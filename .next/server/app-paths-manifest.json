@@ -1,9 +1,6 @@
 {
-  "/not-found": "app/not-found.js",
   "/(root)/page": "app/(root)/page.js",
-  "/api/uploadthing/route": "app/api/uploadthing/route.js",
-  "/(root)/profile/page": "app/(root)/profile/page.js",
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
   "/(root)/dashboard/page": "app/(root)/dashboard/page.js",
-  "/(auth)/login/page": "app/(auth)/login/page.js"
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/(root)/profile/page": "app/(root)/profile/page.js"
 }

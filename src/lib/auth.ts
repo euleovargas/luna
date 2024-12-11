@@ -98,13 +98,20 @@ export const authOptions: NextAuthOptions = {
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // Redireciona para o dashboard após o login
-      if (url.startsWith(baseUrl)) {
-        return url;
-      } else if (url.startsWith("/")) {
-        return `${baseUrl}${url}`;
+      // Permite redirecionamento para a URL de callback após o login
+      if (url.includes('/login')) {
+        return baseUrl + '/dashboard'
       }
-      return baseUrl + "/dashboard";
+      
+      if (url.startsWith(baseUrl)) {
+        return url
+      }
+      
+      if (url.startsWith('/')) {
+        return `${baseUrl}${url}`
+      }
+      
+      return baseUrl
     },
   },
 }
