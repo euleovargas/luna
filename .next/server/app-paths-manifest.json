@@ -1,8 +1,6 @@
 {
   "/(root)/page": "app/(root)/page.js",
-  "/api/uploadthing/route": "app/api/uploadthing/route.js",
-  "/(root)/profile/page": "app/(root)/profile/page.js",
+  "/(auth)/login/page": "app/(auth)/login/page.js",
   "/(root)/dashboard/page": "app/(root)/dashboard/page.js",
-  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/(auth)/login/page": "app/(auth)/login/page.js"
+  "/(root)/profile/page": "app/(root)/profile/page.js"
 }
