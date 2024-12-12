@@ -7,6 +7,15 @@ export async function middleware(request: NextRequest) {
   const isAuthPage = request.nextUrl.pathname.startsWith('/login') || 
                     request.nextUrl.pathname.startsWith('/register')
   const isHomePage = request.nextUrl.pathname === '/'
+  const isProfilePage = request.nextUrl.pathname.startsWith('/profile')
+
+  // Se estiver na página de perfil e autenticado, permite o acesso
+  if (isProfilePage) {
+    if (!token) {
+      return NextResponse.redirect(new URL('/login', request.url))
+    }
+    return NextResponse.next()
+  }
 
   // Redireciona da home page baseado no status de autenticação
   if (isHomePage) {

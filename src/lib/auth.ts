@@ -213,40 +213,58 @@ export const authOptions: NextAuthOptions = {
       }
       return true;
     },
-    async jwt({ token, user, account, profile }) {
-      if (user) {
-        return {
-          ...token,
-          role: user.role,
-          id: user.id,
-          picture: user.image
-        };
+    async jwt({ token, user, account, profile, trigger, session }) {
+      console.log("[AUTH] JWT Callback - Input:", { token, user, trigger, session });
+      
+      if (trigger === "update" && session?.user) {
+        // Update the token when session is updated
+        token.name = session.user.name;
+        token.picture = session.user.image;
       }
+
+      if (user) {
+        token.role = user.role;
+        token.id = user.id;
+        token.picture = user.image;
+        token.name = user.name;
+      }
+
+      console.log("[AUTH] JWT Callback - Output token:", token);
       return token;
     },
     async session({ session, token }) {
+      console.log("[AUTH] Session Callback - Input:", { session, token });
+      
       if (session.user) {
         session.user.role = token.role as UserRole;
         session.user.id = token.id as string;
         session.user.image = token.picture as string;
+        session.user.name = token.name as string;
       }
+
+      console.log("[AUTH] Session Callback - Output session:", session);
       return session;
     },
     async redirect({ url, baseUrl }) {
-      // Permite redirecionamento para a URL de callback após o login
+      // Mantém o usuário na página atual se estiver atualizando o perfil
+      if (url.includes('/profile')) {
+        return url;
+      }
+      
+      // Redireciona para o dashboard apenas após o login
       if (url.includes('/login')) {
-        return baseUrl + '/dashboard'
+        return baseUrl + '/dashboard';
       }
       
       if (url.startsWith(baseUrl)) {
-        return url
+        return url;
       }
       
       if (url.startsWith('/')) {
-        return `${baseUrl}${url}`
+        return `${baseUrl}${url}`;
       }
       
-      return baseUrl
+      return baseUrl;
     },
   },
 }

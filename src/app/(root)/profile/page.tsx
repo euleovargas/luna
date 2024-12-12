@@ -11,26 +11,26 @@ import { toast } from "@/components/ui/use-toast"
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useDropzone } from "react-dropzone"
+import { Icons } from "@/components/ui/icons"
 
 export default function ProfilePage() {
-  const { data: session, update } = useSession()
   const router = useRouter()
+  const { data: session, update } = useSession()
   const [name, setName] = useState("")
   const [isLoading, setIsLoading] = useState(false)
-
+  const [isUploading, setIsUploading] = useState(false)
   const { startUpload } = useUploadThing("imageUploader")
 
   useEffect(() => {
-    if (!session) {
-      router.push("/login")
-    } else {
-      setName(session.user?.name || "")
+    if (session?.user?.name) {
+      setName(session.user.name)
     }
-  }, [session, router])
+  }, [session?.user?.name])
 
   const onDrop = async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
       try {
+        setIsUploading(true)
         const uploadedFiles = await startUpload(acceptedFiles)
         
         if (uploadedFiles && uploadedFiles[0]) {
@@ -50,6 +50,8 @@ export default function ProfilePage() {
               title: "Foto atualizada",
               description: "Sua foto de perfil foi atualizada com sucesso.",
             })
+          } else {
+            throw new Error("Erro ao atualizar foto")
           }
         }
       } catch (error) {
@@ -58,6 +60,8 @@ export default function ProfilePage() {
           description: "Erro ao fazer upload da imagem",
           variant: "destructive",
         })
+      } finally {
+        setIsUploading(false)
       }
     }
   }
@@ -70,13 +74,11 @@ export default function ProfilePage() {
     maxFiles: 1,
   })
 
-  if (!session) {
-    return null
-  }
-
   const updateProfile = async () => {
     try {
       setIsLoading(true)
+      console.log("[PROFILE_UPDATE] Starting update with name:", name)
+      
       const response = await fetch("/api/user/profile", {
         method: "PUT",
         headers: {
@@ -87,24 +89,46 @@ export default function ProfilePage() {
         }),
       })
 
+      const data = await response.json()
+      console.log("[PROFILE_UPDATE] API Response:", data)
+
       if (!response.ok) {
-        throw new Error("Failed to update profile")
+        throw new Error(data.message || "Failed to update profile")
       }
 
-      await update()
+      await update({
+        ...session,
+        user: {
+          ...session?.user,
+          name: data.user.name
+        }
+      })
+
       toast({
         title: "Perfil atualizado",
         description: "Suas informações foram atualizadas com sucesso.",
       })
+
+      router.refresh()
+
     } catch (error) {
+      console.error("[PROFILE_UPDATE] Error:", error)
       toast({
         title: "Erro",
-        description: "Não foi possível atualizar o perfil.",
+        description: error instanceof Error ? error.message : "Não foi possível atualizar o perfil.",
         variant: "destructive",
       })
     } finally {
       setIsLoading(false)
     }
+  }
+
+  if (!session?.user) {
+    return (
+      <div className="flex items-center justify-center min-h-screen">
+        <Icons.spinner className="h-8 w-8 animate-spin" />
+      </div>
+    )
   }
 
   return (
@@ -118,19 +142,32 @@ export default function ProfilePage() {
         </CardHeader>
         <CardContent className="space-y-6">
           <div className="flex flex-col items-center space-y-4">
-            <Avatar className="h-24 w-24">
-              <AvatarImage src={session.user.image || ""} />
-              <AvatarFallback>{session.user.name?.[0]}</AvatarFallback>
-            </Avatar>
             <div 
               {...getRootProps()} 
-              className="w-full max-w-sm border-2 border-dashed border-gray-300 rounded-lg p-6 text-center cursor-pointer hover:border-primary transition-colors"
+              className="relative group cursor-pointer"
             >
               <input {...getInputProps()} />
-              {isDragActive ? (
-                <p>Solte a imagem aqui...</p>
-              ) : (
-                <p>Arraste uma imagem ou clique para selecionar</p>
+              <Avatar className="h-24 w-24 ring-2 ring-offset-2 ring-offset-background transition-all duration-300 group-hover:ring-primary">
+                <AvatarImage 
+                  src={session.user.image || ""}
+                  alt={session.user.name || "Avatar"}
+                  className={isUploading ? "opacity-50" : ""}
+                />
+                <AvatarFallback>{session.user.name?.[0]?.toUpperCase()}</AvatarFallback>
+              </Avatar>
+              <div className="absolute inset-0 flex items-center justify-center">
+                {isUploading ? (
+                  <Icons.spinner className="h-8 w-8 animate-spin text-primary" />
+                ) : (
+                  <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full opacity-0 transition-opacity duration-300 group-hover:opacity-100">
+                    <Icons.camera className="h-8 w-8 text-white" />
+                  </div>
+                )}
+              </div>
+              {isDragActive && (
+                <div className="absolute inset-0 flex items-center justify-center bg-black/60 rounded-full">
+                  <p className="text-sm text-white">Solte aqui</p>
+                </div>
               )}
             </div>
           </div>
@@ -160,7 +197,14 @@ export default function ProfilePage() {
             disabled={isLoading}
             className="w-full"
           >
-            {isLoading ? "Salvando..." : "Salvar alterações"}
+            {isLoading ? (
+              <>
+                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                Atualizando...
+              </>
+            ) : (
+              "Salvar alterações"
+            )}
           </Button>
         </CardContent>
       </Card>
