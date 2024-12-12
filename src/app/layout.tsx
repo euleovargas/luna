@@ -10,6 +10,17 @@ const inter = Inter({ subsets: ['latin'] })
 export const metadata: Metadata = {
   title: 'Luna',
   description: 'Luna - Sua plataforma moderna',
+  icons: [
+    {
+      rel: 'icon',
+      url: '/favicon.ico',
+    },
+    {
+      rel: 'icon',
+      url: '/icon.svg',
+      type: 'image/svg+xml',
+    },
+  ],
 }
 
 export default function RootLayout({

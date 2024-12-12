@@ -49,6 +49,20 @@ if ('GET' in entry) {
       'GET'
     >
   >()
+  
+  checkFields<
+    Diff<
+      {
+        __tag__: 'GET',
+        __return_type__: Response | void | never | Promise<Response | void | never>
+      },
+      {
+        __tag__: 'GET',
+        __return_type__: ReturnType<MaybeField<TEntry, 'GET'>>
+      },
+      'GET'
+    >
+  >()
 }
 // Check the prop type of the entry function
 if ('HEAD' in entry) {
@@ -70,6 +84,20 @@ if ('HEAD' in entry) {
         __tag__: 'HEAD'
         __param_position__: 'second'
         __param_type__: SecondArg<MaybeField<TEntry, 'HEAD'>>
+      },
+      'HEAD'
+    >
+  >()
+  
+  checkFields<
+    Diff<
+      {
+        __tag__: 'HEAD',
+        __return_type__: Response | void | never | Promise<Response | void | never>
+      },
+      {
+        __tag__: 'HEAD',
+        __return_type__: ReturnType<MaybeField<TEntry, 'HEAD'>>
       },
       'HEAD'
     >
@@ -99,6 +127,20 @@ if ('OPTIONS' in entry) {
       'OPTIONS'
     >
   >()
+  
+  checkFields<
+    Diff<
+      {
+        __tag__: 'OPTIONS',
+        __return_type__: Response | void | never | Promise<Response | void | never>
+      },
+      {
+        __tag__: 'OPTIONS',
+        __return_type__: ReturnType<MaybeField<TEntry, 'OPTIONS'>>
+      },
+      'OPTIONS'
+    >
+  >()
 }
 // Check the prop type of the entry function
 if ('POST' in entry) {
@@ -120,6 +162,20 @@ if ('POST' in entry) {
         __tag__: 'POST'
         __param_position__: 'second'
         __param_type__: SecondArg<MaybeField<TEntry, 'POST'>>
+      },
+      'POST'
+    >
+  >()
+  
+  checkFields<
+    Diff<
+      {
+        __tag__: 'POST',
+        __return_type__: Response | void | never | Promise<Response | void | never>
+      },
+      {
+        __tag__: 'POST',
+        __return_type__: ReturnType<MaybeField<TEntry, 'POST'>>
       },
       'POST'
     >
@@ -149,6 +205,20 @@ if ('PUT' in entry) {
       'PUT'
     >
   >()
+  
+  checkFields<
+    Diff<
+      {
+        __tag__: 'PUT',
+        __return_type__: Response | void | never | Promise<Response | void | never>
+      },
+      {
+        __tag__: 'PUT',
+        __return_type__: ReturnType<MaybeField<TEntry, 'PUT'>>
+      },
+      'PUT'
+    >
+  >()
 }
 // Check the prop type of the entry function
 if ('DELETE' in entry) {
@@ -174,6 +244,20 @@ if ('DELETE' in entry) {
       'DELETE'
     >
   >()
+  
+  checkFields<
+    Diff<
+      {
+        __tag__: 'DELETE',
+        __return_type__: Response | void | never | Promise<Response | void | never>
+      },
+      {
+        __tag__: 'DELETE',
+        __return_type__: ReturnType<MaybeField<TEntry, 'DELETE'>>
+      },
+      'DELETE'
+    >
+  >()
 }
 // Check the prop type of the entry function
 if ('PATCH' in entry) {
@@ -195,6 +279,20 @@ if ('PATCH' in entry) {
         __tag__: 'PATCH'
         __param_position__: 'second'
         __param_type__: SecondArg<MaybeField<TEntry, 'PATCH'>>
+      },
+      'PATCH'
+    >
+  >()
+  
+  checkFields<
+    Diff<
+      {
+        __tag__: 'PATCH',
+        __return_type__: Response | void | never | Promise<Response | void | never>
+      },
+      {
+        __tag__: 'PATCH',
+        __return_type__: ReturnType<MaybeField<TEntry, 'PATCH'>>
       },
       'PATCH'
     >

@@ -1,12 +1,11 @@
 {
-  "/api/uploadthing/route": "app/api/uploadthing/route.js",
-  "/(auth)/register/page": "app/(auth)/register/page.js",
-  "/api/auth/verify/route": "app/api/auth/verify/route.js",
-  "/(root)/dashboard/page": "app/(root)/dashboard/page.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
-  "/api/user/profile/route": "app/api/user/profile/route.js",
-  "/(auth)/verify-email/page": "app/(auth)/verify-email/page.js",
+  "/_not-found/page": "app/_not-found/page.js",
+  "/api/uploadthing/route": "app/api/uploadthing/route.js",
   "/(root)/profile/page": "app/(root)/profile/page.js",
   "/(auth)/reset-password/page": "app/(auth)/reset-password/page.js",
-  "/(auth)/login/page": "app/(auth)/login/page.js"
+  "/(root)/dashboard/page": "app/(root)/dashboard/page.js",
+  "/(auth)/verify-email/page": "app/(auth)/verify-email/page.js",
+  "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/(auth)/forgot-password/page": "app/(auth)/forgot-password/page.js"
 }
