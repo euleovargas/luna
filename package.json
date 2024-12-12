@@ -46,12 +46,12 @@
   },
   "devDependencies": {
     "@sentry/cli": "^2.39.1",
+    "@shadcn/ui": "^0.0.4",
     "@types/bcryptjs": "^2.4.6",
     "@types/react": "18.3.14",
     "autoprefixer": "^10.4.20",
     "postcss": "^8.4.49",
     "prisma": "^6.0.1",
-    "shadcn-ui": "^0.9.4",
     "tailwindcss": "^3.4.16",
     "tailwindcss-animate": "^1.0.7",
     "typescript": "5.7.2"
