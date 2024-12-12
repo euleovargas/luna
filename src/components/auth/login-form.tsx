@@ -7,27 +7,27 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import Link from "next/link"
-import { Loader2, Mail, Lock, ArrowRight } from "lucide-react"
+import { Icons } from "@/components/ui/icons"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
-import { useToast } from "@/components/ui/use-toast"
 import {
   Card,
-  CardHeader,
   CardContent,
-  CardFooter,
-  CardTitle,
   CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
 } from "@/components/ui/card"
+import { useToast } from "@/components/ui/use-toast"
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
-  password: z.string().min(6, "Senha deve ter no mínimo 6 caracteres"),
+  password: z.string().min(6, "A senha deve ter no mínimo 6 caracteres"),
 })
 
-type LoginData = z.infer<typeof loginSchema>
+type LoginValues = z.infer<typeof loginSchema>
 
 export function LoginForm() {
   const router = useRouter()
@@ -38,33 +38,30 @@ export function LoginForm() {
     register,
     handleSubmit,
     formState: { errors },
-  } = useForm<LoginData>({
+  } = useForm<LoginValues>({
     resolver: zodResolver(loginSchema),
   })
 
-  const onSubmit = async (data: LoginData) => {
-    try {
-      setIsLoading(true)
-      const response = await signIn("credentials", {
-        email: data.email,
-        password: data.password,
-        redirect: false,
-      })
+  async function onSubmit(data: LoginValues) {
+    setIsLoading(true)
 
-      if (!response?.ok) {
-        throw new Error("Credenciais inválidas")
-      }
+    const signInResult = await signIn("credentials", {
+      email: data.email,
+      password: data.password,
+      redirect: false,
+    })
 
-      router.push("/dashboard")
-    } catch (error) {
-      toast({
+    setIsLoading(false)
+
+    if (!signInResult?.ok) {
+      return toast({
         title: "Erro ao fazer login",
-        description: error instanceof Error ? error.message : "Ocorreu um erro ao fazer login",
+        description: "Credenciais inválidas",
         variant: "destructive",
       })
-    } finally {
-      setIsLoading(false)
     }
+
+    router.push("/dashboard")
   }
 
   const loginWithGoogle = async () => {
@@ -84,7 +81,7 @@ export function LoginForm() {
   return (
     <Card>
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl">Bem-vindo de volta</CardTitle>
+        <CardTitle className="text-2xl">Bem-vindo</CardTitle>
         <CardDescription>
           Entre com sua conta para acessar a plataforma
         </CardDescription>
@@ -94,7 +91,7 @@ export function LoginForm() {
           <div className="grid gap-2">
             <Label htmlFor="email">Email</Label>
             <div className="relative">
-              <Mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Icons.mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 id="email"
                 placeholder="seu@email.com"
@@ -116,7 +113,7 @@ export function LoginForm() {
           <div className="grid gap-2">
             <Label htmlFor="password">Senha</Label>
             <div className="relative">
-              <Lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Icons.lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
               <Input
                 id="password"
                 type="password"
@@ -135,13 +132,12 @@ export function LoginForm() {
           <Button disabled={isLoading}>
             {isLoading ? (
               <>
-                <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
                 Entrando...
               </>
             ) : (
               <>
                 Entrar
-                <ArrowRight className="ml-2 h-4 w-4" />
               </>
             )}
           </Button>
@@ -153,7 +149,7 @@ export function LoginForm() {
           </div>
           <div className="relative flex justify-center text-xs uppercase">
             <span className="bg-background px-2 text-muted-foreground">
-              Ou continue com
+              Ou
             </span>
           </div>
         </div>
@@ -166,13 +162,12 @@ export function LoginForm() {
         >
           {isLoading ? (
             <>
-              <Loader2 className="mr-2 h-4 w-4 animate-spin" />
+              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
               Conectando...
             </>
           ) : (
             <>
-              Google
-              <ArrowRight className="ml-2 h-4 w-4" />
+              <Icons.google className="mr-2 h-4 w-4" /> Entrar com Google
             </>
           )}
         </Button>
@@ -181,7 +176,7 @@ export function LoginForm() {
         <p className="text-sm text-muted-foreground">
           Não tem uma conta?{" "}
           <Link href="/register" className="text-primary hover:underline">
-            Registre-se
+            Inscrever-se
           </Link>
         </p>
       </CardFooter>

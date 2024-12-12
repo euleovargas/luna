@@ -8,7 +8,15 @@ const nextConfig = {
   },
   experimental: {
     serverActions: true,
-    instrumentationHook: true,
+  },
+  webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
+    // Ignore browser extension errors in development
+    if (dev && !isServer) {
+      config.infrastructureLogging = {
+        level: 'error',
+      }
+    }
+    return config
   },
 }
 
@@ -20,9 +28,6 @@ const sentryWebpackPluginOptions = {
   silent: true,
   org: "modernodev",
   project: "luna",
-};
+}
 
-module.exports = withSentryConfig(
-  nextConfig,
-  sentryWebpackPluginOptions
-);
+module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions)

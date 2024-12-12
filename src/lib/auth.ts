@@ -31,9 +31,35 @@ export const authOptions: NextAuthOptions = {
       clientSecret: process.env.GOOGLE_CLIENT_SECRET!,
       authorization: {
         params: {
-          scope: "openid email profile",
-          prompt: "consent",
+          scope: "https://www.googleapis.com/auth/userinfo.profile https://www.googleapis.com/auth/userinfo.email openid",
+          access_type: "offline",
+          response_type: "code"
         },
+      },
+      async profile(profile) {
+        console.log("=== Google Profile Raw ===", profile);
+
+        // Primeiro, vamos verificar se já existe um usuário com este email
+        const existingUser = await db.user.findUnique({
+          where: { email: profile.email }
+        });
+
+        // Se existir, vamos atualizar a imagem
+        if (existingUser) {
+          const updatedUser = await db.user.update({
+            where: { email: profile.email },
+            data: { image: profile.picture }
+          });
+          console.log("=== Updated User ===", updatedUser);
+        }
+
+        return {
+          id: profile.sub,
+          name: profile.name,
+          email: profile.email,
+          image: profile.picture,
+          emailVerified: profile.email_verified
+        };
       },
     }),
     CredentialsProvider({
@@ -76,9 +102,97 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
+      if (account?.provider === "google") {
+        console.log("=== Google Sign In ===");
+        console.log("Profile:", JSON.stringify(profile, null, 2));
+        console.log("User:", JSON.stringify(user, null, 2));
+        console.log("Account:", JSON.stringify(account, null, 2));
+        
+        const existingUser = await db.user.findUnique({
+          where: { email: user.email! },
+          include: { accounts: true }
+        });
+
+        console.log("Existing User:", JSON.stringify(existingUser, null, 2));
+
+        // Se não existir usuário, cria um novo
+        if (!existingUser) {
+          console.log("Creating new user with image:", user.image);
+          const newUser = await db.user.create({
+            data: {
+              email: user.email!,
+              name: user.name,
+              image: user.image,
+              emailVerified: new Date(),
+              accounts: {
+                create: {
+                  type: account.type,
+                  provider: account.provider,
+                  providerAccountId: account.providerAccountId,
+                  access_token: account.access_token,
+                  token_type: account.token_type,
+                  scope: account.scope,
+                  id_token: account.id_token,
+                },
+              },
+            },
+            include: { accounts: true }
+          });
+          
+          console.log("Created User:", JSON.stringify(newUser, null, 2));
+          return true;
+        }
+
+        // Se existir usuário mas não tiver conta Google vinculada
+        const existingAccount = await db.account.findFirst({
+          where: {
+            userId: existingUser.id,
+            provider: account.provider,
+          },
+        });
+
+        if (!existingAccount) {
+          console.log("Updating existing user with image:", user.image);
+          
+          // Atualiza a imagem do usuário existente com a do Google
+          const updatedUser = await db.user.update({
+            where: { id: existingUser.id },
+            data: { 
+              image: user.image,
+              emailVerified: new Date()
+            },
+            include: { accounts: true }
+          });
+          
+          console.log("Updated User:", JSON.stringify(updatedUser, null, 2));
+
+          await db.account.create({
+            data: {
+              userId: existingUser.id,
+              type: account.type,
+              provider: account.provider,
+              providerAccountId: account.providerAccountId,
+              access_token: account.access_token,
+              token_type: account.token_type,
+              scope: account.scope,
+              id_token: account.id_token,
+            },
+          });
+        } else {
+          // Mesmo que a conta já exista, vamos atualizar a imagem
+          console.log("Updating existing user image:", user.image);
+          const updatedUser = await db.user.update({
+            where: { id: existingUser.id },
+            data: { 
+              image: user.image
+            }
+          });
+          console.log("Updated User:", JSON.stringify(updatedUser, null, 2));
+        }
+      }
       return true;
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, account, profile }) {
       if (user) {
         return {
           ...token,
