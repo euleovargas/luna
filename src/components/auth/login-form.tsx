@@ -22,6 +22,7 @@ import {
 } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
 import { useSearchParams } from "next/navigation"
+import { Checkbox } from "@/components/ui/checkbox"
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -156,6 +157,27 @@ export function LoginForm() {
                 {errors.password.message}
               </p>
             )}
+          </div>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-2">
+              <Checkbox id="remember" />
+              <label
+                htmlFor="remember"
+                className="text-sm font-medium leading-none peer-disabled:cursor-not-allowed peer-disabled:opacity-70"
+              >
+                Lembrar de mim
+              </label>
+            </div>
+            <Button
+              variant="link"
+              className="px-0 font-normal"
+              size="sm"
+              asChild
+            >
+              <Link href="/forgot-password">
+                Esqueceu a senha?
+              </Link>
+            </Button>
           </div>
           <Button disabled={isLoading}>
             {isLoading ? (

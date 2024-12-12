@@ -12,6 +12,17 @@ const isDev = process.env.NODE_ENV === 'development';
 
 // Email verificado no Resend para testes
 const TEST_EMAIL = 'eu.leovargas@gmail.com';
+const SENDER_EMAIL = 'onboarding@resend.dev';
+
+interface SendVerificationEmailParams {
+  email: string;
+  token: string;
+}
+
+interface SendPasswordResetEmailParams {
+  email: string;
+  token: string;
+}
 
 // Função de teste para enviar um email simples
 export const sendTestEmail = async (to: string) => {
@@ -149,3 +160,54 @@ export const sendVerificationEmail = async (email: string, token: string) => {
     return { success: false, error };
   }
 };
+
+export async function sendPasswordResetEmail({ email, token }: SendPasswordResetEmailParams) {
+  // Em desenvolvimento, sempre envia para o email de teste
+  const recipient = isDev ? TEST_EMAIL : email;
+  const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`;
+
+  console.log('[RESET_PASSWORD_EMAIL] Configurações:', {
+    from: EMAIL_FROM,
+    to: recipient,
+    resetUrl,
+    apiKey: process.env.RESEND_API_KEY?.substring(0, 8) + '...',
+    isDev,
+    originalTo: email,
+    timestamp: new Date().toISOString()
+  });
+
+  try {
+    const data = await resend.emails.send({
+      from: EMAIL_FROM,
+      to: [recipient],
+      subject: 'Recuperação de Senha - Luna',
+      html: `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+          <h1 style="color: #333; text-align: center;">Recuperação de Senha</h1>
+          <p>Olá,</p>
+          <p>Recebemos uma solicitação para redefinir sua senha.</p>
+          <p>Clique no botão abaixo para criar uma nova senha:</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" 
+               style="background-color: #0070f3; color: white; padding: 12px 24px; 
+                      text-decoration: none; border-radius: 5px; display: inline-block;">
+              Redefinir Senha
+            </a>
+          </div>
+          <p>Se você não solicitou a redefinição de senha, ignore este email.</p>
+          <p>O link expira em 15 minutos.</p>
+          <hr style="margin: 30px 0; border: none; border-top: 1px solid #eaeaea;" />
+          <p style="color: #666; font-size: 12px; text-align: center;">
+            Este é um email automático, por favor não responda.
+          </p>
+        </div>
+      `,
+    });
+
+    console.log('[RESET_PASSWORD_EMAIL] Email enviado:', data);
+    return data;
+  } catch (error) {
+    console.error('[RESET_PASSWORD_EMAIL] Erro ao enviar email:', error);
+    throw error;
+  }
+}
