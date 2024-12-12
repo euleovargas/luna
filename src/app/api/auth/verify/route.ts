@@ -1,5 +1,6 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { signJwtAccessToken } from "@/lib/jwt";
 
 export async function GET(request: Request) {
   try {
@@ -34,9 +35,15 @@ export async function GET(request: Request) {
       },
     });
 
-    // Redireciona para o login com mensagem de sucesso
+    // Redireciona para a página de login com um token especial
+    const verificationToken = signJwtAccessToken({
+      id: user.id,
+      email: user.email,
+      verified: true,
+    });
+
     return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL}/login?verified=true`
+      `${process.env.NEXTAUTH_URL}/login?token=${verificationToken}`
     );
   } catch (error) {
     console.error("[VERIFY_ERROR]", error);

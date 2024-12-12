@@ -6,6 +6,7 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import { UserRole } from "@prisma/client"
 import { Adapter } from "next-auth/adapters"
+import { verifyJwt } from "@/lib/jwt"
 
 // Criando um adapter tipado corretamente
 const prismaAdapter = PrismaAdapter(db) as Adapter
@@ -66,39 +67,59 @@ export const authOptions: NextAuthOptions = {
       name: "credentials",
       credentials: {
         email: { label: "Email", type: "email" },
-        password: { label: "Password", type: "password" }
+        password: { label: "Password", type: "password" },
+        token: { label: "Token", type: "text" }, // Token opcional para verificação de email
       },
       async authorize(credentials) {
-        if (!credentials?.email || !credentials?.password) {
-          return null;
+        try {
+          if (!credentials) {
+            throw new Error("Credenciais não fornecidas");
+          }
+
+          // Se tiver um token de verificação, validar
+          if (credentials.token) {
+            const decoded = verifyJwt(credentials.token);
+            
+            if (decoded?.verified) {
+              const user = await db.user.findUnique({
+                where: { id: decoded.id },
+              });
+
+              if (user) {
+                return user;
+              }
+            }
+            return null;
+          }
+
+          // Login normal com email e senha
+          const { email, password } = credentials;
+
+          const user = await db.user.findUnique({
+            where: { email },
+          });
+
+          if (!user || !user.password) {
+            throw new Error("Email ou senha inválidos");
+          }
+
+          if (!user.emailVerified) {
+            throw new Error("Por favor, verifique seu email antes de fazer login");
+          }
+
+          const isValidPassword = await bcrypt.compare(password, user.password);
+
+          if (!isValidPassword) {
+            throw new Error("Email ou senha inválidos");
+          }
+
+          return user;
+        } catch (error) {
+          console.error("[AUTH_ERROR]", error);
+          throw error;
         }
-
-        const user = await db.user.findUnique({
-          where: { email: credentials.email }
-        });
-
-        if (!user || !user.password) {
-          return null;
-        }
-
-        const isCorrectPassword = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-
-        if (!isCorrectPassword) {
-          return null;
-        }
-
-        return {
-          id: user.id,
-          name: user.name,
-          email: user.email,
-          role: user.role,
-          image: user.image
-        };
-      }
-    })
+      },
+    }),
   ],
   callbacks: {
     async signIn({ user, account, profile }) {

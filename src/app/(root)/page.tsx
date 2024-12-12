@@ -3,11 +3,15 @@
 import Link from "next/link";
 import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
-import { useSession } from "next-auth/react";
+import { useSession, signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
+import { useSearchParams } from "next/navigation";
+import { useToast } from "@/components/ui/use-toast";
 
 export default function Home() {
   const { data: session } = useSession();
+  const searchParams = useSearchParams();
+  const { toast } = useToast();
 
   // Configurar contexto global do usuário para o Sentry
   useEffect(() => {
@@ -19,6 +23,25 @@ export default function Home() {
       });
     }
   }, [session]);
+
+  // Login automático após verificação de email
+  useEffect(() => {
+    const verified = searchParams.get("verified");
+    const email = searchParams.get("email");
+
+    if (verified === "true" && email && !session) {
+      // Faz o login automático
+      toast({
+        title: "Email verificado com sucesso!",
+        description: "Você será conectado automaticamente.",
+      });
+
+      signIn("credentials", {
+        email,
+        callbackUrl: "/",
+      });
+    }
+  }, [searchParams, session, toast]);
 
   return (
     <main className="flex min-h-[calc(100vh-4rem)] flex-col items-center justify-center p-24">

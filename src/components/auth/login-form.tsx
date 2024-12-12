@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import React, { useState, useEffect } from "react"
 import { signIn } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
@@ -21,6 +21,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
+import { useSearchParams } from "next/navigation"
 
 const loginSchema = z.object({
   email: z.string().email("Email inválido"),
@@ -30,9 +31,36 @@ const loginSchema = z.object({
 type LoginValues = z.infer<typeof loginSchema>
 
 export function LoginForm() {
+  const searchParams = useSearchParams();
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+
+  // Verificar token de verificação de email
+  useEffect(() => {
+    const token = searchParams.get("token");
+    if (token) {
+      // Se tiver um token de verificação, fazer login automático
+      signIn("credentials", {
+        token,
+        redirect: false,
+      }).then((response) => {
+        if (response?.error) {
+          toast({
+            title: "Erro ao fazer login",
+            description: "Por favor, tente fazer login manualmente",
+            variant: "destructive",
+          });
+        } else {
+          toast({
+            title: "Email verificado com sucesso!",
+            description: "Você foi conectado automaticamente",
+          });
+          router.push("/");
+        }
+      });
+    }
+  }, [searchParams, router, toast]);
 
   const {
     register,

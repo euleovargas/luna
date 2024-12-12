@@ -1,14 +1,59 @@
 "use client"
 
+import { useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Icons } from "@/components/ui/icons"
+import { useToast } from "@/components/ui/use-toast"
 import Link from "next/link"
 import { useSearchParams } from "next/navigation"
 
 export default function VerifyEmailPage() {
   const searchParams = useSearchParams()
   const email = searchParams.get("email")
+  const { toast } = useToast()
+  const [isResending, setIsResending] = useState(false)
+
+  const handleResendVerification = async () => {
+    if (!email) {
+      toast({
+        title: "Erro",
+        description: "Email não encontrado. Por favor, tente fazer o registro novamente.",
+        variant: "destructive",
+      })
+      return
+    }
+
+    try {
+      setIsResending(true)
+      const response = await fetch("/api/auth/resend-verification", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({ email }),
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || "Erro ao reenviar email")
+      }
+
+      toast({
+        title: "Email reenviado",
+        description: "Verifique sua caixa de entrada.",
+      })
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Erro ao reenviar email de verificação",
+        variant: "destructive",
+      })
+    } finally {
+      setIsResending(false)
+    }
+  }
 
   return (
     <div className="flex flex-col items-center justify-center">
@@ -39,11 +84,21 @@ export default function VerifyEmailPage() {
         <CardFooter className="flex flex-col space-y-2">
           <Button
             variant="outline"
-            onClick={() => window.location.reload()}
+            onClick={handleResendVerification}
+            disabled={isResending}
             className="w-full"
           >
-            <Icons.refresh className="mr-2 h-4 w-4" />
-            Reenviar email
+            {isResending ? (
+              <>
+                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                Reenviando...
+              </>
+            ) : (
+              <>
+                <Icons.refresh className="mr-2 h-4 w-4" />
+                Reenviar email
+              </>
+            )}
           </Button>
           <Link href="/login" className="w-full">
             <Button variant="ghost" className="w-full">
