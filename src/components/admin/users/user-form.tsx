@@ -79,15 +79,14 @@ export function UserForm({ user }: UserFormProps) {
     setIsLoading(true)
 
     try {
-      if (!user?.id) {
-        throw new Error("User ID is required for update")
-      }
+      const isNewUser = !user?.id
+      const url = isNewUser ? '/api/admin/users' : `/api/admin/users/${user.id}`
+      const method = isNewUser ? 'POST' : 'PUT'
 
-      const url = `/api/admin/users/${user.id}`
-      console.log("[USER_FORM] Making request to:", url)
+      console.log("[USER_FORM] Making request to:", url, "with method:", method)
 
       const response = await fetch(url, {
-        method: "PUT",
+        method: method,
         headers: {
           "Content-Type": "application/json",
         },
@@ -95,38 +94,33 @@ export function UserForm({ user }: UserFormProps) {
           name: data.name,
           email: data.email,
           role: data.role,
+          ...(isNewUser && data.password ? { password: data.password } : {}),
         }),
         cache: 'no-store'
       })
 
-      console.log("[USER_FORM] Response status:", response.status)
-      const responseData = await response.json()
-      console.log("[USER_FORM] Response data:", responseData)
-
-      if (!response?.ok) {
-        throw new Error(responseData.message || "Failed to save user")
+      if (!response.ok) {
+        const error = await response.json()
+        throw new Error(error.message || "Algo deu errado")
       }
 
-      // Atualiza o formulário com os novos dados
-      form.reset({
-        name: data.name,
-        email: data.email,
-        role: data.role,
-        password: "",
-      })
+      const result = await response.json()
+      console.log("[USER_FORM] Response:", result)
 
       toast({
-        title: "Sucesso!",
-        description: "Usuário atualizado com sucesso.",
+        title: isNewUser ? "Usuário criado!" : "Usuário atualizado!",
+        description: isNewUser 
+          ? "O novo usuário foi criado com sucesso."
+          : "As informações do usuário foram atualizadas.",
       })
 
-      // Força revalidação dos dados
+      router.push("/admin/users")
       router.refresh()
     } catch (error) {
-      console.error("[USER_FORM] Error saving user:", error)
+      console.error("[USER_FORM] Error:", error)
       toast({
         title: "Algo deu errado.",
-        description: error instanceof Error ? error.message : "Não foi possível salvar o usuário. Por favor, tente novamente.",
+        description: error instanceof Error ? error.message : "Erro ao processar a requisição.",
         variant: "destructive",
       })
     } finally {
