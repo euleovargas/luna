@@ -9,6 +9,7 @@ export function LoginPage() {
   const searchParams = useSearchParams()
   const { toast } = useToast()
   const verified = searchParams.get("verified")
+  const error = searchParams.get("error")
 
   useEffect(() => {
     if (verified === "true") {
@@ -17,7 +18,33 @@ export function LoginPage() {
         description: "Sua conta foi ativada com sucesso. Você já pode fazer login.",
       })
     }
-  }, [verified, toast])
+
+    // Tratamento de erros de verificação
+    if (error) {
+      const errorMessages = {
+        missing_token: {
+          title: "Link inválido",
+          description: "O link de verificação está incompleto. Por favor, use o link mais recente enviado ao seu email.",
+        },
+        invalid_token: {
+          title: "Link expirado",
+          description: "Este link de verificação não é mais válido. Use o link mais recente enviado ao seu email ou solicite um novo.",
+        },
+        server_error: {
+          title: "Erro no servidor",
+          description: "Ocorreu um erro ao verificar seu email. Por favor, tente novamente mais tarde.",
+        },
+      }[error]
+
+      if (errorMessages) {
+        toast({
+          title: errorMessages.title,
+          description: errorMessages.description,
+          variant: "destructive",
+        })
+      }
+    }
+  }, [verified, error, toast])
 
   return (
     <div className="container relative h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">

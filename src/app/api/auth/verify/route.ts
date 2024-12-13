@@ -7,10 +7,9 @@ export async function GET(request: Request) {
     const token = searchParams.get("token");
 
     if (!token) {
-      return NextResponse.json(
-        { message: "Token não fornecido" },
-        { status: 400 }
-      );
+      const loginUrl = new URL("/login", process.env.NEXTAUTH_URL);
+      loginUrl.searchParams.set("error", "missing_token");
+      return NextResponse.redirect(loginUrl.toString());
     }
 
     // Busca o usuário pelo token
@@ -20,14 +19,15 @@ export async function GET(request: Request) {
         id: true,
         email: true,
         name: true,
+        emailVerified: true,
       },
     });
 
-    if (!user) {
-      return NextResponse.json(
-        { message: "Token inválido ou expirado" },
-        { status: 400 }
-      );
+    // Se o token não existir ou o email já estiver verificado
+    if (!user || user.emailVerified) {
+      const loginUrl = new URL("/login", process.env.NEXTAUTH_URL);
+      loginUrl.searchParams.set("error", "invalid_token");
+      return NextResponse.redirect(loginUrl.toString());
     }
 
     // Atualiza o usuário como verificado
@@ -46,9 +46,8 @@ export async function GET(request: Request) {
     return NextResponse.redirect(loginUrl.toString());
   } catch (error) {
     console.error("[VERIFY_ERROR]", error);
-    return NextResponse.json(
-      { message: "Erro ao verificar email" },
-      { status: 500 }
-    );
+    const loginUrl = new URL("/login", process.env.NEXTAUTH_URL);
+    loginUrl.searchParams.set("error", "server_error");
+    return NextResponse.redirect(loginUrl.toString());
   }
 }
