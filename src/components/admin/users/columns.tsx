@@ -30,6 +30,13 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import {
+  Tooltip,
+  TooltipContent,
+  TooltipProvider,
+  TooltipTrigger,
+} from "@/components/ui/tooltip"
+import { useSession } from "next-auth/react"
 
 export type User = {
   id: string
@@ -47,6 +54,8 @@ interface DataTableRowActionsProps {
 
 export function DataTableRowActions({ user, onDelete }: DataTableRowActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false)
+  const { data: session } = useSession()
+  const isCurrentUser = session?.user?.id === user.id
 
   const handleDelete = async () => {
     try {
@@ -106,43 +115,57 @@ export function DataTableRowActions({ user, onDelete }: DataTableRowActionsProps
             Editar
           </Link>
         </DropdownMenuItem>
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
-            <DropdownMenuItem
-              onSelect={(e) => e.preventDefault()}
-              className="text-destructive focus:text-destructive"
-            >
-              <Icons.trash className="mr-2 h-4 w-4" />
-              Deletar
-            </DropdownMenuItem>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta ação não pode ser desfeita. Isso irá deletar permanentemente o usuário
-                e remover seus dados dos nossos servidores.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={handleDelete}
-                disabled={isDeleting}
-                className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-              >
-                {isDeleting ? (
-                  <>
-                    <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                    Deletando...
-                  </>
-                ) : (
-                  "Continuar"
-                )}
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+        <TooltipProvider>
+          <Tooltip>
+            <TooltipTrigger asChild>
+              <div>
+                <AlertDialog>
+                  <AlertDialogTrigger asChild>
+                    <DropdownMenuItem
+                      onSelect={(e) => e.preventDefault()}
+                      className="text-destructive focus:text-destructive"
+                      disabled={isCurrentUser}
+                    >
+                      <Icons.trash className="mr-2 h-4 w-4" />
+                      Deletar
+                    </DropdownMenuItem>
+                  </AlertDialogTrigger>
+                  <AlertDialogContent>
+                    <AlertDialogHeader>
+                      <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                      <AlertDialogDescription>
+                        Esta ação não pode ser desfeita. Isso irá deletar permanentemente o usuário
+                        e remover seus dados dos nossos servidores.
+                      </AlertDialogDescription>
+                    </AlertDialogHeader>
+                    <AlertDialogFooter>
+                      <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                      <AlertDialogAction
+                        onClick={handleDelete}
+                        disabled={isDeleting}
+                        className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                      >
+                        {isDeleting ? (
+                          <>
+                            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                            Deletando...
+                          </>
+                        ) : (
+                          "Continuar"
+                        )}
+                      </AlertDialogAction>
+                    </AlertDialogFooter>
+                  </AlertDialogContent>
+                </AlertDialog>
+              </div>
+            </TooltipTrigger>
+            {isCurrentUser && (
+              <TooltipContent>
+                <p>Você não pode deletar sua própria conta</p>
+              </TooltipContent>
+            )}
+          </Tooltip>
+        </TooltipProvider>
       </DropdownMenuContent>
     </DropdownMenu>
   )
