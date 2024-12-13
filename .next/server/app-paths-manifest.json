@@ -1,7 +1,10 @@
 {
-  "/(root)/dashboard/page": "app/(root)/dashboard/page.js",
-  "/(admin)/admin/users/new/page": "app/(admin)/admin/users/new/page.js",
+  "/api/auth/verify/route": "app/api/auth/verify/route.js",
+  "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/api/auth/resend-verification/route": "app/api/auth/resend-verification/route.js",
   "/(auth)/login/page": "app/(auth)/login/page.js",
+  "/(auth)/resend-verification/page": "app/(auth)/resend-verification/page.js",
+  "/(auth)/verify-email/page": "app/(auth)/verify-email/page.js",
   "/(auth)/register/page": "app/(auth)/register/page.js",
-  "/(auth)/verify-email/page": "app/(auth)/verify-email/page.js"
+  "/(root)/dashboard/page": "app/(root)/dashboard/page.js"
 }

@@ -1,9 +1,9 @@
-import { NextResponse } from 'next/server';
-import { hash } from 'bcryptjs';
-import { db } from '@/lib/db';
-import { z } from 'zod';
-import { sendVerificationEmail } from '@/lib/mail';
-import { randomBytes } from 'crypto';
+import { NextResponse } from "next/server"
+import { hash } from "bcryptjs"
+import { db } from "@/lib/db"
+import { generateVerificationToken } from "@/lib/tokens"
+import { sendVerificationEmail } from "@/lib/mail"
+import { z } from "zod"
 
 const registerSchema = z.object({
   name: z
@@ -18,37 +18,56 @@ const registerSchema = z.object({
     .regex(/[a-z]/, "A senha deve conter pelo menos uma letra minúscula")
     .regex(/[0-9]/, "A senha deve conter pelo menos um número")
     .regex(/[^A-Za-z0-9]/, "A senha deve conter pelo menos um caractere especial"),
-});
+})
 
 export async function POST(req: Request) {
   try {
-    const json = await req.json();
-    const body = registerSchema.parse(json);
+    const json = await req.json()
+    const body = registerSchema.parse(json)
 
-    console.log('[REGISTER] Iniciando registro para:', body.email);
-
-    // Verifica se o email já está em uso
+    // Verifica se já existe um usuário com este email
     const existingUser = await db.user.findUnique({
       where: { email: body.email },
-    });
+      select: {
+        id: true,
+        emailVerified: true,
+        verifyToken: true,
+        createdAt: true,
+      },
+    })
 
-    if (existingUser) {
-      console.log('[REGISTER] Email já em uso:', body.email);
+    // Se existir um usuário não verificado há mais de 24 horas, deletamos para permitir novo registro
+    if (existingUser && !existingUser.emailVerified) {
+      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
+      
+      if (existingUser.createdAt < twentyFourHoursAgo) {
+        await db.user.delete({
+          where: { id: existingUser.id }
+        })
+      } else {
+        // Conta não verificada ainda dentro das 24 horas
+        return NextResponse.json(
+          {
+            error: "unverified_account",
+            message: "Já existe uma conta não verificada com este email. Verifique sua caixa de entrada ou solicite um novo email de verificação.",
+          },
+          { status: 400 }
+        )
+      }
+    } else if (existingUser && existingUser.emailVerified) {
+      // Conta já existe e está verificada
       return NextResponse.json(
-        { message: 'Este email já está em uso' },
+        {
+          error: "email_exists",
+          message: "Este email já está em uso.",
+        },
         { status: 400 }
-      );
+      )
     }
 
-    // Hash da senha
-    const hashedPassword = await hash(body.password, 12);
+    const hashedPassword = await hash(body.password, 12)
+    const verifyToken = generateVerificationToken()
 
-    // Gera token de verificação
-    const verifyToken = randomBytes(32).toString('hex');
-
-    console.log('[REGISTER] Criando usuário com token:', verifyToken);
-
-    // Cria o usuário
     const user = await db.user.create({
       data: {
         name: body.name,
@@ -61,39 +80,27 @@ export async function POST(req: Request) {
         name: true,
         email: true,
       },
-    });
-
-    console.log('[REGISTER] Usuário criado:', user);
+    })
 
     // Envia email de verificação
-    const emailResult = await sendVerificationEmail(body.email, verifyToken);
-    console.log('[REGISTER] Resultado do envio de email:', emailResult);
-
-    if (!emailResult.success) {
-      console.error('[REGISTER] Erro ao enviar email:', emailResult.error);
-      return NextResponse.json(
-        { message: 'Erro ao enviar email de verificação' },
-        { status: 500 }
-      );
-    }
+    await sendVerificationEmail(body.email, verifyToken)
 
     return NextResponse.json(
-      { message: 'Usuário criado com sucesso', user },
+      { message: "Usuário criado com sucesso", user },
       { status: 201 }
-    );
+    )
   } catch (error) {
     if (error instanceof z.ZodError) {
-      console.log('[REGISTER] Erro de validação:', error.errors);
       return NextResponse.json(
-        { message: 'Dados inválidos', errors: error.errors },
+        { message: "Dados inválidos", errors: error.errors },
         { status: 400 }
-      );
+      )
     }
 
-    console.error('[REGISTER_ERROR]', error);
+    console.error("[REGISTER_ERROR]", error)
     return NextResponse.json(
-      { message: 'Algo deu errado ao criar sua conta' },
+      { message: "Algo deu errado ao criar sua conta" },
       { status: 500 }
-    );
+    )
   }
 }

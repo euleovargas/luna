@@ -61,10 +61,22 @@ export function RegisterForm() {
         body: JSON.stringify(data),
       })
 
-      const result = await response.json()
+      const responseData = await response.json()
 
       if (!response.ok) {
-        throw new Error(result.message || 'Erro ao criar conta')
+        setIsLoading(false)
+        
+        // Se for conta não verificada, redireciona direto
+        if (responseData.error === "unverified_account") {
+          router.push(`/resend-verification?email=${encodeURIComponent(data.email)}`)
+          return
+        }
+
+        return toast({
+          title: "Erro ao criar conta",
+          description: responseData.message,
+          variant: "destructive",
+        })
       }
       
       toast({
