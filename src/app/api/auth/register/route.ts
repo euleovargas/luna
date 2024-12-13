@@ -143,4 +143,4 @@ export const POST = withRateLimit(async (req: Request) => {
       { status: 500 }
     )
   }
-})
+}, 'register')
