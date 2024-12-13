@@ -2,7 +2,7 @@ import {
   AlertTriangle,
   ArrowRight,
   Camera,
-  Check,
+  CircleCheck,
   ChevronLeft,
   ChevronRight,
   CircleX,
@@ -120,6 +120,6 @@ export const Icons = {
   pencil: Pencil,
   eye: Eye,
   edit: Edit,
-  check: Check,
+  circleCheck: CircleCheck,
   circleX: CircleX,
 }

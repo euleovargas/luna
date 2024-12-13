@@ -60,7 +60,7 @@ export function PasswordRules({ password, showRules }: PasswordRulesProps) {
             className="flex items-center space-x-2 text-sm"
           >
             {isValid ? (
-              <Icons.check className="h-4 w-4 text-green-500" />
+              <Icons.circleCheck className="h-4 w-4 text-green-500" />
             ) : (
               <Icons.circleX className="h-4 w-4 text-muted-foreground" />
             )}
