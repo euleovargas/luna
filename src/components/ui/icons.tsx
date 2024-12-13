@@ -5,7 +5,7 @@ import {
   Check,
   ChevronLeft,
   ChevronRight,
-  Circle,
+  CircleX,
   Command,
   CreditCard,
   File,
@@ -121,5 +121,5 @@ export const Icons = {
   eye: Eye,
   edit: Edit,
   check: Check,
-  circle: Circle,
+  circleX: CircleX,
 }
