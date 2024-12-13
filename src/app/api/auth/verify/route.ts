@@ -1,6 +1,5 @@
 import { NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { signJwtAccessToken } from "@/lib/jwt";
 
 export async function GET(request: Request) {
   try {
@@ -40,16 +39,9 @@ export async function GET(request: Request) {
       },
     });
 
-    // Gera um token JWT com os dados necessários
-    const verificationToken = signJwtAccessToken({
-      id: user.id,
-      email: user.email,
-      verified: true,
-    });
-
-    // Redireciona para a página de login com o token
+    // Redireciona para a página de login com o parâmetro verified
     const loginUrl = new URL("/login", process.env.NEXTAUTH_URL);
-    loginUrl.searchParams.set("token", verificationToken);
+    loginUrl.searchParams.set("verified", "true");
     
     return NextResponse.redirect(loginUrl.toString());
   } catch (error) {

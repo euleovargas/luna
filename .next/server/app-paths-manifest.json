@@ -1,9 +1,10 @@
 {
-  "/api/auth/register/route": "app/api/auth/register/route.js",
   "/api/auth/[...nextauth]/route": "app/api/auth/[...nextauth]/route.js",
+  "/api/auth/resend-verification/route": "app/api/auth/resend-verification/route.js",
   "/api/auth/verify/route": "app/api/auth/verify/route.js",
-  "/(admin)/admin/users/new/page": "app/(admin)/admin/users/new/page.js",
+  "/api/auth/register/route": "app/api/auth/register/route.js",
   "/(root)/dashboard/page": "app/(root)/dashboard/page.js",
+  "/(admin)/admin/users/new/page": "app/(admin)/admin/users/new/page.js",
   "/(auth)/login/page": "app/(auth)/login/page.js",
   "/(auth)/verify-email/page": "app/(auth)/verify-email/page.js",
   "/(auth)/register/page": "app/(auth)/register/page.js"
