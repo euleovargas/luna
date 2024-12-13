@@ -105,6 +105,11 @@
       "static/chunks/webpack.js",
       "static/chunks/main-app.js",
       "static/chunks/app/(admin)/admin/users/new/page.js"
+    ],
+    "/(auth)/verify-email/page": [
+      "static/chunks/webpack.js",
+      "static/chunks/main-app.js",
+      "static/chunks/app/(auth)/verify-email/page.js"
     ]
   }
 }

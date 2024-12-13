@@ -1,6 +1,7 @@
 import {
   AlertTriangle,
   ArrowRight,
+  ArrowLeft,
   Camera,
   CircleCheck,
   ChevronLeft,
@@ -22,6 +23,7 @@ import {
   MoreVertical,
   Pizza,
   Plus,
+  RefreshCw,
   Settings,
   SunMedium,
   Trash,
@@ -58,6 +60,7 @@ export const Icons = {
   add: Plus,
   warning: AlertTriangle,
   arrowRight: ArrowRight,
+  arrowLeft: ArrowLeft,
   help: HelpCircle,
   pizza: Pizza,
   sun: SunMedium,
@@ -122,4 +125,5 @@ export const Icons = {
   edit: Edit,
   circleCheck: CircleCheck,
   circleX: CircleX,
+  refresh: RefreshCw,
 }
