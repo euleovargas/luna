@@ -6,6 +6,7 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import { UserRole } from "@prisma/client"
 import { Adapter } from "next-auth/adapters"
+import { verifyJwtToken } from "./jwt"
 
 const prismaAdapter = PrismaAdapter(db) as Adapter
 
@@ -44,27 +45,56 @@ export const authOptions: NextAuthOptions = {
       credentials: {
         email: { label: "Email", type: "email" },
         password: { label: "Password", type: "password" },
+        token: { label: "Token", type: "text" },
       },
       async authorize(credentials) {
+        if (credentials?.token) {
+          try {
+            const verifiedToken = verifyJwtToken(credentials.token);
+            if (!verifiedToken || !verifiedToken.email) {
+              return null;
+            }
+
+            const user = await db.user.findUnique({
+              where: { email: verifiedToken.email },
+            });
+
+            if (!user || !user.emailVerified) {
+              return null;
+            }
+
+            return {
+              id: user.id,
+              email: user.email,
+              name: user.name,
+              image: user.image,
+              role: user.role,
+            };
+          } catch (error) {
+            console.error("[TOKEN_VERIFY_ERROR]", error);
+            return null;
+          }
+        }
+
         if (!credentials?.email || !credentials?.password) {
-          return null
+          return null;
         }
 
         const user = await db.user.findUnique({
           where: { email: credentials.email },
-        })
+        });
 
         if (!user || !user.password) {
-          return null
+          return null;
         }
 
         const isPasswordValid = await bcrypt.compare(
           credentials.password,
           user.password
-        )
+        );
 
         if (!isPasswordValid) {
-          return null
+          return null;
         }
 
         return {
@@ -73,7 +103,7 @@ export const authOptions: NextAuthOptions = {
           name: user.name,
           image: user.image,
           role: user.role,
-        }
+        };
       },
     }),
   ],
