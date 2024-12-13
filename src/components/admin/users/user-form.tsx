@@ -40,7 +40,7 @@ const userFormSchema = z.object({
   }),
   password: z.string().min(8, {
     message: "A senha deve ter pelo menos 8 caracteres.",
-  }).optional(),
+  }).optional().or(z.literal("")),
 })
 
 type UserFormValues = z.infer<typeof userFormSchema>
@@ -70,12 +70,24 @@ export function UserForm({ user }: UserFormProps) {
     },
   })
 
+  React.useEffect(() => {
+    console.log("[USER_FORM] Form errors:", form.formState.errors)
+  }, [form.formState])
+
   async function onSubmit(data: UserFormValues) {
+    console.log("[USER_FORM] onSubmit called with data:", data)
     setIsLoading(true)
 
     try {
-      const response = await fetch(user ? `/api/admin/users/${user.id}` : "/api/admin/users", {
-        method: user ? "PUT" : "POST",
+      if (!user?.id) {
+        throw new Error("User ID is required for update")
+      }
+
+      const url = `/api/admin/users/${user.id}`
+      console.log("[USER_FORM] Making request to:", url)
+
+      const response = await fetch(url, {
+        method: "PUT",
         headers: {
           "Content-Type": "application/json",
         },
@@ -83,25 +95,35 @@ export function UserForm({ user }: UserFormProps) {
           name: data.name,
           email: data.email,
           role: data.role,
-          ...(user ? {} : { password: data.password }),
         }),
+        cache: 'no-store'
       })
 
+      console.log("[USER_FORM] Response status:", response.status)
       const responseData = await response.json()
+      console.log("[USER_FORM] Response data:", responseData)
 
       if (!response?.ok) {
         throw new Error(responseData.message || "Failed to save user")
       }
 
-      toast({
-        title: "Sucesso!",
-        description: `Usuário ${user ? "atualizado" : "criado"} com sucesso.`,
+      // Atualiza o formulário com os novos dados
+      form.reset({
+        name: data.name,
+        email: data.email,
+        role: data.role,
+        password: "",
       })
 
-      router.push("/admin/users")
+      toast({
+        title: "Sucesso!",
+        description: "Usuário atualizado com sucesso.",
+      })
+
+      // Força revalidação dos dados
       router.refresh()
     } catch (error) {
-      console.error("Error saving user:", error)
+      console.error("[USER_FORM] Error saving user:", error)
       toast({
         title: "Algo deu errado.",
         description: error instanceof Error ? error.message : "Não foi possível salvar o usuário. Por favor, tente novamente.",
@@ -114,7 +136,13 @@ export function UserForm({ user }: UserFormProps) {
 
   return (
     <Form {...form}>
-      <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
+      <form 
+        onSubmit={(e) => {
+          console.log("[USER_FORM] Form submitted")
+          form.handleSubmit(onSubmit)(e)
+        }} 
+        className="space-y-4"
+      >
         <FormField
           control={form.control}
           name="name"
@@ -196,7 +224,7 @@ export function UserForm({ user }: UserFormProps) {
             {isLoading && (
               <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
             )}
-            {user ? "Atualizar" : "Criar"} Usuário
+            {user ? "Atualizar" : "Criar"}
           </Button>
         </div>
       </form>
