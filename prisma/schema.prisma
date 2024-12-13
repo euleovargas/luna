@@ -29,6 +29,7 @@ model User {
   accounts      Account[]
   sessions      Session[]
   verifyToken   String?   @unique
+  lastEmailSent DateTime?  // Novo campo para controlar o último envio
   createdAt     DateTime  @default(now())
   updatedAt     DateTime  @updatedAt
 

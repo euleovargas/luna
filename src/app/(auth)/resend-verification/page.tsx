@@ -29,6 +29,7 @@ export default function ResendVerificationPage() {
   const searchParams = useSearchParams()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [cooldown, setCooldown] = useState(0)
 
   const {
     register,
@@ -46,34 +47,64 @@ export default function ResendVerificationPage() {
   }
 
   async function onSubmit(data: ResendValues) {
+    if (cooldown > 0) {
+      toast({
+        variant: "destructive",
+        title: "Aguarde",
+        description: `Por favor, aguarde ${cooldown} minutos antes de solicitar um novo email.`,
+      })
+      return
+    }
+
     setIsLoading(true)
 
     try {
       const response = await fetch("/api/auth/resend-verification", {
         method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
+        headers: { "Content-Type": "application/json" },
         body: JSON.stringify(data),
       })
 
-      const responseData = await response.json()
+      const result = await response.json()
+
+      if (response.status === 429) {
+        // Too many requests - extrair o tempo restante da mensagem
+        const minutes = parseInt(result.message.match(/\d+/)[0])
+        setCooldown(minutes)
+        
+        // Iniciar countdown
+        const interval = setInterval(() => {
+          setCooldown((current) => {
+            if (current <= 1) {
+              clearInterval(interval)
+              return 0
+            }
+            return current - 1
+          })
+        }, 60000) // atualiza a cada minuto
+
+        toast({
+          variant: "destructive",
+          title: "Muitas tentativas",
+          description: result.message,
+        })
+        return
+      }
 
       if (!response.ok) {
-        throw new Error(responseData.message)
+        throw new Error(result.error || "Erro ao reenviar email")
       }
 
       toast({
-        title: "Email enviado!",
-        description: "Verifique sua caixa de entrada para confirmar seu email.",
+        title: "Email enviado",
+        description: "Verifique sua caixa de entrada e spam.",
       })
 
-      router.push("/login")
     } catch (error) {
       toast({
-        title: "Erro ao enviar email",
-        description: error instanceof Error ? error.message : "Algo deu errado",
         variant: "destructive",
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Erro ao reenviar email",
       })
     } finally {
       setIsLoading(false)
@@ -81,99 +112,51 @@ export default function ResendVerificationPage() {
   }
 
   return (
-    <div className="container relative h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">
-      <div className="relative hidden h-full flex-col bg-muted p-10 text-white lg:flex dark:border-r">
-        <div className="absolute inset-0 bg-indigo-400" />
-        <div className="relative z-20 flex items-center text-lg font-medium">
-          <svg
-            xmlns="http://www.w3.org/2000/svg"
-            viewBox="0 0 24 24"
-            fill="none"
-            stroke="currentColor"
-            strokeWidth="2"
-            strokeLinecap="round"
-            strokeLinejoin="round"
-            className="mr-2 h-6 w-6"
+    <Card className="w-[400px]">
+      <CardHeader>
+        <CardTitle>Reenviar Email de Verificação</CardTitle>
+        <CardDescription>
+          {emailFromRegister
+            ? "Um email de verificação já foi enviado para este endereço. Se não o encontrou, você pode solicitar um novo envio."
+            : "Digite seu email para receber um novo link de verificação."}
+        </CardDescription>
+      </CardHeader>
+      <form onSubmit={handleSubmit(onSubmit)}>
+        <CardContent>
+          <div className="grid gap-4">
+            <div className="grid gap-2">
+              <Input
+                {...register("email")}
+                placeholder="nome@exemplo.com"
+                type="email"
+                autoCapitalize="none"
+                autoComplete="email"
+                autoCorrect="off"
+                disabled={isLoading || cooldown > 0}
+              />
+              {errors?.email && (
+                <p className="text-sm text-red-500">{errors.email.message}</p>
+              )}
+            </div>
+          </div>
+        </CardContent>
+        <CardFooter>
+          <Button
+            type="submit"
+            className="w-full"
+            disabled={isLoading || cooldown > 0}
           >
-            <path d="M15 6v12a3 3 0 1 0 3-3H6a3 3 0 1 0 3 3V6a3 3 0 1 0-3 3h12a3 3 0 1 0-3-3" />
-          </svg>
-          Luna
-        </div>
-        <div className="relative z-20 mt-auto">
-          <blockquote className="space-y-2">
-            <p className="text-lg">
-              Reenvie seu email de verificação.
-            </p>
-          </blockquote>
-        </div>
-      </div>
-      <div className="lg:p-8">
-        <div className="mx-auto flex w-full flex-col justify-center space-y-6 sm:w-[350px]">
-          <Card>
-            <CardHeader className="space-y-1">
-              <CardTitle className="text-2xl">Verificar Email</CardTitle>
-              <CardDescription>
-                {emailFromRegister ? (
-                  <>
-                    Encontramos uma conta não verificada com o email{" "}
-                    <strong>{emailFromRegister}</strong>. Envie um novo link de
-                    verificação para ativar sua conta.
-                  </>
-                ) : (
-                  "Digite seu email para receber um novo link de verificação"
-                )}
-              </CardDescription>
-            </CardHeader>
-            <CardContent>
-              <form onSubmit={handleSubmit(onSubmit)}>
-                <div className="grid gap-4">
-                  <div className="grid gap-2">
-                    <div className="relative">
-                      <Icons.mail className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-                      <Input
-                        id="email"
-                        placeholder="seu@email.com"
-                        type="email"
-                        autoCapitalize="none"
-                        autoComplete="email"
-                        autoCorrect="off"
-                        disabled={isLoading}
-                        className="pl-10"
-                        {...register("email")}
-                      />
-                    </div>
-                    {errors?.email && (
-                      <p className="text-sm font-medium text-destructive">
-                        {errors.email.message}
-                      </p>
-                    )}
-                  </div>
-                  <Button disabled={isLoading}>
-                    {isLoading ? (
-                      <>
-                        <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                        Enviando...
-                      </>
-                    ) : (
-                      "Enviar email"
-                    )}
-                  </Button>
-                </div>
-              </form>
-            </CardContent>
-            <CardFooter className="flex justify-center">
-              <Button
-                variant="link"
-                className="px-0 font-normal"
-                size="sm"
-                onClick={() => router.push("/login")}
-              >
-                Voltar para login
-              </Button>
-            </CardFooter>
-          </Card>
-        </div>
-      </div>
-    </div>
+            {isLoading && (
+              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+            )}
+            {cooldown > 0 ? (
+              `Aguarde ${cooldown}min para reenviar`
+            ) : (
+              "Reenviar email de verificação"
+            )}
+          </Button>
+        </CardFooter>
+      </form>
+    </Card>
   )
 }

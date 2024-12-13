@@ -929,6 +929,9 @@ video {
 .w-screen {
   width: 100vw;
 }
+.w-\[400px\] {
+  width: 400px;
+}
 .min-w-\[8rem\] {
   min-width: 8rem;
 }
@@ -1348,6 +1351,10 @@ video {
 .py-8 {
   padding-top: 2rem;
   padding-bottom: 2rem;
+}
+.px-1 {
+  padding-left: 0.25rem;
+  padding-right: 0.25rem;
 }
 .pb-6 {
   padding-bottom: 1.5rem;
