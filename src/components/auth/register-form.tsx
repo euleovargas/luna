@@ -7,6 +7,7 @@ import Link from "next/link"
 import { useRouter } from "next/navigation"
 import { useForm } from "react-hook-form"
 import { Icons } from "@/components/ui/icons"
+import { signIn } from "next-auth/react"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
@@ -80,6 +81,20 @@ export function RegisterForm() {
         variant: "destructive",
       })
     } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const loginWithGoogle = async () => {
+    try {
+      setIsLoading(true)
+      await signIn("google", { callbackUrl: "/dashboard" })
+    } catch (error) {
+      toast({
+        title: "Erro ao fazer login",
+        description: "Ocorreu um erro ao fazer login com o Google",
+        variant: "destructive",
+      })
       setIsLoading(false)
     }
   }
@@ -174,6 +189,35 @@ export function RegisterForm() {
             )}
           </Button>
         </form>
+
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Ou
+            </span>
+          </div>
+        </div>
+
+        <Button
+          variant="outline"
+          type="button"
+          disabled={isLoading}
+          onClick={loginWithGoogle}
+        >
+          {isLoading ? (
+            <>
+              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+              Conectando...
+            </>
+          ) : (
+            <>
+              <Icons.google className="mr-2 h-4 w-4" /> Entrar com Google
+            </>
+          )}
+        </Button>
       </CardContent>
       <CardFooter className="flex flex-col items-center justify-center space-y-2">
         <div className="text-sm text-muted-foreground">

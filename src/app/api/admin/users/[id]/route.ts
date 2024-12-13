@@ -83,3 +83,56 @@ export async function PUT(req: Request, context: z.infer<typeof routeContextSche
     );
   }
 }
+
+export async function DELETE(req: Request, context: z.infer<typeof routeContextSchema>) {
+  try {
+    // Verificar autenticação
+    const session = await getServerSession(authOptions);
+
+    if (!session?.user || session.user.role !== UserRole.ADMIN) {
+      return new NextResponse("Unauthorized", { status: 401 });
+    }
+
+    // Validar parâmetros da rota
+    const { params } = routeContextSchema.parse(context);
+
+    // Verificar se o usuário existe
+    const existingUser = await prisma.user.findUnique({
+      where: { id: params.id },
+    });
+
+    if (!existingUser) {
+      return NextResponse.json(
+        { success: false, message: "User not found" },
+        { status: 404 }
+      );
+    }
+
+    // Não permitir que um admin delete a si mesmo
+    if (existingUser.id === session.user.id) {
+      return NextResponse.json(
+        { success: false, message: "You cannot delete your own account" },
+        { status: 400 }
+      );
+    }
+
+    // Deletar usuário
+    await prisma.user.delete({
+      where: { id: params.id },
+    });
+
+    return NextResponse.json({
+      success: true,
+      message: "User deleted successfully",
+    });
+  } catch (error) {
+    console.error("[USER_DELETE_ERROR]", error);
+    return NextResponse.json(
+      { 
+        success: false, 
+        message: error instanceof Error ? error.message : "Something went wrong" 
+      },
+      { status: 500 }
+    );
+  }
+}

@@ -62,7 +62,7 @@ export function PasswordRules({ password, showRules }: PasswordRulesProps) {
             {isValid ? (
               <Icons.check className="h-4 w-4 text-green-500" />
             ) : (
-              <Icons.check className="h-4 w-4 text-muted-foreground" />
+              <Icons.circle className="h-4 w-4 text-muted-foreground" />
             )}
             <span
               className={
