@@ -36,10 +36,12 @@ type RegisterValues = z.infer<typeof registerSchema>
 
 export function RegisterForm() {
   const router = useRouter()
-  const [isLoading, setIsLoading] = React.useState<boolean>(false)
-  const { toast } = useToast()
+  const [isLoading, setIsLoading] = React.useState(false)
+  const [isLoadingGoogle, setIsLoadingGoogle] = React.useState(false)
   const [password, setPassword] = React.useState("")
   const [showRules, setShowRules] = React.useState(false)
+
+  const { toast } = useToast()
 
   const {
     register,
@@ -99,7 +101,7 @@ export function RegisterForm() {
 
   const loginWithGoogle = async () => {
     try {
-      setIsLoading(true)
+      setIsLoadingGoogle(true)
       await signIn("google", { callbackUrl: "/dashboard" })
     } catch (error) {
       toast({
@@ -107,7 +109,7 @@ export function RegisterForm() {
         description: "Ocorreu um erro ao fazer login com o Google",
         variant: "destructive",
       })
-      setIsLoading(false)
+      setIsLoadingGoogle(false)
     }
   }
 
@@ -216,10 +218,10 @@ export function RegisterForm() {
         <Button
           variant="outline"
           type="button"
-          disabled={isLoading}
+          disabled={isLoadingGoogle}
           onClick={loginWithGoogle}
         >
-          {isLoading ? (
+          {isLoadingGoogle ? (
             <>
               <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
               Conectando...

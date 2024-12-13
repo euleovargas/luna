@@ -36,6 +36,7 @@ export function LoginForm() {
   const router = useRouter()
   const { toast } = useToast()
   const [isLoading, setIsLoading] = useState(false)
+  const [isLoadingGoogle, setIsLoadingGoogle] = useState(false)
 
   // Verificar token de verificação de email
   useEffect(() => {
@@ -97,7 +98,7 @@ export function LoginForm() {
 
   const loginWithGoogle = async () => {
     try {
-      setIsLoading(true)
+      setIsLoadingGoogle(true)
       await signIn("google", { callbackUrl: "/dashboard" })
     } catch (error) {
       toast({
@@ -105,7 +106,7 @@ export function LoginForm() {
         description: "Ocorreu um erro ao fazer login com o Google",
         variant: "destructive",
       })
-      setIsLoading(false)
+      setIsLoadingGoogle(false)
     }
   }
 
@@ -209,10 +210,10 @@ export function LoginForm() {
         <Button
           variant="outline"
           type="button"
-          disabled={isLoading}
+          disabled={isLoadingGoogle}
           onClick={loginWithGoogle}
         >
-          {isLoading ? (
+          {isLoadingGoogle ? (
             <>
               <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
               Conectando...
