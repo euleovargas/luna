@@ -20,45 +20,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
-
-const passwordRules = [
-  {
-    id: "minLength",
-    label: "Pelo menos 8 caracteres",
-    regex: /.{8,}/,
-  },
-  {
-    id: "uppercase",
-    label: "Uma letra maiúscula",
-    regex: /[A-Z]/,
-  },
-  {
-    id: "lowercase",
-    label: "Uma letra minúscula",
-    regex: /[a-z]/,
-  },
-  {
-    id: "number",
-    label: "Um número",
-    regex: /[0-9]/,
-  },
-  {
-    id: "special",
-    label: "Um caractere especial",
-    regex: /[^A-Za-z0-9]/,
-  },
-] as const
-
-const passwordSchema = z
-  .string()
-  .min(8, "A senha deve ter no mínimo 8 caracteres")
-  .regex(/[A-Z]/, "A senha deve conter pelo menos uma letra maiúscula")
-  .regex(/[a-z]/, "A senha deve conter pelo menos uma letra minúscula")
-  .regex(/[0-9]/, "A senha deve conter pelo menos um número")
-  .regex(
-    /[^A-Za-z0-9]/,
-    "A senha deve conter pelo menos um caractere especial"
-  )
+import { passwordSchema, PasswordRules } from "./password-rules"
 
 const registerSchema = z.object({
   name: z
@@ -121,15 +83,6 @@ export function RegisterForm() {
       setIsLoading(false)
     }
   }
-
-  const passwordRulesStatus = React.useMemo(() => {
-    return passwordRules.map((rule) => ({
-      ...rule,
-      isValid: rule.regex.test(password),
-    }))
-  }, [password])
-
-  const allRulesValid = passwordRulesStatus.every((rule) => rule.isValid)
 
   return (
     <Card>
@@ -203,77 +156,36 @@ export function RegisterForm() {
                 onFocus={() => setShowRules(true)}
               />
             </div>
-            {showRules && (
-              <div className="mt-2">
-                
-                <ul className="text-sm space-y-1">
-                  {passwordRulesStatus.map((rule) => (
-                    <li key={rule.id} className="flex items-center">
-                      {rule.isValid ? (
-                        <Icons.check className="mr-2 h-4 w-4 text-green-500" />
-                      ) : (
-                        <Icons.x className="mr-2 h-4 w-4 text-destructive text-gray-500" />
-                      )}
-                      <span className="text-muted-foreground">{rule.label}</span>
-                    </li>
-                  ))}
-                </ul>
-              </div>
-            )}
             {errors?.password && (
               <p className="text-sm font-medium text-destructive">
                 {errors.password.message}
               </p>
             )}
+            <PasswordRules password={password} showRules={showRules} />
           </div>
-          <Button disabled={isLoading}>
+          <Button type="submit" className="w-full" disabled={isLoading}>
             {isLoading ? (
               <>
                 <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
                 Criando conta...
               </>
             ) : (
-              <>
-                Criar conta
-              </>
+              "Criar conta"
             )}
           </Button>
         </form>
-        <div className="relative">
-          <div className="absolute inset-0 flex items-center">
-            <span className="w-full border-t" />
-          </div>
-          <div className="relative flex justify-center text-xs uppercase">
-            <span className="bg-background px-2 text-muted-foreground">
-              Ou
-            </span>
-          </div>
-        </div>
-        <Button
-          variant="outline"
-          type="button"
-          disabled={isLoading}
-          onClick={() => router.push(`/api/auth/signin/google`)}
-        >
-          {isLoading ? (
-            <>
-              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-              Conectando...
-            </>
-          ) : (
-            <>
-              <Icons.google className="mr-2 h-4 w-4" /> Entrar com Google
-            </>
-          )}
-        </Button>
       </CardContent>
-      <CardFooter className="flex justify-center">
-        <p className="text-sm text-muted-foreground">
+      <CardFooter className="flex flex-col items-center justify-center space-y-2">
+        <div className="text-sm text-muted-foreground">
           Já tem uma conta?{" "}
-          <Link href="/login" className="text-primary hover:underline">
-            Fazer login
+          <Link
+            aria-label="Sign in"
+            href="/login"
+            className="text-primary underline-offset-4 transition-colors hover:underline"
+          >
+            Entrar
           </Link>
-        </p>
+        </div>
       </CardFooter>
     </Card>
   )

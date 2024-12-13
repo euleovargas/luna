@@ -4,6 +4,7 @@ interface TokenPayload {
   id: string;
   email: string;
   verified?: boolean;
+  resetPassword?: boolean;
 }
 
 export function signJwtAccessToken(payload: TokenPayload) {

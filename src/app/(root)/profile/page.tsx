@@ -1,7 +1,7 @@
 "use client"
 
 import { useEffect, useState } from "react"
-import { useSession } from "next-auth/react"
+import { useSession, signOut } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { useUploadThing } from "@/lib/uploadthing"
 import { Button } from "@/components/ui/button"
@@ -12,6 +12,17 @@ import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/com
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useDropzone } from "react-dropzone"
 import { Icons } from "@/components/ui/icons"
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog"
 
 export default function ProfilePage() {
   const router = useRouter()
@@ -19,6 +30,7 @@ export default function ProfilePage() {
   const [name, setName] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
   const { startUpload } = useUploadThing("imageUploader")
 
   useEffect(() => {
@@ -44,20 +56,34 @@ export default function ProfilePage() {
             }),
           })
 
-          if (response.ok) {
-            await update()
+          if (!response.ok) {
+            throw new Error("Erro ao atualizar foto")
+          }
+
+          const data = await response.json()
+          
+          if (data.success) {
+            await update({
+              ...session,
+              user: {
+                ...session?.user,
+                image: uploadedFiles[0].url,
+              }
+            })
+            router.refresh()
             toast({
               title: "Foto atualizada",
               description: "Sua foto de perfil foi atualizada com sucesso.",
             })
           } else {
-            throw new Error("Erro ao atualizar foto")
+            throw new Error(data.message || "Erro ao atualizar foto")
           }
         }
       } catch (error) {
+        console.error("[PROFILE_UPDATE] Error updating image:", error)
         toast({
           title: "Erro",
-          description: "Erro ao fazer upload da imagem",
+          description: error instanceof Error ? error.message : "Erro ao fazer upload da imagem",
           variant: "destructive",
         })
       } finally {
@@ -96,20 +122,18 @@ export default function ProfilePage() {
         throw new Error(data.message || "Failed to update profile")
       }
 
-      await update({
-        ...session,
-        user: {
-          ...session?.user,
-          name: data.user.name
-        }
-      })
+      if (data.success) {
+        await update()
+        
+        toast({
+          title: "Perfil atualizado",
+          description: "Suas informações foram atualizadas com sucesso.",
+        })
 
-      toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram atualizadas com sucesso.",
-      })
-
-      router.refresh()
+        router.refresh()
+      } else {
+        throw new Error(data.message || "Erro ao atualizar perfil")
+      }
 
     } catch (error) {
       console.error("[PROFILE_UPDATE] Error:", error)
@@ -120,6 +144,44 @@ export default function ProfilePage() {
       })
     } finally {
       setIsLoading(false)
+    }
+  }
+
+  const deleteAccount = async () => {
+    try {
+      setIsDeleting(true)
+      const response = await fetch("/api/user/profile", {
+        method: "DELETE",
+      })
+
+      const data = await response.json()
+
+      if (!response.ok) {
+        throw new Error(data.message || "Failed to delete account")
+      }
+
+      if (data.success) {
+        toast({
+          title: "Conta deletada",
+          description: "Sua conta foi deletada com sucesso.",
+        })
+        // Fazer logout e redirecionar
+        await signOut({
+          redirect: true,
+          callbackUrl: "/account-deleted"
+        })
+      } else {
+        throw new Error(data.message || "Erro ao deletar conta")
+      }
+    } catch (error) {
+      console.error("[PROFILE_DELETE] Error:", error)
+      toast({
+        title: "Erro",
+        description: error instanceof Error ? error.message : "Não foi possível deletar a conta.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleting(false)
     }
   }
 
@@ -206,6 +268,42 @@ export default function ProfilePage() {
               "Salvar alterações"
             )}
           </Button>
+
+          <div className="pt-4 border-t">
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <Button variant="destructive" className="w-full">
+                  Deletar conta
+                </Button>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação não pode ser desfeita. Isso irá deletar permanentemente sua conta
+                    e remover seus dados dos nossos servidores.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={deleteAccount}
+                    disabled={isDeleting}
+                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
+                  >
+                    {isDeleting ? (
+                      <>
+                        <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                        Deletando...
+                      </>
+                    ) : (
+                      "Continuar"
+                    )}
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </div>
         </CardContent>
       </Card>
     </div>

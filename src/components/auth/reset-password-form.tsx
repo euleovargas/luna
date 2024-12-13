@@ -5,9 +5,11 @@ import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
 import { useRouter, useSearchParams } from "next/navigation"
+import Link from "next/link"
 
 import { Button } from "@/components/ui/button"
 import { Input } from "@/components/ui/input"
+import { Label } from "@/components/ui/label"
 import {
   Card,
   CardContent,
@@ -17,9 +19,11 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
+import { Icons } from "@/components/ui/icons"
+import { passwordSchema, PasswordRules } from "./password-rules"
 
 const resetPasswordSchema = z.object({
-  password: z.string().min(6, "A senha deve ter no mínimo 6 caracteres"),
+  password: passwordSchema,
   confirmPassword: z.string(),
 }).refine((data) => data.password === data.confirmPassword, {
   message: "As senhas não coincidem",
@@ -33,6 +37,8 @@ export function ResetPasswordForm() {
   const router = useRouter()
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
+  const [password, setPassword] = useState("")
+  const [showRules, setShowRules] = useState(false)
 
   const token = searchParams.get("token")
 
@@ -68,8 +74,10 @@ export function ResetPasswordForm() {
         }),
       })
 
+      const result = await response.json()
+
       if (!response.ok) {
-        throw new Error("Erro ao redefinir senha")
+        throw new Error(result.error || "Erro ao redefinir senha")
       }
 
       toast({
@@ -79,9 +87,10 @@ export function ResetPasswordForm() {
 
       router.push("/login")
     } catch (error) {
+      console.error("Erro ao redefinir senha:", error)
       toast({
         title: "Erro",
-        description: "Ocorreu um erro ao redefinir sua senha",
+        description: error instanceof Error ? error.message : "Ocorreu um erro ao redefinir sua senha",
         variant: "destructive",
       })
     } finally {
@@ -100,27 +109,45 @@ export function ResetPasswordForm() {
       <form onSubmit={form.handleSubmit(onSubmit)}>
         <CardContent className="grid gap-4">
           <div className="grid gap-2">
-            <Input
-              {...form.register("password")}
-              placeholder="Nova senha"
-              type="password"
-              disabled={isLoading}
-            />
+            <Label htmlFor="password">Nova senha</Label>
+            <div className="relative">
+              <Icons.lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="password"
+                {...form.register("password")}
+                onChange={(e) => {
+                  form.register("password").onChange(e)
+                  setPassword(e.target.value)
+                }}
+                onFocus={() => setShowRules(true)}
+                type="password"
+                placeholder="••••••••"
+                className="pl-10"
+                disabled={isLoading}
+              />
+            </div>
             {form.formState.errors.password && (
-              <p className="text-sm text-red-500">
+              <p className="text-sm font-medium text-destructive">
                 {form.formState.errors.password.message}
               </p>
             )}
+            <PasswordRules password={password} showRules={showRules} />
           </div>
           <div className="grid gap-2">
-            <Input
-              {...form.register("confirmPassword")}
-              placeholder="Confirme a nova senha"
-              type="password"
-              disabled={isLoading}
-            />
+            <Label htmlFor="confirmPassword">Confirmar senha</Label>
+            <div className="relative">
+              <Icons.lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
+              <Input
+                id="confirmPassword"
+                {...form.register("confirmPassword")}
+                type="password"
+                placeholder="••••••••"
+                className="pl-10"
+                disabled={isLoading}
+              />
+            </div>
             {form.formState.errors.confirmPassword && (
-              <p className="text-sm text-red-500">
+              <p className="text-sm font-medium text-destructive">
                 {form.formState.errors.confirmPassword.message}
               </p>
             )}
@@ -132,13 +159,16 @@ export function ResetPasswordForm() {
             className="w-full"
             disabled={isLoading}
           >
-            {isLoading && (
-              <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-primary border-t-transparent" />
-            )}
+            {isLoading && <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />}
             Redefinir senha
           </Button>
         </CardFooter>
       </form>
+      <div className="mt-4 text-center text-sm">
+        <Link href="/login" className="text-primary hover:underline">
+          Voltar para o login
+        </Link>
+      </div>
     </Card>
   )
 }
