@@ -2,8 +2,9 @@ import { NextResponse } from "next/server"
 import { db } from "@/lib/db"
 import { generateVerificationToken } from "@/lib/tokens"
 import { sendVerificationEmail } from "@/lib/mail"
+import { withRateLimit } from "@/lib/rate-limit"
 
-export async function POST(req: Request) {
+export const POST = withRateLimit(async (req: Request) => {
   try {
     const { email } = await req.json()
 
@@ -58,4 +59,4 @@ export async function POST(req: Request) {
       { status: 500 }
     )
   }
-}
+})

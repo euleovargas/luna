@@ -4,6 +4,8 @@ import { db } from "@/lib/db"
 import { generateVerificationToken } from "@/lib/tokens"
 import { sendVerificationEmail } from "@/lib/mail"
 import { z } from "zod"
+import { withRateLimit } from "@/lib/rate-limit"
+import { logSecurityEvent, SecurityEventType, SecuritySeverity } from "@/lib/security"
 
 const registerSchema = z.object({
   name: z
@@ -20,7 +22,7 @@ const registerSchema = z.object({
     .regex(/[^A-Za-z0-9]/, "A senha deve conter pelo menos um caractere especial"),
 })
 
-export async function POST(req: Request) {
+export const POST = withRateLimit(async (req: Request) => {
   try {
     const json = await req.json()
     const body = registerSchema.parse(json)
@@ -46,6 +48,15 @@ export async function POST(req: Request) {
         })
       } else {
         // Conta não verificada ainda dentro das 24 horas
+        await logSecurityEvent(
+          SecurityEventType.REGISTER_ATTEMPT,
+          SecuritySeverity.MEDIUM,
+          {
+            email: body.email,
+            error: "unverified_account",
+          }
+        )
+
         return NextResponse.json(
           {
             error: "unverified_account",
@@ -56,6 +67,15 @@ export async function POST(req: Request) {
       }
     } else if (existingUser && existingUser.emailVerified) {
       // Conta já existe e está verificada
+      await logSecurityEvent(
+        SecurityEventType.REGISTER_ATTEMPT,
+        SecuritySeverity.MEDIUM,
+        {
+          email: body.email,
+          error: "email_exists",
+        }
+      )
+
       return NextResponse.json(
         {
           error: "email_exists",
@@ -85,11 +105,31 @@ export async function POST(req: Request) {
     // Envia email de verificação
     await sendVerificationEmail(body.email, verifyToken)
 
+    // Log registro bem-sucedido
+    await logSecurityEvent(
+      SecurityEventType.REGISTER_ATTEMPT,
+      SecuritySeverity.LOW,
+      {
+        email: body.email,
+        success: true
+      }
+    )
+
     return NextResponse.json(
       { message: "Usuário criado com sucesso", user },
       { status: 201 }
     )
   } catch (error) {
+    // Log erro no registro
+    await logSecurityEvent(
+      SecurityEventType.REGISTER_ATTEMPT,
+      SecuritySeverity.HIGH,
+      {
+        error: error instanceof Error ? error.message : "Unknown error",
+        stack: error instanceof Error ? error.stack : undefined
+      }
+    )
+
     if (error instanceof z.ZodError) {
       return NextResponse.json(
         { message: "Dados inválidos", errors: error.errors },
@@ -103,4 +143,4 @@ export async function POST(req: Request) {
       { status: 500 }
     )
   }
-}
+})

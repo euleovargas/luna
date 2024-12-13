@@ -78,3 +78,29 @@ model VerificationToken {
   @@unique([identifier, token])
   @@map("verification_tokens")
 }
+
+// Modelo para logs de segurança
+model SecurityLog {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  type      String   // LOGIN_ATTEMPT, REGISTER_ATTEMPT, SUSPICIOUS_ACTIVITY
+  ip        String
+  userAgent String?
+  details   String?  // JSON string com detalhes adicionais
+  severity  String   // LOW, MEDIUM, HIGH
+  timestamp DateTime @default(now())
+
+  @@index([ip])
+  @@map("security_logs")
+}
+
+// Modelo para blacklist de IPs
+model BlockedIP {
+  id          String   @id @default(auto()) @map("_id") @db.ObjectId
+  ip          String   @unique
+  reason      String
+  blockedAt   DateTime @default(now())
+  expiresAt   DateTime?
+  isPermanent Boolean  @default(false)
+
+  @@map("blocked_ips")
+}
