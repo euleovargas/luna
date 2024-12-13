@@ -74,9 +74,18 @@ export function RegisterForm() {
           return
         }
 
+        // Se for erro de rate limit
+        if (response.status === 429) {
+          return toast({
+            title: "Muitas tentativas",
+            description: responseData.error || "Por favor, aguarde alguns minutos antes de tentar novamente.",
+            variant: "destructive",
+          })
+        }
+
         return toast({
           title: "Erro ao criar conta",
-          description: responseData.message,
+          description: responseData.message || responseData.error || "Ocorreu um erro ao criar sua conta",
           variant: "destructive",
         })
       }
