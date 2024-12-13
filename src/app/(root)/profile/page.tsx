@@ -46,14 +46,16 @@ export default function ProfilePage() {
         const uploadedFiles = await startUpload(acceptedFiles)
         
         if (uploadedFiles && uploadedFiles[0]) {
+          const imageUrl = uploadedFiles[0].url
           const response = await fetch("/api/user/profile", {
             method: "PUT",
             headers: {
               "Content-Type": "application/json",
             },
             body: JSON.stringify({
-              image: uploadedFiles[0].url,
+              image: imageUrl,
             }),
+            cache: 'no-store'
           })
 
           if (!response.ok) {
@@ -63,14 +65,15 @@ export default function ProfilePage() {
           const data = await response.json()
           
           if (data.success) {
+            // Atualiza a sessão com a nova imagem
             await update({
               ...session,
               user: {
                 ...session?.user,
-                image: uploadedFiles[0].url,
+                image: imageUrl,
               }
             })
-            router.refresh()
+
             toast({
               title: "Foto atualizada",
               description: "Sua foto de perfil foi atualizada com sucesso.",
@@ -113,6 +116,7 @@ export default function ProfilePage() {
         body: JSON.stringify({
           name,
         }),
+        cache: 'no-store'
       })
 
       const data = await response.json()
@@ -123,14 +127,22 @@ export default function ProfilePage() {
       }
 
       if (data.success) {
-        await update()
+        // Atualiza o estado local primeiro
+        setName(name)
         
+        // Atualiza a sessão com os novos dados
+        await update({
+          ...session,
+          user: {
+            ...session?.user,
+            name: name,
+          }
+        })
+
         toast({
           title: "Perfil atualizado",
           description: "Suas informações foram atualizadas com sucesso.",
         })
-
-        router.refresh()
       } else {
         throw new Error(data.message || "Erro ao atualizar perfil")
       }
@@ -139,7 +151,7 @@ export default function ProfilePage() {
       console.error("[PROFILE_UPDATE] Error:", error)
       toast({
         title: "Erro",
-        description: error instanceof Error ? error.message : "Não foi possível atualizar o perfil.",
+        description: error instanceof Error ? error.message : "Erro ao atualizar perfil",
         variant: "destructive",
       })
     } finally {

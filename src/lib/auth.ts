@@ -112,10 +112,27 @@ export const authOptions: NextAuthOptions = {
     },
     async session({ session, token }) {
       if (session.user) {
-        session.user.id = token.sub as string
-        session.user.role = token.role as UserRole
+        // Busca os dados mais recentes do usuário no banco
+        const user = await db.user.findUnique({
+          where: { id: token.sub as string },
+          select: {
+            id: true,
+            name: true,
+            email: true,
+            image: true,
+            role: true,
+          }
+        });
+
+        if (user) {
+          session.user.id = user.id;
+          session.user.name = user.name;
+          session.user.email = user.email;
+          session.user.image = user.image;
+          session.user.role = user.role;
+        }
       }
-      return session
+      return session;
     },
     async jwt({ token, user }) {
       if (user) {

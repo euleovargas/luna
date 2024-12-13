@@ -49,9 +49,15 @@ export async function PUT(req: Request) {
 
     return NextResponse.json({
       success: true,
-      user,
-      session: newSession,
-      message: "Profile updated successfully"
+      data: {
+        name: user.name,
+        image: user.image,
+      }
+    }, {
+      headers: {
+        'Cache-Control': 'no-store, must-revalidate',
+        'Pragma': 'no-cache',
+      }
     });
   } catch (error) {
     console.error("[USER_PROFILE_UPDATE] Error:", error);
