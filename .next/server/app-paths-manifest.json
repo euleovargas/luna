@@ -1,7 +1,7 @@
 {
   "/(root)/dashboard/page": "app/(root)/dashboard/page.js",
-  "/(admin)/admin/users/page": "app/(admin)/admin/users/page.js",
   "/(admin)/admin/users/new/page": "app/(admin)/admin/users/new/page.js",
+  "/(admin)/admin/users/page": "app/(admin)/admin/users/page.js",
   "/(auth)/login/page": "app/(auth)/login/page.js",
   "/(auth)/register/page": "app/(auth)/register/page.js"
 }
