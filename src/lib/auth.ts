@@ -6,7 +6,7 @@ import CredentialsProvider from "next-auth/providers/credentials"
 import bcrypt from "bcryptjs"
 import { UserRole } from "@prisma/client"
 import { Adapter } from "next-auth/adapters"
-import { verifyJwtToken } from "./jwt"
+import { verifyJwt } from "./jwt"
 
 const prismaAdapter = PrismaAdapter(db) as Adapter
 
@@ -48,62 +48,71 @@ export const authOptions: NextAuthOptions = {
         token: { label: "Token", type: "text" },
       },
       async authorize(credentials) {
-        if (credentials?.token) {
-          try {
-            const verifiedToken = verifyJwtToken(credentials.token);
+        try {
+          // Verificar se é um login por token de verificação
+          if (credentials?.token) {
+            const verifiedToken = verifyJwt(credentials.token);
             if (!verifiedToken || !verifiedToken.email) {
+              console.error("[TOKEN_VERIFY_ERROR] Token inválido ou sem email");
               return null;
             }
 
             const user = await db.user.findUnique({
               where: { email: verifiedToken.email },
+              select: {
+                id: true,
+                email: true,
+                name: true,
+                image: true,
+                role: true,
+                emailVerified: true,
+              },
             });
 
             if (!user || !user.emailVerified) {
+              console.error("[TOKEN_VERIFY_ERROR] Usuário não encontrado ou email não verificado");
               return null;
             }
 
-            return {
-              id: user.id,
-              email: user.email,
-              name: user.name,
-              image: user.image,
-              role: user.role,
-            };
-          } catch (error) {
-            console.error("[TOKEN_VERIFY_ERROR]", error);
+            return user;
+          }
+
+          // Login normal com email e senha
+          if (!credentials?.email || !credentials?.password) {
             return null;
           }
-        }
 
-        if (!credentials?.email || !credentials?.password) {
+          const user = await db.user.findUnique({
+            where: { email: credentials.email },
+            select: {
+              id: true,
+              email: true,
+              name: true,
+              image: true,
+              role: true,
+              password: true,
+            },
+          });
+
+          if (!user || !user.password) {
+            return null;
+          }
+
+          const isPasswordValid = await bcrypt.compare(
+            credentials.password,
+            user.password
+          );
+
+          if (!isPasswordValid) {
+            return null;
+          }
+
+          const { password, ...userWithoutPass } = user;
+          return userWithoutPass;
+        } catch (error) {
+          console.error("[AUTHORIZE_ERROR]", error);
           return null;
         }
-
-        const user = await db.user.findUnique({
-          where: { email: credentials.email },
-        });
-
-        if (!user || !user.password) {
-          return null;
-        }
-
-        const isPasswordValid = await bcrypt.compare(
-          credentials.password,
-          user.password
-        );
-
-        if (!isPasswordValid) {
-          return null;
-        }
-
-        return {
-          id: user.id,
-          email: user.email,
-          name: user.name,
-          image: user.image,
-          role: user.role,
-        };
       },
     }),
   ],

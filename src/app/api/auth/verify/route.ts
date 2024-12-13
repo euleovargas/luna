@@ -17,6 +17,11 @@ export async function GET(request: Request) {
     // Busca o usuário pelo token
     const user = await db.user.findUnique({
       where: { verifyToken: token },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+      },
     });
 
     if (!user) {
@@ -35,16 +40,18 @@ export async function GET(request: Request) {
       },
     });
 
-    // Redireciona para a página de login com um token especial
+    // Gera um token JWT com os dados necessários
     const verificationToken = signJwtAccessToken({
       id: user.id,
       email: user.email,
       verified: true,
     });
 
-    return NextResponse.redirect(
-      `${process.env.NEXTAUTH_URL}/login?token=${verificationToken}`
-    );
+    // Redireciona para a página de login com o token
+    const loginUrl = new URL("/login", process.env.NEXTAUTH_URL);
+    loginUrl.searchParams.set("token", verificationToken);
+    
+    return NextResponse.redirect(loginUrl.toString());
   } catch (error) {
     console.error("[VERIFY_ERROR]", error);
     return NextResponse.json(

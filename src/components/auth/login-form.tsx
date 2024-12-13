@@ -44,9 +44,11 @@ export function LoginForm() {
       // Se tiver um token de verificação, fazer login automático
       signIn("credentials", {
         token,
+        callbackUrl: "/",
         redirect: false,
       }).then((response) => {
         if (response?.error) {
+          console.error("[LOGIN_ERROR]", response.error);
           toast({
             title: "Erro ao fazer login",
             description: "Por favor, tente fazer login manualmente",
