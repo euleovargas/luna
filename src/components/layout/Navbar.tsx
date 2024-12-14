@@ -2,7 +2,7 @@
 
 import { MainHeader } from '@/components/layout/MainHeader';
 import { ThemeToggle } from "@/components/theme/theme-toggle";
-import { User } from '@/types/next-auth';
+import { User } from 'next-auth';
 
 interface NavbarProps {
   user?: User | null;
