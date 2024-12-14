@@ -137,8 +137,8 @@ export const authOptions: NextAuthOptions = {
             await db.user.update({
               where: { id: existingUser.id },
               data: {
-                name: user.name,
-                image: user.image,
+                name: user.name ?? undefined,
+                image: user.image ?? undefined,
               },
             })
           }
