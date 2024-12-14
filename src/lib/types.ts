@@ -1,14 +1,4 @@
 import { User, UserRole } from "@prisma/client";
-import { DefaultSession } from "next-auth";
-
-// Extende o tipo User da sessão do NextAuth para incluir role
-declare module "next-auth" {
-  interface Session {
-    user: {
-      role: UserRole;
-    } & DefaultSession["user"];
-  }
-}
 
 // Tipo para formulário de login
 export type LoginFormData = {
