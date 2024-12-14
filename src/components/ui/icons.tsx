@@ -29,6 +29,7 @@ import {
   Trash,
   Twitter,
   User,
+  Users,
   X,
   UserX,
   UserPlus,
@@ -126,4 +127,5 @@ export const Icons = {
   circleCheck: CircleCheck,
   circleX: CircleX,
   refresh: RefreshCw,
-}
+  users: Users,
+} as const
