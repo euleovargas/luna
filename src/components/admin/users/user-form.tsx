@@ -35,7 +35,7 @@ const userFormSchema = z.object({
   email: z.string().email({
     message: "Digite um email válido.",
   }),
-  role: z.enum([UserRole.ADMIN, UserRole.USER], {
+  role: z.enum([UserRole.ADMIN, UserRole.MANAGER, UserRole.USER], {
     required_error: "Por favor selecione um tipo de usuário.",
   }),
   password: z.string().min(8, {
@@ -176,8 +176,9 @@ export function UserForm({ user }: UserFormProps) {
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value={UserRole.USER}>Usuário</SelectItem>
                   <SelectItem value={UserRole.ADMIN}>Administrador</SelectItem>
+                  <SelectItem value={UserRole.MANAGER}>Gerente</SelectItem>
+                  <SelectItem value={UserRole.USER}>Usuário</SelectItem>
                 </SelectContent>
               </Select>
               <FormMessage />
