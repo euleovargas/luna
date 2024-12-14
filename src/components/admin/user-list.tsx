@@ -24,7 +24,7 @@ import { toast } from "@/components/ui/use-toast"
 import { formatDate } from "@/lib/utils"
 import { UserRole } from "@prisma/client"
 
-interface User {
+interface UserItem {
   id: string
   name: string
   email: string
@@ -34,7 +34,7 @@ interface User {
 }
 
 interface UserListProps {
-  users: User[]
+  users: UserItem[]
 }
 
 export function UserList({ users }: UserListProps) {
