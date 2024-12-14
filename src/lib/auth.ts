@@ -37,7 +37,6 @@ export const authOptions: NextAuthOptions = {
           name: profile.name,
           email: profile.email,
           image: profile.picture,
-          emailVerified: profile.email_verified,
           role: UserRole.USER,
         }
       },
