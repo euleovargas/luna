@@ -1,6 +1,7 @@
 import { getServerSession } from "next-auth";
 import { createUploadthing, type FileRouter } from "uploadthing/next";
 import { authOptions } from "@/lib/auth";
+import { CustomSession } from "@/types";
 
 const f = createUploadthing();
 
@@ -15,7 +16,7 @@ export const ourFileRouter = {
     image: { maxFileSize: "4MB", maxFileCount: 1 }
   })
     .middleware(async () => {
-      const session = await handleAuth();
+      const session = await handleAuth() as CustomSession;
       return { userId: session.user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {
