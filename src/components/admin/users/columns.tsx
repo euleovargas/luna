@@ -37,6 +37,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useSession } from "next-auth/react"
+import { CustomSession } from "@/types"
 
 export type User = {
   id: string
@@ -54,7 +55,8 @@ interface DataTableRowActionsProps {
 
 export function DataTableRowActions({ user, onDelete }: DataTableRowActionsProps) {
   const [isDeleting, setIsDeleting] = useState(false)
-  const { data: session } = useSession()
+  const { data: sessionData } = useSession()
+  const session = sessionData as CustomSession
   const isCurrentUser = session?.user?.id === user.id
 
   const handleDelete = async () => {
