@@ -248,7 +248,9 @@ export const columns: ColumnDef<User>[] = [
   {
     id: "actions",
     cell: ({ row, table }) => {
-      return <DataTableRowActions user={row.original} onDelete={table.options.meta?.deleteUser} />
+      const deleteUser = table.options.meta?.deleteUser
+      const handleDelete = deleteUser ? () => deleteUser(row.original.id) : undefined
+      return <DataTableRowActions user={row.original} onDelete={handleDelete} />
     },
   },
 ]
