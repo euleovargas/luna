@@ -1,7 +1,8 @@
 "use client"
 
 import { useState } from "react"
-import { useRouter, useSearchParams } from "next/navigation"
+import { useRouter } from "next/navigation"
+import { useSearchParams } from "@/hooks/use-search-params"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import * as z from "zod"
@@ -41,7 +42,7 @@ export default function ResendVerificationPage() {
   })
 
   // Se vier da página de registro, já preenche o email
-  const emailFromRegister = searchParams?.get("email") ?? null
+  const emailFromRegister = searchParams.get("email")
   if (emailFromRegister) {
     setValue("email", emailFromRegister)
   }

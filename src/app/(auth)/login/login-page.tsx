@@ -1,15 +1,15 @@
 "use client"
 
 import { LoginForm } from "@/components/auth/login-form"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams } from "@/hooks/use-search-params"
 import { useToast } from "@/components/ui/use-toast"
 import { useEffect } from "react"
 
 export function LoginPage() {
   const searchParams = useSearchParams()
   const { toast } = useToast()
-  const verified = searchParams?.get("verified") ?? null
-  const error = searchParams?.get("error") ?? null
+  const verified = searchParams.get("verified")
+  const error = searchParams.get("error")
 
   useEffect(() => {
     if (verified === "true") {
