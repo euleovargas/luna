@@ -2,10 +2,11 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { CustomSession } from "@/types";
 
 export async function PUT(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as CustomSession;
     console.log("[USER_PROFILE_UPDATE] Session:", JSON.stringify(session, null, 2));
 
     if (!session?.user?.id) {
@@ -73,7 +74,7 @@ export async function PUT(req: Request) {
 
 export async function DELETE(req: Request) {
   try {
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as CustomSession;
     console.log("[USER_PROFILE_DELETE] Session:", JSON.stringify(session, null, 2));
 
     if (!session?.user?.id) {
