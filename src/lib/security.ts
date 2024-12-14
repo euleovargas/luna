@@ -74,7 +74,7 @@ export async function blockIP(ip: string, reason: string, permanent: boolean = f
       data: {
         ip,
         reason,
-        isPermament: permanent,
+        isPermanent: permanent,
         expiresAt: permanent ? null : new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 horas se não for permanente
       },
     })
@@ -90,7 +90,7 @@ export async function checkBlockedIP(ip: string): Promise<boolean> {
       where: {
         ip,
         OR: [
-          { isPermament: true },
+          { isPermanent: true },
           { expiresAt: { gt: new Date() } },
         ],
       },
