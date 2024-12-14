@@ -25,6 +25,11 @@ const sentryWebpackPluginOptions = {
   silent: true,
   org: "modernodev",
   project: "luna",
+
+  // Configurações para otimizar o build
+  hideSourceMaps: true, // Esconde os source maps em produção
+  disableServerWebpackPlugin: true, // Desabilita o plugin no servidor
+  disableClientWebpackPlugin: true, // Desabilita o plugin no cliente
 }
 
 module.exports = withSentryConfig(nextConfig, sentryWebpackPluginOptions)
