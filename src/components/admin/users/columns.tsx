@@ -50,7 +50,7 @@ export type User = {
 
 interface DataTableRowActionsProps {
   user: User
-  onDelete: () => Promise<void>
+  onDelete?: () => Promise<void>
 }
 
 export function DataTableRowActions({ user, onDelete }: DataTableRowActionsProps) {
@@ -62,6 +62,9 @@ export function DataTableRowActions({ user, onDelete }: DataTableRowActionsProps
   const handleDelete = async () => {
     try {
       setIsDeleting(true)
+      if (onDelete) {
+        await onDelete()
+      }
       const response = await fetch(`/api/admin/users/${user.id}`, {
         method: "DELETE",
       })
@@ -70,8 +73,6 @@ export function DataTableRowActions({ user, onDelete }: DataTableRowActionsProps
         throw new Error("Failed to delete user")
       }
 
-      await onDelete()
-      
       toast({
         title: "Usuário deletado",
         description: "O usuário foi deletado com sucesso.",
@@ -175,7 +176,7 @@ export function DataTableRowActions({ user, onDelete }: DataTableRowActionsProps
 
 declare module '@tanstack/table-core' {
   interface TableMeta<TData extends unknown> {
-    deleteUser: (userId: string) => void
+    deleteUser: (userId: string) => Promise<void>
   }
 }
 
