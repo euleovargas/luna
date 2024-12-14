@@ -1,15 +1,18 @@
-import { getServerSession } from "next-auth/next"
-import { redirect } from "next/navigation"
-import { authOptions } from "@/lib/auth"
+"use client"
+
+import { Suspense } from "react"
+import AuthLoading from "./loading"
 
 export default function AuthLayout({
   children,
 }: {
-  children: React.ReactNode;
+  children: React.ReactNode
 }) {
   return (
-    <div className="min-h-screen flex items-center justify-center bg-background">
-      {children}
-    </div>
-  );
+    <Suspense fallback={<AuthLoading />}>
+      <div className="min-h-screen flex items-center justify-center bg-background">
+        {children}
+      </div>
+    </Suspense>
+  )
 }

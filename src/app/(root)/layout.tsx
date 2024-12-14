@@ -1,7 +1,9 @@
 'use client';
 
-import { useSession } from 'next-auth/react';
+import { Suspense } from "react";
+import { useSession } from "next-auth/react";
 import { Navbar } from "@/components/layout/Navbar";
+import RootLoading from "./loading";
 
 export default function RootLayout({
   children,
@@ -22,9 +24,11 @@ export default function RootLayout({
       ];
 
   return (
-    <div className="relative flex min-h-screen flex-col">
-      <Navbar menuItems={menuItems} />
-      <main className="flex-1">{children}</main>
-    </div>
+    <>
+      <Navbar menuItems={menuItems} user={session?.user} />
+      <Suspense fallback={<RootLoading />}>
+        <main className="flex-1">{children}</main>
+      </Suspense>
+    </>
   );
 }

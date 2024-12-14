@@ -4,7 +4,7 @@ import { Metadata } from 'next'
 import { ThemeProvider } from '@/components/providers/theme-provider'
 import { NextAuthProvider } from '@/components/providers/session-provider'
 import { Toaster } from "@/components/ui/toaster"
-import { RouteProgress } from "@/components/ui/route-progress"
+import { Suspense } from "react"
 
 const inter = Inter({ subsets: ['latin'] })
 
@@ -39,8 +39,9 @@ export default function RootLayout({
           disableTransitionOnChange
         >
           <NextAuthProvider>
-            <RouteProgress />
-            {children}
+            <Suspense>
+              {children}
+            </Suspense>
             <Toaster />
           </NextAuthProvider>
         </ThemeProvider>
