@@ -2,7 +2,7 @@
 
 import { useEffect } from "react";
 import { useSession, signIn } from "next-auth/react";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams } from "@/hooks/use-search-params";
 import { useToast } from "@/components/ui/use-toast";
 
 export function DashboardClient() {

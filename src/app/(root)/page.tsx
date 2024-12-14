@@ -5,7 +5,7 @@ import * as Sentry from "@sentry/nextjs";
 import { useEffect } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
-import { useSearchParams } from "next/navigation";
+import { useSearchParams } from "@/hooks/use-search-params";
 import { useToast } from "@/components/ui/use-toast";
 
 export default function Home() {

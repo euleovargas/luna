@@ -21,7 +21,7 @@ import {
   CardTitle,
 } from "@/components/ui/card"
 import { useToast } from "@/components/ui/use-toast"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams } from "@/hooks/use-search-params"
 import { Checkbox } from "@/components/ui/checkbox"
 
 const loginSchema = z.object({
