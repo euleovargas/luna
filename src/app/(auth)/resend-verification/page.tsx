@@ -41,7 +41,7 @@ export default function ResendVerificationPage() {
   })
 
   // Se vier da página de registro, já preenche o email
-  const emailFromRegister = searchParams.get("email")
+  const emailFromRegister = searchParams?.get("email") ?? null
   if (emailFromRegister) {
     setValue("email", emailFromRegister)
   }
