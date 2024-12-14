@@ -109,7 +109,7 @@ export function UserList({ users }: UserListProps) {
                     <DropdownMenuItem
                       onClick={() => router.push(`/admin/users/${user.id}`)}
                     >
-                      <Icons.view className="mr-2 h-4 w-4" />
+                      <Icons.eye className="mr-2 h-4 w-4" />
                       Ver detalhes
                     </DropdownMenuItem>
                     <DropdownMenuItem
