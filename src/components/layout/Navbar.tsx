@@ -6,10 +6,11 @@ import { User } from 'next-auth';
 
 interface NavbarProps {
   user?: User | null;
+  menuItems?: { href: string; title: string; }[];
 }
 
-export default function Navbar({ user }: NavbarProps) {
-  const menuItems = user?.role === 'ADMIN' 
+export default function Navbar({ user, menuItems: propMenuItems }: NavbarProps) {
+  const defaultMenuItems = user?.role === 'ADMIN' 
     ? [
         { href: "/dashboard", title: "Dashboard" },
         { href: "/admin/users", title: "Usuários" },
@@ -19,6 +20,8 @@ export default function Navbar({ user }: NavbarProps) {
         { href: "/dashboard", title: "Dashboard" },
         { href: "/profile", title: "Perfil" }
       ];
+  
+  const menuItems = propMenuItems || defaultMenuItems;
 
   return (
     <MainHeader menuItems={menuItems}>
