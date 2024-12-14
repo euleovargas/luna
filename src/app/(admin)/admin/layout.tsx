@@ -4,13 +4,15 @@ import { WithRole } from "@/components/auth/with-role"
 import { UserRole } from "@prisma/client"
 import Navbar from "@/components/layout/Navbar"
 import { useSession } from "next-auth/react"
+import { CustomSession } from "@/types"
 
 export default function AdminLayout({
   children,
 }: {
   children: React.ReactNode
 }) {
-  const { data: session } = useSession()
+  const { data: sessionData } = useSession()
+  const session = sessionData as CustomSession
 
   const menuItems = [
     { href: "/dashboard", title: "Dashboard" },

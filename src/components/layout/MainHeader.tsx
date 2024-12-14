@@ -4,6 +4,7 @@ import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
 import { useSession, signOut } from "next-auth/react"
+import { CustomSession } from "@/types"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
@@ -87,7 +88,8 @@ MainHeader.Actions = function MainHeaderActions({ children }: MainHeaderActionsP
 }
 
 MainHeader.User = function MainHeaderUser() {
-  const { data: session } = useSession()
+  const { data: sessionData } = useSession()
+  const session = sessionData as CustomSession
 
   if (!session?.user) {
     return null

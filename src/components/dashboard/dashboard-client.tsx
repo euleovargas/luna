@@ -4,9 +4,11 @@ import { useEffect } from "react";
 import { useSession, signIn } from "next-auth/react";
 import { useSearchParams } from "@/hooks/use-search-params";
 import { useToast } from "@/components/ui/use-toast";
+import { CustomSession } from "@/types";
 
 export function DashboardClient() {
-  const { data: session } = useSession();
+  const { data: sessionData } = useSession();
+  const session = sessionData as CustomSession;
   const searchParams = useSearchParams();
   const { toast } = useToast();
 

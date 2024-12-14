@@ -4,13 +4,15 @@ import { Suspense } from "react";
 import { useSession } from "next-auth/react";
 import Navbar from "@/components/layout/Navbar";
 import RootLoading from "./loading";
+import { CustomSession } from "@/types";
 
 export default function RootLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
-  const { data: session } = useSession();
+  const { data: sessionData } = useSession();
+  const session = sessionData as CustomSession;
 
   return (
     <>

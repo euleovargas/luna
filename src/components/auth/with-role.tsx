@@ -4,6 +4,7 @@ import { useSession } from "next-auth/react"
 import { useRouter } from "next/navigation"
 import { UserRole } from "@prisma/client"
 import { Icons } from "@/components/ui/icons"
+import { CustomSession } from "@/types"
 
 interface WithRoleProps {
   children: React.ReactNode
@@ -11,7 +12,8 @@ interface WithRoleProps {
 }
 
 export function WithRole({ children, allowedRoles }: WithRoleProps) {
-  const { data: session, status } = useSession()
+  const { data: sessionData, status } = useSession()
+  const session = sessionData as CustomSession
   const router = useRouter()
 
   // Enquanto verifica a sessão, mostra loading

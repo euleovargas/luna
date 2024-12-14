@@ -6,9 +6,11 @@ import { useRouter } from "next/navigation"
 import Link from "next/link"
 import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/ui/icons"
+import { CustomSession } from "@/types"
 
 export default function AccountDeletedPage() {
-  const { data: session } = useSession()
+  const { data: sessionData } = useSession()
+  const session = sessionData as CustomSession
   const router = useRouter()
 
   useEffect(() => {

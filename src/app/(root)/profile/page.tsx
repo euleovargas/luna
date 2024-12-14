@@ -23,10 +23,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
+import { CustomSession } from "@/types"
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { data: session, update } = useSession()
+  const { data: sessionData, update } = useSession()
+  const session = sessionData as CustomSession
   const [name, setName] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
