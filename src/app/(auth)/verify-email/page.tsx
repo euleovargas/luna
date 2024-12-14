@@ -6,7 +6,7 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Icons } from "@/components/ui/icons"
 import { useToast } from "@/components/ui/use-toast"
 import Link from "next/link"
-import { useSearchParams } from "next/navigation"
+import { useSearchParams } from "@/hooks/use-search-params"
 
 export default function VerifyEmailPage() {
   const searchParams = useSearchParams()
