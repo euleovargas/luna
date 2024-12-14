@@ -2,11 +2,12 @@ import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 import { createUser, getUsers } from "@/lib/api/users"
+import { CustomSession } from "@/types"
 
 // GET /api/admin/users - Lista todos os usuários
 export async function GET() {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions) as CustomSession
 
     if (!session?.user || session.user.role !== "ADMIN") {
       return new NextResponse("Unauthorized", { status: 403 })
@@ -23,7 +24,7 @@ export async function GET() {
 // POST /api/admin/users - Cria um novo usuário
 export async function POST(req: Request) {
   try {
-    const session = await getServerSession(authOptions)
+    const session = await getServerSession(authOptions) as CustomSession
 
     if (!session?.user || session.user.role !== "ADMIN") {
       return new NextResponse("Unauthorized", { status: 403 })

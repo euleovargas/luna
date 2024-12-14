@@ -6,7 +6,7 @@ import { CustomSession } from "@/types";
 const f = createUploadthing();
 
 const handleAuth = async () => {
-  const session = await getServerSession(authOptions);
+  const session = await getServerSession(authOptions) as CustomSession;
   if (!session) throw new Error("Unauthorized");
   return session;
 };
@@ -16,7 +16,7 @@ export const ourFileRouter = {
     image: { maxFileSize: "4MB", maxFileCount: 1 }
   })
     .middleware(async () => {
-      const session = await handleAuth() as CustomSession;
+      const session = await handleAuth();
       return { userId: session.user.id };
     })
     .onUploadComplete(async ({ metadata, file }) => {

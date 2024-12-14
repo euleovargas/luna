@@ -2,6 +2,7 @@ import { Metadata } from "next"
 import { getServerSession } from "next-auth"
 import { redirect } from "next/navigation"
 import { authOptions } from "@/lib/auth"
+import { CustomSession } from "@/types"
 
 export const metadata: Metadata = {
   title: "Dashboard | Luna",
@@ -9,7 +10,7 @@ export const metadata: Metadata = {
 }
 
 export default async function DashboardPage() {
-  const session = await getServerSession(authOptions)
+  const session = await getServerSession(authOptions) as CustomSession
 
   if (!session) {
     redirect("/login")
