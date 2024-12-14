@@ -173,7 +173,11 @@ export function DataTableRowActions({ user, onDelete }: DataTableRowActionsProps
   )
 }
 
-export const columns: ColumnDef<User>[] = [
+interface TableMeta {
+  deleteUser: (userId: string) => void
+}
+
+export const columns: ColumnDef<User, TableMeta>[] = [
   {
     id: "select",
     header: ({ table }) => (
