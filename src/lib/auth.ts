@@ -153,10 +153,8 @@ export const authOptions: NextAuthOptions = {
       return {
         ...session,
         user: {
-          id: token.sub as string,
-          name: session.user.name,
-          email: session.user.email,
-          image: session.user.image,
+          ...session.user,
+          id: token.sub,
           role: token.role as UserRole,
         },
       };
