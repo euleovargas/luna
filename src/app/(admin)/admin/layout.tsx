@@ -2,7 +2,7 @@
 
 import { WithRole } from "@/components/auth/with-role"
 import { UserRole } from "@prisma/client"
-import { Navbar } from "@/components/layout/Navbar"
+import Navbar from "@/components/layout/Navbar"
 import { useSession } from "next-auth/react"
 
 export default function AdminLayout({

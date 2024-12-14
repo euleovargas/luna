@@ -43,7 +43,10 @@ export const loginLimiter = isDevelopment
       legacyHeaders: false,
     })
 
-export function withRateLimit(handler: Function, limiterType: 'register' | 'email' | 'login' = 'login') {
+export function withRateLimit(
+  handler: (req: Request) => Promise<Response>,
+  limiterType: 'register' | 'email' | 'login' = 'login'
+) {
   // Em desenvolvimento, retorna o handler direto sem rate limit
   if (isDevelopment) {
     return handler
