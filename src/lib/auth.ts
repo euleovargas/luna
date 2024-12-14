@@ -7,6 +7,7 @@ import bcrypt from "bcryptjs"
 import { UserRole } from "@prisma/client"
 import { Adapter } from "next-auth/adapters"
 import { verifyJwt } from "./jwt"
+import { User } from "next-auth"
 
 const prismaAdapter = PrismaAdapter(db) as Adapter
 
@@ -30,7 +31,7 @@ export const authOptions: NextAuthOptions = {
           response_type: "code"
         },
       },
-      async profile(profile) {
+      async profile(profile: any): Promise<User> {
         return {
           id: profile.sub,
           name: profile.name,
@@ -120,48 +121,51 @@ export const authOptions: NextAuthOptions = {
   callbacks: {
     async signIn({ user, account, profile }) {
       if (account?.provider === "google") {
+        if (!user.email) {
+          return false
+        }
+
         try {
-          const existingUser = await db.user.findUnique({
-            where: { email: user.email! },
+          const userExists = await db.user.findUnique({
+            where: {
+              email: user.email,
+            },
           })
 
-          if (!existingUser) {
+          if (!userExists) {
             await db.user.create({
               data: {
-                email: user.email!,
-                name: user.name!,
+                email: user.email,
+                name: user.name,
                 image: user.image,
-                emailVerified: new Date(),
-              },
-            })
-          } else {
-            await db.user.update({
-              where: { id: existingUser.id },
-              data: {
-                name: user.name ?? undefined,
-                image: user.image ?? undefined,
+                role: UserRole.USER,
               },
             })
           }
+
+          return true
         } catch (error) {
-          console.error("[GOOGLE_SIGNIN_ERROR]", error)
+          console.error("Error checking if user exists: ", error)
           return false
         }
       }
+
       return true
     },
     async session({ session, token }) {
-      return {
-        ...session,
-        user: {
-          ...session.user,
-          id: token.sub,
-          role: token.role as UserRole,
-        },
-      };
+      if (token) {
+        session.user.id = token.id
+        session.user.name = token.name
+        session.user.email = token.email
+        session.user.image = token.picture
+        session.user.role = token.role as UserRole
+      }
+
+      return session
     },
     async jwt({ token, user }) {
       if (user) {
+        token.id = user.id
         token.role = user.role
       }
       return token
