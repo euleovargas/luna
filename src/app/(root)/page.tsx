@@ -7,18 +7,8 @@ import { useSession, signIn } from "next-auth/react";
 import { Button } from "@/components/ui/button";
 import { useSearchParams } from "@/hooks/use-search-params";
 import { useToast } from "@/components/ui/use-toast";
+import { CustomSession } from "@/types";
 import { UserRole } from "@prisma/client"
-
-interface CustomSession {
-  user: {
-    id: string
-    name?: string | null
-    email?: string | null
-    image?: string | null
-    role: UserRole
-  }
-  expires: string
-}
 
 export default function Home() {
   const { data: sessionData } = useSession();

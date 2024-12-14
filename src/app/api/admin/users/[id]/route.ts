@@ -4,6 +4,13 @@ import { z } from "zod";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { UserRole } from "@prisma/client";
+import { CustomSession } from "@/types";
+
+interface RouteContextSchema {
+  params: {
+    id: string
+  }
+}
 
 const routeContextSchema = z.object({
   params: z.object({
@@ -20,7 +27,7 @@ const userUpdateSchema = z.object({
 export async function PUT(req: Request, context: z.infer<typeof routeContextSchema>) {
   try {
     // Verificar autenticação
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as CustomSession;
 
     if (!session?.user || session.user.role !== UserRole.ADMIN) {
       return new NextResponse("Unauthorized", { status: 401 });
@@ -87,7 +94,7 @@ export async function PUT(req: Request, context: z.infer<typeof routeContextSche
 export async function DELETE(req: Request, context: z.infer<typeof routeContextSchema>) {
   try {
     // Verificar autenticação
-    const session = await getServerSession(authOptions);
+    const session = await getServerSession(authOptions) as CustomSession;
 
     if (!session?.user || session.user.role !== UserRole.ADMIN) {
       return new NextResponse("Unauthorized", { status: 401 });
