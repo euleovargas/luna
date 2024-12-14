@@ -8,10 +8,6 @@ declare module "next-auth" {
       role: UserRole;
     } & DefaultSession["user"];
   }
-
-  interface User {
-    role: UserRole;
-  }
 }
 
 // Tipo para formulário de login
