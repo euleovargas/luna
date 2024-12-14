@@ -150,28 +150,16 @@ export const authOptions: NextAuthOptions = {
       return true
     },
     async session({ session, token }) {
-      if (session.user) {
-        // Busca os dados mais recentes do usuário no banco
-        const user = await db.user.findUnique({
-          where: { id: token.sub as string },
-          select: {
-            id: true,
-            name: true,
-            email: true,
-            image: true,
-            role: true,
-          }
-        });
-
-        if (user) {
-          session.user.id = user.id;
-          session.user.name = user.name;
-          session.user.email = user.email;
-          session.user.image = user.image;
-          session.user.role = user.role;
-        }
-      }
-      return session;
+      return {
+        ...session,
+        user: {
+          id: token.sub as string,
+          name: session.user.name,
+          email: session.user.email,
+          image: session.user.image,
+          role: token.role as UserRole,
+        },
+      };
     },
     async jwt({ token, user }) {
       if (user) {
