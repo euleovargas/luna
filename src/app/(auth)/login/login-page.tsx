@@ -8,8 +8,8 @@ import { useEffect } from "react"
 export function LoginPage() {
   const searchParams = useSearchParams()
   const { toast } = useToast()
-  const verified = searchParams.get("verified")
-  const error = searchParams.get("error")
+  const verified = searchParams?.get("verified") ?? null
+  const error = searchParams?.get("error") ?? null
 
   useEffect(() => {
     if (verified === "true") {
