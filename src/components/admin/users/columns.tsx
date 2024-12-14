@@ -1,6 +1,6 @@
 "use client"
 
-import { ColumnDef } from "@tanstack/react-table"
+import { ColumnDef, Table } from "@tanstack/react-table"
 import { UserRole } from "@prisma/client"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { Badge } from "@/components/ui/badge"
@@ -173,11 +173,13 @@ export function DataTableRowActions({ user, onDelete }: DataTableRowActionsProps
   )
 }
 
-interface TableMeta {
-  deleteUser: (userId: string) => void
+declare module '@tanstack/table-core' {
+  interface TableMeta<TData extends unknown> {
+    deleteUser: (userId: string) => void
+  }
 }
 
-export const columns: ColumnDef<User, TableMeta>[] = [
+export const columns: ColumnDef<User>[] = [
   {
     id: "select",
     header: ({ table }) => (
