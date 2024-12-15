@@ -1,6 +1,5 @@
-const { PrismaClient, UserRole } = require('@prisma/client')
-
-const prisma = new PrismaClient()
+import { UserRole } from '@prisma/client'
+import prisma from '@/lib/prisma'
 
 async function main() {
   const email = 'eu.leovargas@gmail.com'
