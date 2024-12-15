@@ -4,28 +4,58 @@ import { db } from "@/lib/db"
 import { generateVerificationToken } from "@/lib/tokens"
 import { sendVerificationEmail } from "@/lib/mail"
 import { z } from "zod"
-import { withRateLimit } from "@/lib/rate-limit"
-import { logSecurityEvent, SecurityEventType, SecuritySeverity } from "@/lib/security"
+
+export const dynamic = 'force-dynamic'
 
 const registerSchema = z.object({
   name: z
     .string()
-    .min(3, "O nome deve ter no mínimo 3 caracteres")
-    .regex(/^[A-Za-zÀ-ÖØ-öø-ÿ\s]*$/, "O nome deve conter apenas letras"),
-  email: z.string().email("Email inválido"),
+    .min(1, "Nome é obrigatório")
+    .max(100, "Nome muito longo"),
+  email: z
+    .string()
+    .email("Email inválido"),
   password: z
     .string()
-    .min(8, "A senha deve ter no mínimo 8 caracteres")
+    .min(6, "A senha deve ter no mínimo 6 caracteres")
     .regex(/[A-Z]/, "A senha deve conter pelo menos uma letra maiúscula")
-    .regex(/[a-z]/, "A senha deve conter pelo menos uma letra minúscula")
     .regex(/[0-9]/, "A senha deve conter pelo menos um número")
     .regex(/[^A-Za-z0-9]/, "A senha deve conter pelo menos um caractere especial"),
 })
 
-export const POST = withRateLimit(async (req: Request) => {
+// Cache para armazenar as últimas tentativas de registro
+const attempts = new Map<string, { count: number; timestamp: number }>()
+const MAX_ATTEMPTS = 5
+const WINDOW_MS = 60 * 1000 // 1 minuto
+
+export async function POST(req: Request) {
   try {
+    const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1"
+    
+    // Verifica o rate limit
+    const now = Date.now()
+    const userAttempts = attempts.get(ip)
+    
+    if (userAttempts) {
+      // Limpa tentativas antigas
+      if (now - userAttempts.timestamp > WINDOW_MS) {
+        attempts.delete(ip)
+      } else if (userAttempts.count >= MAX_ATTEMPTS) {
+        return NextResponse.json(
+          { error: "Muitas tentativas. Tente novamente mais tarde." },
+          { status: 429 }
+        )
+      }
+    }
+
     const json = await req.json()
     const body = registerSchema.parse(json)
+
+    // Incrementa o contador de tentativas
+    attempts.set(ip, {
+      count: (userAttempts?.count ?? 0) + 1,
+      timestamp: now
+    })
 
     // Verifica se já existe um usuário com este email
     const existingUser = await db.user.findUnique({
@@ -48,15 +78,6 @@ export const POST = withRateLimit(async (req: Request) => {
         })
       } else {
         // Conta não verificada ainda dentro das 24 horas
-        await logSecurityEvent(
-          SecurityEventType.REGISTER_ATTEMPT,
-          SecuritySeverity.MEDIUM,
-          {
-            email: body.email,
-            error: "unverified_account",
-          }
-        )
-
         return NextResponse.json(
           {
             error: "unverified_account",
@@ -67,15 +88,6 @@ export const POST = withRateLimit(async (req: Request) => {
       }
     } else if (existingUser && existingUser.emailVerified) {
       // Conta já existe e está verificada
-      await logSecurityEvent(
-        SecurityEventType.REGISTER_ATTEMPT,
-        SecuritySeverity.MEDIUM,
-        {
-          email: body.email,
-          error: "email_exists",
-        }
-      )
-
       return NextResponse.json(
         {
           error: "email_exists",
@@ -85,15 +97,16 @@ export const POST = withRateLimit(async (req: Request) => {
       )
     }
 
-    const hashedPassword = await hash(body.password, 12)
-    const verifyToken = generateVerificationToken()
+    const hashedPassword = await hash(body.password, 10)
+    const verificationToken = await generateVerificationToken()
 
     const user = await db.user.create({
       data: {
         name: body.name,
         email: body.email,
         password: hashedPassword,
-        verifyToken,
+        verifyToken: verificationToken,
+        verifyTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 horas
       },
       select: {
         id: true,
@@ -103,44 +116,25 @@ export const POST = withRateLimit(async (req: Request) => {
     })
 
     // Envia email de verificação
-    await sendVerificationEmail(body.email, verifyToken)
-
-    // Log registro bem-sucedido
-    await logSecurityEvent(
-      SecurityEventType.REGISTER_ATTEMPT,
-      SecuritySeverity.LOW,
-      {
-        email: body.email,
-        success: true
-      }
+    await sendVerificationEmail(
+      verificationToken,
+      body.email
     )
 
-    return NextResponse.json(
-      { message: "Usuário criado com sucesso", user },
-      { status: 201 }
-    )
+    return NextResponse.json({
+      message: "Usuário criado com sucesso",
+      user: {
+        name: user.name,
+        email: user.email,
+      },
+    },
+    { status: 201 })
+
   } catch (error) {
-    // Log erro no registro
-    await logSecurityEvent(
-      SecurityEventType.REGISTER_ATTEMPT,
-      SecuritySeverity.HIGH,
-      {
-        error: error instanceof Error ? error.message : "Unknown error",
-        stack: error instanceof Error ? error.stack : undefined
-      }
-    )
-
-    if (error instanceof z.ZodError) {
-      return NextResponse.json(
-        { message: "Dados inválidos", errors: error.errors },
-        { status: 400 }
-      )
-    }
-
     console.error("[REGISTER_ERROR]", error)
     return NextResponse.json(
-      { message: "Algo deu errado ao criar sua conta" },
+      { error: "Erro ao registrar usuário" },
       { status: 500 }
     )
   }
-}, 'register')
+}
