@@ -134,9 +134,9 @@ export const authOptions: NextAuthOptions = {
           if (!userExists) {
             await db.user.create({
               data: {
-                email: user.email,
-                name: user.name,
-                image: user.image,
+                email: user.email ?? '',
+                name: user.name ?? 'User',
+                image: user.image ?? '',
                 role: UserRole.USER,
               },
             })
