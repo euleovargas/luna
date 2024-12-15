@@ -50,18 +50,26 @@ export async function POST(req: Request) {
         verifyToken: verificationToken,
         lastEmailSent: new Date(),
       },
+      select: {
+        id: true,
+        email: true,
+        name: true,
+        verifyToken: true,
+      },
     })
 
     // Envia email de verificação
     await sendVerificationEmail(
-      verificationToken,
-      body.email
+      user.email,
+      user.name,
+      user.verifyToken as string
     )
 
     return NextResponse.json({
       user: {
-        name: user.name,
+        id: user.id,
         email: user.email,
+        name: user.name,
       },
     })
 
