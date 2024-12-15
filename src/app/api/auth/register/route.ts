@@ -61,7 +61,6 @@ export async function POST(req: Request) {
     // Envia email de verificação
     await sendVerificationEmail(
       user.email,
-      user.name,
       user.verifyToken as string
     )
 
