@@ -6,6 +6,7 @@ import { sendVerificationEmail } from "@/lib/mail"
 import { z } from "zod"
 
 export const dynamic = 'force-dynamic'
+export const maxDuration = 300 // 5 minutos em segundos
 
 const registerSchema = z.object({
   name: z
@@ -25,23 +26,28 @@ const registerSchema = z.object({
 
 export async function POST(req: Request) {
   try {
+    console.log("[REGISTER] Iniciando registro...")
     const json = await req.json()
     const body = registerSchema.parse(json)
 
+    console.log("[REGISTER] Verificando usuário existente...")
     const existingUser = await db.user.findUnique({
       where: { email: body.email },
     })
 
     if (existingUser) {
+      console.log("[REGISTER] Email já cadastrado:", body.email)
       return NextResponse.json(
         { error: "Email já cadastrado" },
         { status: 400 }
       )
     }
 
+    console.log("[REGISTER] Gerando hash da senha...")
     const hashedPassword = await hash(body.password, 10)
     const verificationToken = await generateVerificationToken()
 
+    console.log("[REGISTER] Criando usuário...")
     const user = await db.user.create({
       data: {
         name: body.name,
@@ -58,12 +64,14 @@ export async function POST(req: Request) {
       },
     })
 
-    // Envia email de verificação
-    await sendVerificationEmail(
-      user.email,
-      user.verifyToken as string
-    )
+    // Envia email de verificação em background
+    console.log("[REGISTER] Enviando email de verificação...")
+    sendVerificationEmail(user.email, user.verifyToken as string)
+      .catch(error => {
+        console.error("[REGISTER] Erro ao enviar email:", error)
+      })
 
+    console.log("[REGISTER] Registro concluído com sucesso!")
     return NextResponse.json({
       user: {
         id: user.id,
