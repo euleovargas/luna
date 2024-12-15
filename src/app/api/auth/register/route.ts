@@ -23,76 +23,18 @@ const registerSchema = z.object({
     .regex(/[^A-Za-z0-9]/, "A senha deve conter pelo menos um caractere especial"),
 })
 
-// Cache para armazenar as últimas tentativas de registro
-const attempts = new Map<string, { count: number; timestamp: number }>()
-const MAX_ATTEMPTS = 5
-const WINDOW_MS = 60 * 1000 // 1 minuto
-
 export async function POST(req: Request) {
   try {
-    const ip = req.headers.get("x-forwarded-for") ?? "127.0.0.1"
-    
-    // Verifica o rate limit
-    const now = Date.now()
-    const userAttempts = attempts.get(ip)
-    
-    if (userAttempts) {
-      // Limpa tentativas antigas
-      if (now - userAttempts.timestamp > WINDOW_MS) {
-        attempts.delete(ip)
-      } else if (userAttempts.count >= MAX_ATTEMPTS) {
-        return NextResponse.json(
-          { error: "Muitas tentativas. Tente novamente mais tarde." },
-          { status: 429 }
-        )
-      }
-    }
-
     const json = await req.json()
     const body = registerSchema.parse(json)
 
-    // Incrementa o contador de tentativas
-    attempts.set(ip, {
-      count: (userAttempts?.count ?? 0) + 1,
-      timestamp: now
-    })
-
-    // Verifica se já existe um usuário com este email
     const existingUser = await db.user.findUnique({
       where: { email: body.email },
-      select: {
-        id: true,
-        emailVerified: true,
-        verifyToken: true,
-        createdAt: true,
-      },
     })
 
-    // Se existir um usuário não verificado há mais de 24 horas, deletamos para permitir novo registro
-    if (existingUser && !existingUser.emailVerified) {
-      const twentyFourHoursAgo = new Date(Date.now() - 24 * 60 * 60 * 1000)
-      
-      if (existingUser.createdAt < twentyFourHoursAgo) {
-        await db.user.delete({
-          where: { id: existingUser.id }
-        })
-      } else {
-        // Conta não verificada ainda dentro das 24 horas
-        return NextResponse.json(
-          {
-            error: "unverified_account",
-            message: "Já existe uma conta não verificada com este email. Verifique sua caixa de entrada ou solicite um novo email de verificação.",
-          },
-          { status: 400 }
-        )
-      }
-    } else if (existingUser && existingUser.emailVerified) {
-      // Conta já existe e está verificada
+    if (existingUser) {
       return NextResponse.json(
-        {
-          error: "email_exists",
-          message: "Este email já está em uso.",
-        },
+        { error: "Email já cadastrado" },
         { status: 400 }
       )
     }
@@ -106,12 +48,6 @@ export async function POST(req: Request) {
         email: body.email,
         password: hashedPassword,
         verifyToken: verificationToken,
-        verifyTokenExpiry: new Date(Date.now() + 24 * 60 * 60 * 1000), // 24 horas
-      },
-      select: {
-        id: true,
-        name: true,
-        email: true,
       },
     })
 
@@ -122,13 +58,11 @@ export async function POST(req: Request) {
     )
 
     return NextResponse.json({
-      message: "Usuário criado com sucesso",
       user: {
         name: user.name,
         email: user.email,
       },
-    },
-    { status: 201 })
+    })
 
   } catch (error) {
     console.error("[REGISTER_ERROR]", error)
