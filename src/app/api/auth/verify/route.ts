@@ -1,10 +1,11 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
-export async function GET(request: Request) {
+export const dynamic = 'force-dynamic';
+
+export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    const token = searchParams.get("token");
+    const token = request.nextUrl.searchParams.get("token");
 
     if (!token) {
       const loginUrl = new URL("/login", process.env.NEXTAUTH_URL);
@@ -19,35 +20,41 @@ export async function GET(request: Request) {
         id: true,
         email: true,
         name: true,
-        emailVerified: true,
+        verifyToken: true,
+        verifyTokenExpiry: true,
       },
     });
 
-    // Se o token não existir ou o email já estiver verificado
-    if (!user || user.emailVerified) {
+    if (!user) {
       const loginUrl = new URL("/login", process.env.NEXTAUTH_URL);
       loginUrl.searchParams.set("error", "invalid_token");
       return NextResponse.redirect(loginUrl.toString());
     }
 
-    // Atualiza o usuário como verificado
+    if (!user.verifyTokenExpiry || user.verifyTokenExpiry < new Date()) {
+      const loginUrl = new URL("/login", process.env.NEXTAUTH_URL);
+      loginUrl.searchParams.set("error", "token_expired");
+      return NextResponse.redirect(loginUrl.toString());
+    }
+
+    // Atualiza o usuário
     await db.user.update({
       where: { id: user.id },
       data: {
         emailVerified: new Date(),
-        verifyToken: null, // Remove o token após a verificação
+        verifyToken: null,
+        verifyTokenExpiry: null,
       },
     });
 
-    // Redireciona para a página de login com o parâmetro verified
+    // Redireciona para a página de login com sucesso
     const loginUrl = new URL("/login", process.env.NEXTAUTH_URL);
-    loginUrl.searchParams.set("verified", "true");
-    
+    loginUrl.searchParams.set("success", "email_verified");
     return NextResponse.redirect(loginUrl.toString());
   } catch (error) {
-    console.error("[VERIFY_ERROR]", error);
+    console.error("[VERIFY_EMAIL]", error);
     const loginUrl = new URL("/login", process.env.NEXTAUTH_URL);
-    loginUrl.searchParams.set("error", "server_error");
+    loginUrl.searchParams.set("error", "unknown");
     return NextResponse.redirect(loginUrl.toString());
   }
 }
