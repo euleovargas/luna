@@ -21,7 +21,7 @@ export async function GET(request: NextRequest) {
         email: true,
         name: true,
         verifyToken: true,
-        verifyTokenExpiry: true,
+        lastEmailSent: true,
       },
     });
 
@@ -31,7 +31,9 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(loginUrl.toString());
     }
 
-    if (!user.verifyTokenExpiry || user.verifyTokenExpiry < new Date()) {
+    // Verifica se o token não expirou (24 horas)
+    const tokenAge = user.lastEmailSent ? Date.now() - user.lastEmailSent.getTime() : Infinity;
+    if (tokenAge > 24 * 60 * 60 * 1000) { // 24 horas em milissegundos
       const loginUrl = new URL("/login", process.env.NEXTAUTH_URL);
       loginUrl.searchParams.set("error", "token_expired");
       return NextResponse.redirect(loginUrl.toString());
@@ -43,7 +45,7 @@ export async function GET(request: NextRequest) {
       data: {
         emailVerified: new Date(),
         verifyToken: null,
-        verifyTokenExpiry: null,
+        lastEmailSent: null,
       },
     });
 
