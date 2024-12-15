@@ -48,6 +48,7 @@ export async function POST(req: Request) {
         email: body.email,
         password: hashedPassword,
         verifyToken: verificationToken,
+        lastEmailSent: new Date(),
       },
     })
 
