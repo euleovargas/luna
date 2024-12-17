@@ -49,6 +49,22 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(loginUrl.toString());
     }
 
+    // Verifica se o token é o mais recente
+    const latestUser = await db.user.findUnique({
+      where: { id: user.id },
+      select: { 
+        verifyToken: true,
+        lastEmailSent: true
+      }
+    })
+
+    if (!latestUser || latestUser.verifyToken !== token) {
+      console.log('[VERIFY_EMAIL] Token não é o mais recente')
+      const loginUrl = new URL("/login", APP_URL);
+      loginUrl.searchParams.set("error", "invalid_token");
+      return NextResponse.redirect(loginUrl.toString());
+    }
+
     // Marca o email como verificado e limpa o token
     await db.user.update({
       where: { id: user.id },
