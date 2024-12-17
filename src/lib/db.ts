@@ -12,13 +12,21 @@ const prismaClientSingleton = () => {
         url: process.env.DATABASE_URL
       },
     },
-    // Aumenta o timeout do Prisma para 30s
-    engineConfig: {
-      connectionTimeout: 30000,
+  }).$extends({
+    query: {
+      $allOperations({ operation, model, args, query }) {
+        const start = performance.now()
+        return query(args).finally(() => {
+          const end = performance.now()
+          console.log(`${model}.${operation} took ${end - start}ms`)
+        })
+      },
     },
   })
 }
 
-export const db = globalThis.prisma ?? prismaClientSingleton()
+const prisma = globalThis.prisma ?? prismaClientSingleton()
 
-if (process.env.NODE_ENV !== 'production') globalThis.prisma = db
+export const db = prisma
+
+if (process.env.NODE_ENV !== "production") globalThis.prisma = prisma

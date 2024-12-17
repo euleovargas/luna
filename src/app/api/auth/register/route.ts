@@ -5,8 +5,8 @@ import { generateVerificationToken } from "@/lib/tokens"
 import { z } from "zod"
 import { Prisma } from "@prisma/client"
 
-export const maxDuration = 30 // 30 segundos
-export const dynamic = 'force-dynamic'
+export const runtime = 'nodejs' // Force Node.js runtime
+export const maxDuration = 60 // Aumenta para 60 segundos
 
 const registerSchema = z.object({
   name: z
@@ -24,14 +24,42 @@ const registerSchema = z.object({
     .regex(/[^A-Za-z0-9]/, "A senha deve conter pelo menos um caractere especial"),
 })
 
+// Função de retry para operações do Prisma
+async function withRetry<T>(
+  operation: () => Promise<T>,
+  maxRetries = 3,
+  delay = 1000
+): Promise<T> {
+  let lastError: any
+  
+  for (let i = 0; i < maxRetries; i++) {
+    try {
+      return await operation()
+    } catch (error) {
+      lastError = error
+      if (error instanceof Prisma.PrismaClientKnownRequestError) {
+        // Não tenta novamente se for erro de validação
+        if (error.code === 'P2002') throw error
+      }
+      // Espera antes de tentar novamente
+      await new Promise(resolve => setTimeout(resolve, delay * (i + 1)))
+    }
+  }
+  
+  throw lastError
+}
+
 export async function POST(req: Request) {
   try {
     const json = await req.json()
     const body = registerSchema.parse(json)
 
-    const existingUser = await db.user.findUnique({
-      where: { email: body.email },
-      select: { id: true }
+    // Verifica usuário existente com retry
+    const existingUser = await withRetry(async () => {
+      return db.user.findUnique({
+        where: { email: body.email },
+        select: { id: true }
+      })
     })
 
     if (existingUser) {
@@ -44,20 +72,23 @@ export async function POST(req: Request) {
     const hashedPassword = await hash(body.password, 10)
     const verificationToken = await generateVerificationToken()
 
-    const user = await db.user.create({
-      data: {
-        name: body.name,
-        email: body.email,
-        password: hashedPassword,
-        verifyToken: verificationToken,
-        lastEmailSent: new Date(),
-      },
-      select: {
-        id: true,
-        email: true,
-        name: true,
-        verifyToken: true,
-      },
+    // Cria usuário com retry
+    const user = await withRetry(async () => {
+      return db.user.create({
+        data: {
+          name: body.name,
+          email: body.email,
+          password: hashedPassword,
+          verifyToken: verificationToken,
+          lastEmailSent: new Date(),
+        },
+        select: {
+          id: true,
+          email: true,
+          name: true,
+          verifyToken: true,
+        },
+      })
     })
 
     // Envia email em uma rota separada para não bloquear o registro
