@@ -12,6 +12,8 @@ export const POST = withRateLimit(async (req: Request) => {
   try {
     const { email } = await req.json()
 
+    console.log('[RESEND_VERIFICATION] Iniciando reenvio:', { email })
+
     // Busca o usuário
     const user = await db.user.findUnique({
       where: { email },
@@ -21,6 +23,12 @@ export const POST = withRateLimit(async (req: Request) => {
         verifyToken: true,
         lastEmailSent: true,
       },
+    })
+
+    console.log('[RESEND_VERIFICATION] Usuário encontrado:', { 
+      found: !!user,
+      emailVerified: user?.emailVerified,
+      lastEmailSent: user?.lastEmailSent
     })
 
     // Se não existir usuário ou já estiver verificado
@@ -99,7 +107,14 @@ export const POST = withRateLimit(async (req: Request) => {
     })
 
     // Envia novo email
+    console.log('[RESEND_VERIFICATION] Enviando email com token:', { 
+      email, 
+      tokenLength: verifyToken.length 
+    })
+
     await sendVerificationEmail(email, verifyToken)
+
+    console.log('[RESEND_VERIFICATION] Email enviado com sucesso')
 
     await logSecurityEvent(
       SecurityEventType.REGISTER_ATTEMPT,
