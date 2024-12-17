@@ -1,9 +1,15 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
+import { verifyJwt } from "@/lib/jwt";
+import { z } from "zod";
 
-export const dynamic = 'force-dynamic';
+const verifyEmailSchema = z.object({
+  token: z.string(),
+});
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://luna-lemon.vercel.app';
+
+export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
@@ -19,57 +25,40 @@ export async function GET(request: NextRequest) {
     }
 
     // Busca o usuário pelo token
-    const user = await db.user.findUnique({
-      where: { verifyToken: token },
+    const user = await db.user.findFirst({
+      where: { 
+        verifyToken: token,
+        emailVerified: null // Garante que só verifica usuários não verificados
+      },
       select: {
         id: true,
         email: true,
-        name: true,
         verifyToken: true,
-        lastEmailSent: true,
       },
     });
 
     console.log('[VERIFY_EMAIL] Usuário encontrado:', { 
       found: !!user,
       email: user?.email,
-      lastEmailSent: user?.lastEmailSent
     })
 
-    if (!user) {
+    if (!user || !user.verifyToken || user.verifyToken !== token) {
+      console.log('[VERIFY_EMAIL] Token inválido ou expirado')
       const loginUrl = new URL("/login", APP_URL);
       loginUrl.searchParams.set("error", "invalid_token");
       return NextResponse.redirect(loginUrl.toString());
     }
 
-    // Verifica se o token não expirou (24 horas)
-    const tokenAge = user.lastEmailSent ? Date.now() - user.lastEmailSent.getTime() : Infinity;
-    if (tokenAge > 24 * 60 * 60 * 1000) { // 24 horas em milissegundos
-      console.log('[VERIFY_EMAIL] Token expirado:', { 
-        tokenAge,
-        maxAge: 24 * 60 * 60 * 1000
-      })
-      const loginUrl = new URL("/login", APP_URL);
-      loginUrl.searchParams.set("error", "token_expired");
-      return NextResponse.redirect(loginUrl.toString());
-    }
-
-    console.log('[VERIFY_EMAIL] Atualizando usuário:', { 
-      userId: user.id,
-      email: user.email
-    })
-
-    // Atualiza o usuário
+    // Marca o email como verificado e limpa o token
     await db.user.update({
       where: { id: user.id },
       data: {
         emailVerified: new Date(),
         verifyToken: null,
-        lastEmailSent: null,
       },
     });
 
-    console.log('[VERIFY_EMAIL] Usuário verificado com sucesso')
+    console.log('[VERIFY_EMAIL] Email verificado com sucesso:', { userId: user.id })
 
     // Redireciona para a página de login com sucesso
     const loginUrl = new URL("/login", APP_URL);
