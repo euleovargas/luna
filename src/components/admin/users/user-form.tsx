@@ -66,22 +66,33 @@ export function UserForm({ user, onSubmit }: UserFormProps) {
 
   async function handleSubmit(data: UserFormValues) {
     console.log("[USER_FORM] onSubmit called with data:", data)
-    startTransition(async () => {
-      try {
-        await onSubmit(data)
-        toast({
-          title: "Usuário salvo",
-          description: "As alterações foram salvas com sucesso.",
-        })
-      } catch (error) {
-        console.error("[USER_FORM]", error)
-        toast({
-          title: "Erro ao salvar usuário",
-          description: "Ocorreu um erro ao tentar salvar as alterações.",
-          variant: "destructive",
-        })
-      }
-    })
+    
+    try {
+      startTransition(() => {
+        onSubmit(data)
+          .then(() => {
+            toast({
+              title: "Usuário salvo",
+              description: "As alterações foram salvas com sucesso.",
+            })
+          })
+          .catch((error) => {
+            console.error("[USER_FORM]", error)
+            toast({
+              title: "Erro ao salvar usuário",
+              description: "Ocorreu um erro ao tentar salvar as alterações.",
+              variant: "destructive",
+            })
+          })
+      })
+    } catch (error) {
+      console.error("[USER_FORM]", error)
+      toast({
+        title: "Erro ao salvar usuário",
+        description: "Ocorreu um erro ao tentar salvar as alterações.",
+        variant: "destructive",
+      })
+    }
   }
 
   return (
