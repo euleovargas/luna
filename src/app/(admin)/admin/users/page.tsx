@@ -2,6 +2,7 @@ import { Metadata } from "next"
 import { getUsers } from "@/lib/api/users"
 import { DataTable } from "@/components/admin/users/data-table"
 import { columns } from "@/components/admin/users/columns"
+import { User } from "@/types/user"
 
 export const metadata: Metadata = {
   title: "Usuários",
@@ -12,7 +13,7 @@ export const dynamic = "force-dynamic"
 export const revalidate = 0
 
 export default async function UsersPage() {
-  const users = await getUsers()
+  const users = (await getUsers()) as User[]
 
   return (
     <div className="h-full flex-1 flex-col space-y-8 p-8 md:flex">

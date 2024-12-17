@@ -37,6 +37,7 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useSession } from "next-auth/react"
+import { User } from "@/types/user"
 import { CustomSession } from "@/types"
 
 export type User = {
@@ -185,12 +186,10 @@ export const columns: ColumnDef<User>[] = [
     id: "select",
     header: ({ table }) => (
       <Checkbox
-        checked={
-          table.getIsAllPageRowsSelected() ||
-          (table.getIsSomePageRowsSelected() && "indeterminate")
-        }
+        checked={table.getIsAllPageRowsSelected()}
         onCheckedChange={(value) => table.toggleAllPageRowsSelected(!!value)}
         aria-label="Select all"
+        className="translate-y-[2px]"
       />
     ),
     cell: ({ row }) => (
@@ -198,6 +197,7 @@ export const columns: ColumnDef<User>[] = [
         checked={row.getIsSelected()}
         onCheckedChange={(value) => row.toggleSelected(!!value)}
         aria-label="Select row"
+        className="translate-y-[2px]"
       />
     ),
     enableSorting: false,
@@ -209,15 +209,17 @@ export const columns: ColumnDef<User>[] = [
     cell: ({ row }) => {
       const user = row.original
       return (
-        <div className="flex items-center gap-3">
+        <div className="flex items-center gap-4">
           <Avatar>
             {user.image ? (
-              <AvatarImage src={user.image} alt={user.name} />
+              <AvatarImage src={user.image} alt={user.name || "User"} />
             ) : (
-              <AvatarFallback>{user.name[0]?.toUpperCase()}</AvatarFallback>
+              <AvatarFallback>
+                {user.name ? user.name[0]?.toUpperCase() : "U"}
+              </AvatarFallback>
             )}
           </Avatar>
-          <span>{user.name}</span>
+          <span>{user.name || "Sem nome"}</span>
         </div>
       )
     },
@@ -231,19 +233,13 @@ export const columns: ColumnDef<User>[] = [
     header: "Tipo",
     cell: ({ row }) => {
       const role = row.getValue("role") as UserRole
-      return (
-        <Badge variant={role === UserRole.ADMIN ? "default" : "secondary"}>
-          {role === UserRole.ADMIN ? "Admin" : "Usuário"}
-        </Badge>
-      )
+      return <Badge variant="outline">{role}</Badge>
     },
   },
   {
     accessorKey: "createdAt",
     header: "Criado em",
-    cell: ({ row }) => {
-      return formatDate(row.getValue("createdAt"))
-    },
+    cell: ({ row }) => formatDate(row.getValue("createdAt")),
   },
   {
     id: "actions",
