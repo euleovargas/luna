@@ -1,7 +1,0 @@
-{
-  "functions": {
-    "api/auth/register": {
-      "maxDuration": 10
-    }
-  }
-}
