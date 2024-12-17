@@ -4,8 +4,6 @@ import { generateVerificationToken } from "@/lib/tokens"
 import { sendVerificationEmail } from "@/lib/mail"
 import { z } from "zod"
 
-export const runtime = 'edge'
-
 const registerSchema = z.object({
   email: z.string().email(),
   name: z.string().optional(),
@@ -19,54 +17,44 @@ export async function POST(req: Request) {
 
     console.log("[REGISTER] Verificando email:", { email })
 
-    // Verifica se o email já está em uso
     const existingUser = await db.user.findUnique({
-      where: { email },
-      select: { id: true },
+      where: { email }
     })
 
     if (existingUser) {
+      console.log("[REGISTER] Email já existe:", { email })
       return NextResponse.json(
-        { error: "Este email já está em uso" },
+        { error: "Email já está em uso" },
         { status: 400 }
       )
     }
 
-    // Gera um token de verificação
-    const verifyToken = await generateVerificationToken()
-
-    console.log("[REGISTER] Criando usuário:", { 
-      email, 
-      tokenLength: verifyToken.length 
-    })
-
-    // Cria o usuário
+    console.log("[REGISTER] Criando usuário:", { email })
     const user = await db.user.create({
       data: {
         email,
         name,
-        verifyToken,
-        lastEmailSent: new Date(),
-      },
+      }
     })
 
-    console.log("[REGISTER] Usuário criado, enviando email:", {
-      userId: user.id,
-      email: user.email,
+    const verificationToken = generateVerificationToken()
+
+    await db.verificationToken.create({
+      data: {
+        email,
+        token: verificationToken,
+        expires: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+      }
     })
 
-    // Envia o email de verificação em background
-    sendVerificationEmail({ 
-      email: user.email!, 
-      token: verifyToken 
-    }).catch(error => {
-      console.error("[REGISTER] Erro ao enviar email:", error)
-    })
+    // Enviando email de forma síncrona
+    await sendVerificationEmail(
+      verificationToken,
+      email
+    )
 
-    return NextResponse.json({ 
-      success: true,
-      email: user.email
-    })
+    console.log("[REGISTER] Registro concluído com sucesso:", { email })
+    return NextResponse.json({ success: true })
   } catch (error) {
     console.error("[REGISTER]", error)
     return NextResponse.json(
