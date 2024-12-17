@@ -48,10 +48,10 @@ export const sendTestEmail = async (to: string) => {
     const data = await resend.emails.send({
       from: EMAIL_FROM,
       to: recipient,
-      subject: `Teste Luna Platform [${timestamp}]`,
+      subject: `Teste Luna`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h2 style="color: #333; text-align: center;">Email de Teste - Luna Platform</h2>
+          <h2 style="color: #333; text-align: center;">Email de Teste - Luna</h2>
           <p style="color: #666; font-size: 16px; line-height: 1.5;">
             Este é um email de teste enviado em: ${timestamp}
           </p>
@@ -101,45 +101,45 @@ export const sendVerificationEmail = async (email: string, token: string) => {
       vercelEnv: process.env.VERCEL_ENV
     });
 
-    const emailData = {
+    const data = await resend.emails.send({
       from: EMAIL_FROM,
       to: recipient,
-      subject: `Verificação Luna Platform [${timestamp}]`,
+      subject: `Verifique sua conta na Luna`,
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
           <h2 style="color: #333; text-align: center;">Bem-vindo à Luna!</h2>
-          ${isDev ? `<p style="color: red; text-align: center;">MODO DE DESENVOLVIMENTO - Email original: ${email}</p>` : ''}
           <p style="color: #666; font-size: 16px; line-height: 1.5;">
-            Obrigado por se cadastrar. Para começar a usar a Luna, por favor confirme seu email clicando no botão abaixo:
+            Obrigado por se cadastrar. Para começar a usar sua conta, precisamos confirmar seu endereço de email.
           </p>
           <div style="text-align: center; margin: 30px 0;">
             <a href="${confirmLink}" 
-               style="background-color: #0070f3; color: white; padding: 12px 24px; 
-                      text-decoration: none; border-radius: 5px; font-weight: bold;">
-              Verificar Email
+               style="background-color: #6366f1; color: white; padding: 12px 24px; 
+                      text-decoration: none; border-radius: 6px; font-weight: 500;">
+              Verificar minha conta
             </a>
           </div>
-          <p style="color: #666; font-size: 14px;">
-            Se você não criou uma conta na Luna, pode ignorar este email.
-          </p>
-          <p style="color: #666; font-size: 14px;">
-            Se o botão não funcionar, copie e cole este link no seu navegador:<br>
-            <a href="${confirmLink}" style="color: #0070f3; word-break: break-all;">
+          <p style="color: #666; font-size: 14px; line-height: 1.5;">
+            Se o botão não funcionar, você pode copiar e colar este link no seu navegador:
+            <br>
+            <a href="${confirmLink}" style="color: #6366f1; word-break: break-all;">
               ${confirmLink}
             </a>
           </p>
+          <p style="color: #666; font-size: 14px; line-height: 1.5;">
+            Este link expira em 24 horas por motivos de segurança.
+          </p>
+          ${isDev ? `<p style="color: red; text-align: center;">MODO DE DESENVOLVIMENTO - Email original: ${email}</p>` : ''}
+          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
+          <p style="color: #999; font-size: 12px; text-align: center;">
+            Se você não se cadastrou na Luna, pode ignorar este email com segurança.
+          </p>
         </div>
       `,
-    };
-
-    console.log('[VERIFICATION_EMAIL] Dados do email:', emailData);
-
-    const data = await resend.emails.send(emailData);
+    });
 
     console.log('[VERIFICATION_EMAIL] Email enviado com sucesso:', {
       to: recipient,
-      timestamp,
-      response: data
+      timestamp
     });
     
     return { success: true };
@@ -152,10 +152,9 @@ export const sendVerificationEmail = async (email: string, token: string) => {
       statusCode: error.statusCode,
       response: error.response,
       to: recipient,
-      timestamp,
-      stack: error.stack
+      timestamp
     });
-    throw error; // Propaga o erro para ser tratado pela rota
+    return { success: false, error };
   }
 };
 
