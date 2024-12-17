@@ -48,8 +48,8 @@ type UserFormValues = z.infer<typeof userFormSchema>
 interface UserFormProps {
   user?: {
     id: string
-    name: string
-    email: string
+    name: string | null
+    email: string | null
     role: UserRole
     createdAt?: string
     image?: string | null
@@ -58,8 +58,8 @@ interface UserFormProps {
 
 export function UserForm({ user }: UserFormProps) {
   const router = useRouter()
-  const [isLoading, setIsLoading] = React.useState<boolean>(false)
-  
+  const [isPending, startTransition] = React.useTransition()
+
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userFormSchema),
     defaultValues: {
@@ -76,7 +76,9 @@ export function UserForm({ user }: UserFormProps) {
 
   async function onSubmit(data: UserFormValues) {
     console.log("[USER_FORM] onSubmit called with data:", data)
-    setIsLoading(true)
+    startTransition(() => {
+      setIsPending(true)
+    })
 
     try {
       const isNewUser = !user?.id
@@ -124,7 +126,9 @@ export function UserForm({ user }: UserFormProps) {
         variant: "destructive",
       })
     } finally {
-      setIsLoading(false)
+      startTransition(() => {
+        setIsPending(false)
+      })
     }
   }
 
@@ -215,8 +219,8 @@ export function UserForm({ user }: UserFormProps) {
           >
             Cancelar
           </Button>
-          <Button type="submit" disabled={isLoading}>
-            {isLoading && (
+          <Button type="submit" disabled={isPending}>
+            {isPending && (
               <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
             )}
             {user ? "Atualizar" : "Criar"}
