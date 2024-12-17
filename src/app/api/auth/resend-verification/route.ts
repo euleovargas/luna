@@ -5,8 +5,8 @@ import { sendVerificationEmail } from "@/lib/mail"
 import { withRateLimit } from "@/lib/rate-limit"
 import { logSecurityEvent, SecurityEventType, SecuritySeverity } from "@/lib/security"
 
-// Tempo mínimo entre envios de email (5 minutos)
-const MIN_TIME_BETWEEN_EMAILS = 5 * 60 * 1000 // 5 minutos em milissegundos
+// Tempo mínimo entre envios de email após o primeiro reenvio (45 segundos)
+const MIN_TIME_BETWEEN_EMAILS = 45 * 1000 // 45 segundos em milissegundos
 
 export const POST = withRateLimit(async (req: Request) => {
   try {
@@ -22,13 +22,15 @@ export const POST = withRateLimit(async (req: Request) => {
         emailVerified: true,
         verifyToken: true,
         lastEmailSent: true,
+        resendCount: true,
       },
     })
 
     console.log('[RESEND_VERIFICATION] Usuário encontrado:', { 
       found: !!user,
       emailVerified: user?.emailVerified,
-      lastEmailSent: user?.lastEmailSent
+      lastEmailSent: user?.lastEmailSent,
+      resendCount: user?.resendCount
     })
 
     // Se não existir usuário ou já estiver verificado
@@ -70,11 +72,11 @@ export const POST = withRateLimit(async (req: Request) => {
       )
     }
 
-    // Verifica o tempo desde o último envio
-    if (user.lastEmailSent) {
+    // Verifica o tempo desde o último envio apenas se não for o primeiro reenvio
+    if (user.resendCount > 0 && user.lastEmailSent) {
       const timeSinceLastEmail = Date.now() - user.lastEmailSent.getTime()
       if (timeSinceLastEmail < MIN_TIME_BETWEEN_EMAILS) {
-        const remainingTime = Math.ceil((MIN_TIME_BETWEEN_EMAILS - timeSinceLastEmail) / 1000 / 60)
+        const remainingSeconds = Math.ceil((MIN_TIME_BETWEEN_EMAILS - timeSinceLastEmail) / 1000)
         
         await logSecurityEvent(
           SecurityEventType.SUSPICIOUS_ACTIVITY,
@@ -82,14 +84,16 @@ export const POST = withRateLimit(async (req: Request) => {
           {
             email,
             error: "Too many email requests",
-            timeSinceLastEmail
+            timeSinceLastEmail,
+            resendCount: user.resendCount
           }
         )
 
         return NextResponse.json(
           {
             error: "too_many_requests",
-            message: `Por favor, aguarde ${remainingTime} minutos antes de solicitar um novo email.`,
+            message: `Por favor, aguarde ${remainingSeconds} segundos antes de solicitar um novo email.`,
+            remainingSeconds,
           },
           { status: 429 }
         )
@@ -102,7 +106,10 @@ export const POST = withRateLimit(async (req: Request) => {
       where: { id: user.id },
       data: { 
         verifyToken,
-        lastEmailSent: new Date() 
+        lastEmailSent: new Date(),
+        resendCount: {
+          increment: 1
+        }
       },
     })
 
@@ -122,7 +129,8 @@ export const POST = withRateLimit(async (req: Request) => {
       {
         email,
         success: true,
-        action: "verification_email_resent"
+        action: "verification_email_resent",
+        resendCount: user.resendCount + 1
       }
     )
 

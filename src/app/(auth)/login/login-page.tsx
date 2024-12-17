@@ -8,11 +8,11 @@ import { useEffect } from "react"
 export function LoginPage() {
   const searchParams = useSearchParams()
   const { toast } = useToast()
-  const verified = searchParams.get("verified")
+  const success = searchParams.get("success")
   const error = searchParams.get("error")
 
   useEffect(() => {
-    if (verified === "true") {
+    if (success === "email_verified") {
       toast({
         title: "Email verificado!",
         description: "Sua conta foi ativada com sucesso. Você já pode fazer login.",
@@ -21,7 +21,7 @@ export function LoginPage() {
 
     // Tratamento de erros de verificação
     if (error) {
-      const errorMessages = {
+      const errorMessages: Record<string, { title: string; description: string }> = {
         missing_token: {
           title: "Link inválido",
           description: "O link de verificação está incompleto. Por favor, use o link mais recente enviado ao seu email.",
@@ -30,21 +30,26 @@ export function LoginPage() {
           title: "Link expirado",
           description: "Este link de verificação não é mais válido. Use o link mais recente enviado ao seu email ou solicite um novo.",
         },
-        server_error: {
-          title: "Erro no servidor",
-          description: "Ocorreu um erro ao verificar seu email. Por favor, tente novamente mais tarde.",
+        token_expired: {
+          title: "Link expirado",
+          description: "Este link de verificação expirou. Por favor, solicite um novo link.",
         },
-      }[error]
+        unknown: {
+          title: "Erro inesperado",
+          description: "Ocorreu um erro ao verificar seu email. Por favor, tente novamente mais tarde.",
+        }
+      }
 
-      if (errorMessages) {
+      const message = errorMessages[error]
+      if (message) {
         toast({
-          title: errorMessages.title,
-          description: errorMessages.description,
+          title: message.title,
+          description: message.description,
           variant: "destructive",
         })
       }
     }
-  }, [verified, error, toast])
+  }, [success, error, toast])
 
   return (
     <div className="container relative h-screen flex-col items-center justify-center grid lg:max-w-none lg:grid-cols-2 lg:px-0">

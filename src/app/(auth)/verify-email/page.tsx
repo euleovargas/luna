@@ -115,32 +115,20 @@ export default function VerifyEmailPage() {
   }
 
   return (
-    <div className="flex flex-col items-center justify-center">
-      <Card className="w-full max-w-md">
-        <CardHeader className="space-y-2 text-center">
-          <div className="flex justify-center">
-            <div className="rounded-full bg-primary/10 p-3">
-              <Icons.mail className="h-6 w-6 text-primary" />
-            </div>
+    <div className="flex min-h-screen flex-col items-center justify-center bg-background">
+      <div className="bg-white rounded-lg p-8 shadow-lg">
+        <div className="flex flex-col items-center space-y-6 text-center">
+          <div className="rounded-full bg-blue-50 p-3">
+            <Icons.mail className="h-10 w-10 text-blue-500" />
           </div>
-          <CardTitle className="text-2xl">Verifique seu email</CardTitle>
-          <CardDescription className="text-center">
-            {email ? (
-              <>
-                Enviamos um link de verificação para <span className="font-medium">{email}</span>.
-                Por favor, verifique sua caixa de entrada.
-              </>
-            ) : (
-              "Enviamos um link de verificação para o seu email. Por favor, verifique sua caixa de entrada."
-            )}
-          </CardDescription>
-        </CardHeader>
-        <CardContent className="text-center">
-          <p className="text-sm text-muted-foreground">
-            Não recebeu o email? Verifique sua pasta de spam ou solicite um novo link.
-          </p>
-        </CardContent>
-        <CardFooter className="flex flex-col space-y-2">
+          <div className="space-y-2">
+            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Verifique seu e-mail</h1>
+            <p className="text-sm text-gray-500">
+              Enviamos um link de verificação para o seu e-mail.
+              <br />
+              Por favor, verifique sua caixa de entrada e spam.
+            </p>
+          </div>
           <Button
             variant="outline"
             onClick={handleResendVerification}
@@ -166,8 +154,8 @@ export default function VerifyEmailPage() {
           >
             <Link href="/login">Voltar para o login</Link>
           </Button>
-        </CardFooter>
-      </Card>
+        </div>
+      </div>
     </div>
   )
 }
