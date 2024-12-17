@@ -1,10 +1,13 @@
 import { Resend } from 'resend';
 
-if (!process.env.RESEND_API_KEY) {
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
+
+if (!RESEND_API_KEY) {
+  console.error('[MAIL_CONFIG] RESEND_API_KEY não está configurada');
   throw new Error('RESEND_API_KEY não está configurada');
 }
 
-const resend = new Resend(process.env.RESEND_API_KEY);
+const resend = new Resend(RESEND_API_KEY);
 
 // Configurações de email
 const EMAIL_FROM = 'Luna Platform <onboarding@resend.dev>';
@@ -31,13 +34,15 @@ export const sendTestEmail = async (to: string) => {
   const timestamp = new Date().toISOString();
   
   try {
-    console.log('[TEST_EMAIL] Configurações:', {
+    console.log('[TEST_EMAIL] Iniciando envio:', {
       from: EMAIL_FROM,
       to: recipient,
-      apiKey: process.env.RESEND_API_KEY?.substring(0, 8) + '...',
+      apiKey: RESEND_API_KEY ? 'configurada' : 'não configurada',
       isDev,
       originalTo: to,
-      timestamp
+      timestamp,
+      environment: process.env.NODE_ENV,
+      vercelEnv: process.env.VERCEL_ENV
     });
 
     const data = await resend.emails.send({
@@ -55,11 +60,24 @@ export const sendTestEmail = async (to: string) => {
       `,
     });
 
-    console.log('[TEST_EMAIL] Email enviado:', data);
+    console.log('[TEST_EMAIL] Email enviado com sucesso:', {
+      id: data.id,
+      to: recipient,
+      timestamp
+    });
+    
     return { success: true };
 
-  } catch (error) {
-    console.error('[TEST_EMAIL] Erro ao enviar:', error);
+  } catch (error: any) {
+    console.error('[TEST_EMAIL] Erro ao enviar:', {
+      error: error.message,
+      code: error.code,
+      name: error.name,
+      statusCode: error.statusCode,
+      response: error.response,
+      to: recipient,
+      timestamp
+    });
     return { success: false, error };
   }
 };
@@ -70,18 +88,20 @@ export const sendVerificationEmail = async (email: string, token: string) => {
   const confirmLink = `${APP_URL}/auth/verify?token=${token}`;
   const timestamp = new Date().toISOString();
   
-  console.log('[EMAIL] Configurações:', {
-    from: EMAIL_FROM,
-    to: recipient,
-    originalEmail: email,
-    confirmLink,
-    apiKey: process.env.RESEND_API_KEY?.substring(0, 8) + '...',
-    isDev,
-    appUrl: APP_URL,
-    timestamp
-  });
-
   try {
+    console.log('[VERIFICATION_EMAIL] Iniciando envio:', {
+      from: EMAIL_FROM,
+      to: recipient,
+      originalEmail: email,
+      confirmLink,
+      apiKey: RESEND_API_KEY ? 'configurada' : 'não configurada',
+      isDev,
+      appUrl: APP_URL,
+      timestamp,
+      environment: process.env.NODE_ENV,
+      vercelEnv: process.env.VERCEL_ENV
+    });
+
     const data = await resend.emails.send({
       from: EMAIL_FROM,
       to: recipient,
@@ -113,11 +133,24 @@ export const sendVerificationEmail = async (email: string, token: string) => {
       `,
     });
 
-    console.log('[EMAIL] Email enviado:', data);
+    console.log('[VERIFICATION_EMAIL] Email enviado com sucesso:', {
+      id: data.id,
+      to: recipient,
+      timestamp
+    });
+    
     return { success: true };
 
-  } catch (error) {
-    console.error('[EMAIL] Erro ao enviar:', error);
+  } catch (error: any) {
+    console.error('[VERIFICATION_EMAIL] Erro ao enviar:', {
+      error: error.message,
+      code: error.code,
+      name: error.name,
+      statusCode: error.statusCode,
+      response: error.response,
+      to: recipient,
+      timestamp
+    });
     return { success: false, error };
   }
 };
@@ -129,6 +162,19 @@ export const sendPasswordResetEmail = async ({ email, token }: SendPasswordReset
   const timestamp = new Date().toISOString();
 
   try {
+    console.log('[RESET_EMAIL] Iniciando envio:', {
+      from: EMAIL_FROM,
+      to: recipient,
+      originalEmail: email,
+      resetLink,
+      apiKey: RESEND_API_KEY ? 'configurada' : 'não configurada',
+      isDev,
+      appUrl: APP_URL,
+      timestamp,
+      environment: process.env.NODE_ENV,
+      vercelEnv: process.env.VERCEL_ENV
+    });
+
     const data = await resend.emails.send({
       from: EMAIL_FROM,
       to: recipient,
@@ -160,11 +206,24 @@ export const sendPasswordResetEmail = async ({ email, token }: SendPasswordReset
       `,
     });
 
-    console.log('[PASSWORD_RESET] Email enviado:', data);
+    console.log('[RESET_EMAIL] Email enviado com sucesso:', {
+      id: data.id,
+      to: recipient,
+      timestamp
+    });
+    
     return { success: true };
 
-  } catch (error) {
-    console.error('[PASSWORD_RESET] Erro ao enviar:', error);
+  } catch (error: any) {
+    console.error('[RESET_EMAIL] Erro ao enviar:', {
+      error: error.message,
+      code: error.code,
+      name: error.name,
+      statusCode: error.statusCode,
+      response: error.response,
+      to: recipient,
+      timestamp
+    });
     return { success: false, error };
   }
 };
