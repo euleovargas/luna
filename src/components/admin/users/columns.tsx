@@ -40,15 +40,6 @@ import { useSession } from "next-auth/react"
 import { User } from "@/types/user"
 import { CustomSession } from "@/types"
 
-export type User = {
-  id: string
-  name: string
-  email: string
-  image?: string | null
-  role: UserRole
-  createdAt: string
-}
-
 interface DataTableRowActionsProps {
   user: User
   onDelete?: () => Promise<void>
