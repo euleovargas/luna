@@ -1,10 +1,24 @@
 import { PrismaClient } from '@prisma/client'
 
-// Previne múltiplas instâncias do Prisma Client em desenvolvimento
-const globalForPrisma = globalThis as unknown as {
-  prisma: PrismaClient | undefined
+declare global {
+  var prisma: PrismaClient | undefined
 }
 
-export const db = globalForPrisma.prisma ?? new PrismaClient()
+const prismaClientSingleton = () => {
+  return new PrismaClient({
+    log: ['error', 'warn'],
+    datasources: {
+      db: {
+        url: process.env.DATABASE_URL
+      },
+    },
+    // Aumenta o timeout do Prisma para 30s
+    engineConfig: {
+      connectionTimeout: 30000,
+    },
+  })
+}
 
-if (process.env.NODE_ENV !== 'production') globalForPrisma.prisma = db
+export const db = globalThis.prisma ?? prismaClientSingleton()
+
+if (process.env.NODE_ENV !== 'production') globalThis.prisma = db

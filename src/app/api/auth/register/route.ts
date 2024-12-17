@@ -2,8 +2,8 @@ import { NextResponse } from "next/server"
 import { hash } from "bcryptjs"
 import { db } from "@/lib/db"
 import { generateVerificationToken } from "@/lib/tokens"
-import { sendVerificationEmail } from "@/lib/mail"
 import { z } from "zod"
+import { Prisma } from "@prisma/client"
 
 export const maxDuration = 30 // 30 segundos
 export const dynamic = 'force-dynamic'
@@ -31,6 +31,7 @@ export async function POST(req: Request) {
 
     const existingUser = await db.user.findUnique({
       where: { email: body.email },
+      select: { id: true }
     })
 
     if (existingUser) {
@@ -83,8 +84,25 @@ export async function POST(req: Request) {
 
   } catch (error) {
     console.error("[REGISTER_ERROR]", error)
+    
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.errors[0].message },
+        { status: 400 }
+      )
+    }
+
+    if (error instanceof Prisma.PrismaClientKnownRequestError) {
+      if (error.code === 'P2002') {
+        return NextResponse.json(
+          { error: "Email já cadastrado" },
+          { status: 400 }
+        )
+      }
+    }
+
     return NextResponse.json(
-      { error: "Erro ao registrar usuário" },
+      { error: "Erro ao registrar usuário. Tente novamente mais tarde." },
       { status: 500 }
     )
   }
