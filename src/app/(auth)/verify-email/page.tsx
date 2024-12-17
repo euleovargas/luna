@@ -1,18 +1,45 @@
 "use client"
 
-import { useState } from "react"
+import { useEffect, useState } from "react"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { Icons } from "@/components/ui/icons"
 import { useToast } from "@/components/ui/use-toast"
 import Link from "next/link"
+import { useRouter } from "next/navigation"
 import { useSearchParams as useNextSearchParams } from "next/navigation"
 
 export default function VerifyEmailPage() {
+  const router = useRouter()
   const searchParams = useNextSearchParams()
   const email = searchParams?.get("email")
+  const token = searchParams?.get("token")
   const { toast } = useToast()
   const [isResending, setIsResending] = useState(false)
+  const [isVerifying, setIsVerifying] = useState(false)
+
+  // Verifica o token quando a página carrega
+  useEffect(() => {
+    if (token) {
+      setIsVerifying(true)
+      fetch(`/api/auth/verify?token=${token}`)
+        .then(async (response) => {
+          // A API já redireciona para login, não precisamos fazer nada aqui
+          if (!response.ok) {
+            throw new Error("Falha ao verificar email")
+          }
+        })
+        .catch((error) => {
+          console.error("[VERIFY_EMAIL] Erro ao verificar:", error)
+          toast({
+            title: "Erro ao verificar email",
+            description: "O link pode ter expirado ou ser inválido. Tente solicitar um novo link.",
+            variant: "destructive",
+          })
+          setIsVerifying(false)
+        })
+    }
+  }, [token, toast])
 
   const handleResendVerification = async () => {
     if (!email) {
@@ -58,6 +85,26 @@ export default function VerifyEmailPage() {
     }
   }
 
+  if (isVerifying) {
+    return (
+      <div className="flex flex-col items-center justify-center">
+        <Card className="w-full max-w-md">
+          <CardHeader className="space-y-2 text-center">
+            <div className="flex justify-center">
+              <div className="rounded-full bg-primary/10 p-3">
+                <Icons.spinner className="h-6 w-6 text-primary animate-spin" />
+              </div>
+            </div>
+            <CardTitle className="text-2xl">Verificando seu email</CardTitle>
+            <CardDescription>
+              Por favor, aguarde enquanto verificamos seu email...
+            </CardDescription>
+          </CardHeader>
+        </Card>
+      </div>
+    )
+  }
+
   return (
     <div className="flex flex-col items-center justify-center">
       <Card className="w-full max-w-md">
@@ -99,16 +146,17 @@ export default function VerifyEmailPage() {
             ) : (
               <>
                 <Icons.refresh className="mr-2 h-4 w-4" />
-                Reenviar email
+                Reenviar email de verificação
               </>
             )}
           </Button>
-          <Link href="/login" className="w-full">
-            <Button variant="ghost" className="w-full">
-              <Icons.arrowLeft className="mr-2 h-4 w-4" />
-              Voltar para o login
-            </Button>
-          </Link>
+          <Button
+            variant="ghost"
+            asChild
+            className="w-full"
+          >
+            <Link href="/login">Voltar para o login</Link>
+          </Button>
         </CardFooter>
       </Card>
     </div>
