@@ -119,7 +119,10 @@ export const POST = withRateLimit(async (req: Request) => {
       tokenLength: verifyToken.length 
     })
 
-    await sendVerificationEmail(email, verifyToken)
+    await sendVerificationEmail({ 
+      email, 
+      token: verifyToken 
+    })
 
     console.log('[RESEND_VERIFICATION] Email enviado com sucesso')
 
