@@ -12,6 +12,35 @@ const nextConfig = {
   serverRuntimeConfig: {
     maxDuration: 60
   },
+  async headers() {
+    return [
+      {
+        source: '/:path*',
+        headers: [
+          {
+            key: 'X-DNS-Prefetch-Control',
+            value: 'on'
+          }
+        ],
+      },
+    ]
+  },
+  async rewrites() {
+    return {
+      beforeFiles: [
+        {
+          source: '/:path*',
+          has: [
+            {
+              type: 'host',
+              value: 'luna.lpclass.com.br',
+            },
+          ],
+          destination: '/:path*',
+        },
+      ],
+    }
+  },
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     // Ignore browser extension errors in development
     if (dev && !isServer) {
