@@ -3,27 +3,47 @@ import { MongoClient } from "mongodb"
 
 export const dynamic = 'force-dynamic'
 export const runtime = 'nodejs'
+export const maxDuration = 10
+
+// Cache da conexão entre invocações da função
+let cachedClient: MongoClient | null = null
+
+async function getMongoClient() {
+  if (cachedClient) {
+    return cachedClient
+  }
+
+  const uri = process.env.DATABASE_URL
+  if (!uri) {
+    throw new Error('DATABASE_URL não configurada')
+  }
+
+  cachedClient = new MongoClient(uri, {
+    maxPoolSize: 1,
+    minPoolSize: 0,
+    maxIdleTimeMS: 5000,
+    connectTimeoutMS: 5000,
+    socketTimeoutMS: 5000,
+  })
+
+  await cachedClient.connect()
+  return cachedClient
+}
 
 export async function GET() {
   const start = Date.now()
+  let client: MongoClient | null = null
   
   try {
-    // Tenta conectar diretamente ao MongoDB
-    const client = new MongoClient(process.env.DIRECT_URL || "")
-    console.log("Conectando ao MongoDB...", Date.now() - start, "ms")
-    
-    await client.connect()
-    console.log("Conectado ao MongoDB!", Date.now() - start, "ms")
+    console.log("Iniciando conexão...", Date.now() - start, "ms")
+    client = await getMongoClient()
+    console.log("Conectado!", Date.now() - start, "ms")
     
     const db = client.db()
     const collection = db.collection("User")
     
-    // Faz uma query simples
     const count = await collection.countDocuments()
     console.log("Query executada!", Date.now() - start, "ms")
-    
-    await client.close()
-    console.log("Conexão fechada!", Date.now() - start, "ms")
     
     return NextResponse.json({ 
       success: true,
