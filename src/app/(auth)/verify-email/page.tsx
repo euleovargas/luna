@@ -6,11 +6,11 @@ import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle }
 import { Icons } from "@/components/ui/icons"
 import { useToast } from "@/components/ui/use-toast"
 import Link from "next/link"
-import { useSearchParams } from "@/hooks/use-search-params"
+import { useSearchParams as useNextSearchParams } from "next/navigation"
 
 export default function VerifyEmailPage() {
-  const searchParams = useSearchParams()
-  const email = searchParams.get("email")
+  const searchParams = useNextSearchParams()
+  const email = searchParams?.get("email")
   const { toast } = useToast()
   const [isResending, setIsResending] = useState(false)
 
