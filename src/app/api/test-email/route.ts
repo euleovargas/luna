@@ -1,31 +1,38 @@
-import { NextResponse } from 'next/server';
-import { sendTestEmail } from '@/lib/mail';
+import { NextResponse } from "next/server"
+import { sendTestEmail } from "@/lib/mail"
+
+export const runtime = 'edge'
+export const maxDuration = 10
 
 export async function POST(req: Request) {
   try {
-    const { email } = await req.json();
-    
-    console.log('[TEST_ROUTE] Tentando enviar email de teste para:', email);
-    
-    const result = await sendTestEmail(email);
+    const { email } = await req.json()
+
+    if (!email) {
+      return new NextResponse(
+        "Email é obrigatório",
+        { status: 400 }
+      )
+    }
+
+    const result = await sendTestEmail(email)
     
     if (!result.success) {
-      console.error('[TEST_ROUTE] Erro ao enviar email:', result.error);
       return NextResponse.json(
-        { message: 'Erro ao enviar email de teste', error: result.error },
+        { error: 'Erro ao enviar email de teste' },
         { status: 500 }
-      );
+      )
     }
-    
+
     return NextResponse.json(
-      { message: 'Email de teste enviado com sucesso', data: result.data },
+      { message: 'Email de teste enviado com sucesso' },
       { status: 200 }
-    );
+    )
   } catch (error) {
-    console.error('[TEST_ROUTE] Erro:', error);
+    console.error("[TEST_EMAIL_ERROR]", error)
     return NextResponse.json(
-      { message: 'Erro ao processar requisição', error },
+      { error: "Erro interno do servidor" },
       { status: 500 }
-    );
+    )
   }
 }
