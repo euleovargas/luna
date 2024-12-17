@@ -5,6 +5,7 @@ import { generateVerificationToken } from "@/lib/tokens"
 import { sendVerificationEmail } from "@/lib/mail"
 import { z } from "zod"
 
+export const maxDuration = 30 // 30 segundos
 export const dynamic = 'force-dynamic'
 
 const registerSchema = z.object({
@@ -25,28 +26,23 @@ const registerSchema = z.object({
 
 export async function POST(req: Request) {
   try {
-    console.log("[REGISTER] Iniciando registro...")
     const json = await req.json()
     const body = registerSchema.parse(json)
 
-    console.log("[REGISTER] Verificando usuário existente...")
     const existingUser = await db.user.findUnique({
       where: { email: body.email },
     })
 
     if (existingUser) {
-      console.log("[REGISTER] Email já cadastrado:", body.email)
       return NextResponse.json(
         { error: "Email já cadastrado" },
         { status: 400 }
       )
     }
 
-    console.log("[REGISTER] Gerando hash da senha...")
     const hashedPassword = await hash(body.password, 10)
     const verificationToken = await generateVerificationToken()
 
-    console.log("[REGISTER] Criando usuário...")
     const user = await db.user.create({
       data: {
         name: body.name,
@@ -63,14 +59,20 @@ export async function POST(req: Request) {
       },
     })
 
-    // Envia email de verificação em background
-    console.log("[REGISTER] Enviando email de verificação...")
-    sendVerificationEmail(user.email, user.verifyToken as string)
-      .catch(error => {
-        console.error("[REGISTER] Erro ao enviar email:", error)
-      })
+    // Envia email em uma rota separada para não bloquear o registro
+    fetch('/api/email/send-verification', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        email: user.email,
+        token: user.verifyToken,
+      }),
+    }).catch(error => {
+      console.error("[REGISTER] Erro ao chamar rota de email:", error)
+    })
 
-    console.log("[REGISTER] Registro concluído com sucesso!")
     return NextResponse.json({
       user: {
         id: user.id,
