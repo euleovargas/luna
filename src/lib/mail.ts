@@ -10,7 +10,7 @@ if (!RESEND_API_KEY) {
 const resend = new Resend(RESEND_API_KEY);
 
 // Configurações de email
-const EMAIL_FROM = 'Luna Platform <onboarding@resend.dev>';
+const EMAIL_FROM = 'Luna Platform <noreply@lpclass.com.br>';
 const isDev = process.env.NODE_ENV === 'development';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://luna-lemon.vercel.app';
 
