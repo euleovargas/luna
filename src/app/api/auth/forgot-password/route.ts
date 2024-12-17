@@ -17,7 +17,7 @@ export async function POST(req: Request) {
       where: { email },
     })
 
-    if (!user) {
+    if (!user || !user.email) {
       // Retornamos sucesso mesmo se o usuário não existir para evitar enumeração de emails
       return NextResponse.json({
         message: "Se o email existir, você receberá um link para redefinir sua senha",
@@ -27,13 +27,13 @@ export async function POST(req: Request) {
     // Gera token de recuperação de senha
     const token = signJwtAccessToken({
       id: user.id,
-      email: user.email,
+      email: user.email, // Agora sabemos que user.email não é null
       resetPassword: true,
     })
 
     // Envia email com link de recuperação
     await sendPasswordResetEmail({
-      email,
+      email: user.email,
       token,
     })
 
@@ -41,9 +41,16 @@ export async function POST(req: Request) {
       message: "Se o email existir, você receberá um link para redefinir sua senha",
     })
   } catch (error) {
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { message: "Email inválido" },
+        { status: 400 }
+      )
+    }
+
     console.error("[FORGOT_PASSWORD]", error)
     return NextResponse.json(
-      { error: "Erro interno do servidor" },
+      { message: "Algo deu errado" },
       { status: 500 }
     )
   }
