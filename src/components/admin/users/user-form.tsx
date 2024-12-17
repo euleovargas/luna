@@ -1,10 +1,9 @@
 "use client"
 
-import * as React from "react"
-import { useRouter } from "next/navigation"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { useForm } from "react-hook-form"
 import * as z from "zod"
+import { useTransition } from "react"
 import { UserRole } from "@prisma/client"
 
 import { Button } from "@/components/ui/button"
@@ -27,38 +26,34 @@ import {
 } from "@/components/ui/select"
 import { toast } from "@/components/ui/use-toast"
 import { Icons } from "@/components/ui/icons"
+import { User } from "@/types/user"
 
 const userFormSchema = z.object({
-  name: z.string().min(2, {
-    message: "O nome deve ter pelo menos 2 caracteres.",
-  }),
+  name: z
+    .string()
+    .min(2, {
+      message: "O nome deve ter pelo menos 2 caracteres.",
+    })
+    .max(30, {
+      message: "O nome deve ter no máximo 30 caracteres.",
+    }),
   email: z.string().email({
-    message: "Digite um email válido.",
+    message: "Email inválido.",
   }),
-  role: z.enum([UserRole.ADMIN, UserRole.MANAGER, UserRole.USER], {
+  role: z.nativeEnum(UserRole, {
     required_error: "Por favor selecione um tipo de usuário.",
   }),
-  password: z.string().min(8, {
-    message: "A senha deve ter pelo menos 8 caracteres.",
-  }).optional().or(z.literal("")),
 })
 
 type UserFormValues = z.infer<typeof userFormSchema>
 
 interface UserFormProps {
-  user?: {
-    id: string
-    name: string | null
-    email: string | null
-    role: UserRole
-    createdAt?: string
-    image?: string | null
-  }
+  user?: User
+  onSubmit: (data: UserFormValues) => Promise<void>
 }
 
-export function UserForm({ user }: UserFormProps) {
-  const router = useRouter()
-  const [isPending, startTransition] = React.useTransition()
+export function UserForm({ user, onSubmit }: UserFormProps) {
+  const [isPending, startTransition] = useTransition()
 
   const form = useForm<UserFormValues>({
     resolver: zodResolver(userFormSchema),
@@ -66,81 +61,32 @@ export function UserForm({ user }: UserFormProps) {
       name: user?.name || "",
       email: user?.email || "",
       role: user?.role || UserRole.USER,
-      password: "",
     },
   })
 
-  React.useEffect(() => {
-    console.log("[USER_FORM] Form errors:", form.formState.errors)
-  }, [form.formState])
-
-  async function onSubmit(data: UserFormValues) {
+  async function handleSubmit(data: UserFormValues) {
     console.log("[USER_FORM] onSubmit called with data:", data)
-    startTransition(() => {
-      setIsPending(true)
-    })
-
-    try {
-      const isNewUser = !user?.id
-      const url = isNewUser ? '/api/admin/users' : `/api/admin/users/${user.id}`
-      const method = isNewUser ? 'POST' : 'PUT'
-
-      console.log("[USER_FORM] Making request to:", url, "with method:", method)
-
-      const response = await fetch(url, {
-        method: method,
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: data.name,
-          email: data.email,
-          role: data.role,
-          ...(isNewUser && data.password ? { password: data.password } : {}),
-        }),
-        cache: 'no-store'
-      })
-
-      if (!response.ok) {
-        const error = await response.json()
-        throw new Error(error.message || "Algo deu errado")
+    startTransition(async () => {
+      try {
+        await onSubmit(data)
+        toast({
+          title: "Usuário salvo",
+          description: "As alterações foram salvas com sucesso.",
+        })
+      } catch (error) {
+        console.error("[USER_FORM]", error)
+        toast({
+          title: "Erro ao salvar usuário",
+          description: "Ocorreu um erro ao tentar salvar as alterações.",
+          variant: "destructive",
+        })
       }
-
-      const result = await response.json()
-      console.log("[USER_FORM] Response:", result)
-
-      toast({
-        title: isNewUser ? "Usuário criado!" : "Usuário atualizado!",
-        description: isNewUser 
-          ? "O novo usuário foi criado com sucesso."
-          : "As informações do usuário foram atualizadas.",
-      })
-
-      router.push("/admin/users")
-      router.refresh()
-    } catch (error) {
-      console.error("[USER_FORM] Error:", error)
-      toast({
-        title: "Algo deu errado.",
-        description: error instanceof Error ? error.message : "Erro ao processar a requisição.",
-        variant: "destructive",
-      })
-    } finally {
-      startTransition(() => {
-        setIsPending(false)
-      })
-    }
+    })
   }
 
   return (
     <Form {...form}>
-      <form 
-        onSubmit={(e) => {
-          console.log("[USER_FORM] Form submitted")
-          form.handleSubmit(onSubmit)(e)
-        }} 
-        className="space-y-4"
-      >
+      <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
         <FormField
           control={form.control}
           name="name"
@@ -148,8 +94,11 @@ export function UserForm({ user }: UserFormProps) {
             <FormItem>
               <FormLabel>Nome</FormLabel>
               <FormControl>
-                <Input placeholder="Nome do usuário" {...field} />
+                <Input placeholder="Digite o nome" {...field} />
               </FormControl>
+              <FormDescription>
+                Este é o nome que será exibido no perfil do usuário.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -161,8 +110,11 @@ export function UserForm({ user }: UserFormProps) {
             <FormItem>
               <FormLabel>Email</FormLabel>
               <FormControl>
-                <Input placeholder="email@exemplo.com" type="email" {...field} />
+                <Input placeholder="Digite o email" {...field} />
               </FormControl>
+              <FormDescription>
+                Este é o email que será usado para login.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
@@ -172,60 +124,34 @@ export function UserForm({ user }: UserFormProps) {
           name="role"
           render={({ field }) => (
             <FormItem>
-              <FormLabel>Tipo de usuário</FormLabel>
-              <Select onValueChange={field.onChange} defaultValue={field.value}>
+              <FormLabel>Tipo de Usuário</FormLabel>
+              <Select
+                onValueChange={field.onChange}
+                defaultValue={field.value}
+              >
                 <FormControl>
                   <SelectTrigger>
-                    <SelectValue placeholder="Selecione um tipo de usuário" />
+                    <SelectValue placeholder="Selecione um tipo" />
                   </SelectTrigger>
                 </FormControl>
                 <SelectContent>
-                  <SelectItem value={UserRole.ADMIN}>Administrador</SelectItem>
-                  <SelectItem value={UserRole.MANAGER}>Gerente</SelectItem>
-                  <SelectItem value={UserRole.USER}>Usuário</SelectItem>
+                  <SelectItem value={UserRole.ADMIN}>Admin</SelectItem>
+                  <SelectItem value={UserRole.USER}>User</SelectItem>
                 </SelectContent>
               </Select>
+              <FormDescription>
+                Selecione o tipo de acesso que este usuário terá.
+              </FormDescription>
               <FormMessage />
             </FormItem>
           )}
         />
-        {!user && (
-          <FormField
-            control={form.control}
-            name="password"
-            render={({ field }) => (
-              <FormItem>
-                <FormLabel>Senha</FormLabel>
-                <FormControl>
-                  <Input
-                    placeholder="Digite uma senha"
-                    type="password"
-                    {...field}
-                  />
-                </FormControl>
-                <FormDescription>
-                  A senha deve ter pelo menos 8 caracteres.
-                </FormDescription>
-                <FormMessage />
-              </FormItem>
-            )}
-          />
-        )}
-        <div className="flex gap-4">
-          <Button
-            type="button"
-            variant="outline"
-            onClick={() => router.push("/admin/users")}
-          >
-            Cancelar
-          </Button>
-          <Button type="submit" disabled={isPending}>
-            {isPending && (
-              <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-            )}
-            {user ? "Atualizar" : "Criar"}
-          </Button>
-        </div>
+        <Button type="submit" disabled={isPending}>
+          {isPending && (
+            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+          )}
+          Salvar
+        </Button>
       </form>
     </Form>
   )
