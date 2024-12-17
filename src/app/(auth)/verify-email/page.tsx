@@ -24,10 +24,19 @@ export default function VerifyEmailPage() {
       setIsVerifying(true)
       fetch(`/api/auth/verify?token=${token}`)
         .then(async (response) => {
-          // A API já redireciona para login, não precisamos fazer nada aqui
+          // Se for redirecionamento, pegamos a URL
+          if (response.redirected) {
+            router.push(response.url)
+            return
+          }
+
+          // Se não for redirecionamento mas também não for ok, é erro
           if (!response.ok) {
             throw new Error("Falha ao verificar email")
           }
+
+          // Se chegou aqui deu tudo certo, redireciona para login
+          router.push('/login?success=email_verified')
         })
         .catch((error) => {
           console.error("[VERIFY_EMAIL] Erro ao verificar:", error)
@@ -39,7 +48,7 @@ export default function VerifyEmailPage() {
           setIsVerifying(false)
         })
     }
-  }, [token, toast])
+  }, [token, toast, router])
 
   const handleResendVerification = async () => {
     if (!email) {
