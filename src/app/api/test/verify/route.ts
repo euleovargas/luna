@@ -58,7 +58,10 @@ export async function GET(request: Request) {
 
     // Envia o email
     console.log('[TEST_VERIFY] Enviando email...')
-    await sendVerificationEmail(email, verifyToken)
+    await sendVerificationEmail({ 
+      email, 
+      token: verifyToken 
+    })
     console.log('[TEST_VERIFY] Email enviado com sucesso')
 
     return NextResponse.json({
