@@ -15,6 +15,20 @@ export async function middleware(request: NextRequest) {
   const isHomePage = request.nextUrl.pathname === '/'
   const isProfilePage = request.nextUrl.pathname.startsWith('/profile')
   const isAdminPage = request.nextUrl.pathname.startsWith('/admin')
+  const isDashboardPage = request.nextUrl.pathname.startsWith('/dashboard')
+
+  // Se estiver em uma página de autenticação e já estiver logado, redireciona para dashboard
+  if (isAuthPage && token) {
+    return NextResponse.redirect(new URL('/dashboard', request.url))
+  }
+
+  // Se estiver na homepage
+  if (isHomePage) {
+    if (token) {
+      return NextResponse.redirect(new URL('/dashboard', request.url))
+    }
+    return NextResponse.redirect(new URL('/login', request.url))
+  }
 
   // Se estiver tentando acessar área admin
   if (isAdminPage) {
@@ -28,51 +42,26 @@ export async function middleware(request: NextRequest) {
     if (token.role !== UserRole.ADMIN) {
       return NextResponse.redirect(new URL('/dashboard', request.url))
     }
-
-    return NextResponse.next()
   }
 
-  // Se estiver na página de perfil e autenticado, permite o acesso
-  if (isProfilePage) {
-    if (!token) {
-      return NextResponse.redirect(new URL('/login', request.url))
-    }
-    return NextResponse.next()
-  }
-
-  // Redireciona da home page baseado no status de autenticação
-  if (isHomePage) {
-    if (token) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
-    return NextResponse.redirect(new URL('/login', request.url))
-  }
-
-  // Redireciona das páginas de autenticação se já estiver logado
-  if (isAuthPage) {
-    if (token) {
-      return NextResponse.redirect(new URL('/dashboard', request.url))
-    }
-    const response = NextResponse.next()
-    
-    // Adiciona headers de segurança
-    response.headers.set('X-Frame-Options', 'DENY')
-    response.headers.set('X-Content-Type-Options', 'nosniff')
-    response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
-    response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
-    response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
-    
-    return response
-  }
-
-  // Protege rotas autenticadas
-  if (!token) {
+  // Se estiver na página de perfil ou dashboard e não estiver autenticado
+  if ((isProfilePage || isDashboardPage) && !token) {
     const redirectUrl = new URL('/login', request.url)
     redirectUrl.searchParams.set('callbackUrl', request.nextUrl.pathname)
     return NextResponse.redirect(redirectUrl)
   }
 
-  return NextResponse.next()
+  // Para todas as outras rotas, permite o acesso
+  const response = NextResponse.next()
+  
+  // Adiciona headers de segurança
+  response.headers.set('X-Frame-Options', 'DENY')
+  response.headers.set('X-Content-Type-Options', 'nosniff')
+  response.headers.set('Referrer-Policy', 'strict-origin-when-cross-origin')
+  response.headers.set('Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
+  response.headers.set('Strict-Transport-Security', 'max-age=31536000; includeSubDomains')
+  
+  return response
 }
 
 export const config = {
