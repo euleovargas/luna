@@ -2,13 +2,8 @@ import { getToken } from 'next-auth/jwt'
 import { NextResponse } from 'next/server'
 import type { NextRequest } from 'next/server'
 import { UserRole } from '@prisma/client'
-import { securityMiddleware } from '@/lib/security'
 
 export async function middleware(request: NextRequest) {
-  // Verifica segurança primeiro
-  const securityCheck = await securityMiddleware(request)
-  if (securityCheck) return securityCheck
-
   const token = await getToken({ req: request })
   const isPublicPath = request.nextUrl.pathname.startsWith('/login') || 
                       request.nextUrl.pathname.startsWith('/register')
