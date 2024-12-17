@@ -48,9 +48,11 @@ export default async function UserPage({ params }: UserPageProps) {
         <div className="flex items-center gap-4">
           <Avatar className="h-20 w-20">
             {user.image ? (
-              <AvatarImage src={user.image} alt={user.name} />
+              <AvatarImage src={user.image} alt={user.name || 'User'} />
             ) : (
-              <AvatarFallback>{user.name[0]?.toUpperCase()}</AvatarFallback>
+              <AvatarFallback>
+                {user.name ? user.name[0]?.toUpperCase() : 'U'}
+              </AvatarFallback>
             )}
           </Avatar>
           <div>
