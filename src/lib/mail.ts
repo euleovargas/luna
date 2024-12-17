@@ -61,7 +61,6 @@ export const sendTestEmail = async (to: string) => {
     });
 
     console.log('[TEST_EMAIL] Email enviado com sucesso:', {
-      id: data.id,
       to: recipient,
       timestamp
     });
@@ -134,7 +133,6 @@ export const sendVerificationEmail = async (email: string, token: string) => {
     });
 
     console.log('[VERIFICATION_EMAIL] Email enviado com sucesso:', {
-      id: data.id,
       to: recipient,
       timestamp
     });
@@ -207,7 +205,6 @@ export const sendPasswordResetEmail = async ({ email, token }: SendPasswordReset
     });
 
     console.log('[RESET_EMAIL] Email enviado com sucesso:', {
-      id: data.id,
       to: recipient,
       timestamp
     });
