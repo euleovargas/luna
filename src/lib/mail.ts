@@ -93,7 +93,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
       to: recipient,
       originalEmail: email,
       confirmLink,
-      apiKey: RESEND_API_KEY ? 'configurada' : 'não configurada',
+      apiKey: RESEND_API_KEY ? `configurada (${RESEND_API_KEY.substring(0, 4)}...)` : 'não configurada',
       isDev,
       appUrl: APP_URL,
       timestamp,
