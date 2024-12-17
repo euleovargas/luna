@@ -81,80 +81,74 @@ export const sendTestEmail = async (to: string) => {
   }
 };
 
-export const sendVerificationEmail = async (email: string, token: string) => {
+export const sendVerificationEmail = async ({ email, token }: SendVerificationEmailParams) => {
   // Em desenvolvimento, sempre envia para o email de teste
   const recipient = isDev ? TEST_EMAIL : email;
-  const confirmLink = `${APP_URL}/verify-email?token=${token}`;
-  const timestamp = new Date().toISOString();
-  
+  const verificationLink = `${APP_URL}/verify-email?token=${token}`;
+
   try {
     console.log('[VERIFICATION_EMAIL] Iniciando envio:', {
-      from: EMAIL_FROM,
       to: recipient,
-      originalEmail: email,
-      confirmLink,
-      apiKey: RESEND_API_KEY ? `configurada (${RESEND_API_KEY.substring(0, 4)}...)` : 'não configurada',
+      link: verificationLink,
       isDev,
-      appUrl: APP_URL,
-      timestamp,
-      environment: process.env.NODE_ENV,
-      vercelEnv: process.env.VERCEL_ENV
     });
 
-    const data = await resend.emails.send({
+    const { data, error } = await resend.emails.send({
       from: EMAIL_FROM,
       to: recipient,
-      subject: `Verifique sua conta na Luna`,
+      subject: 'Verifique sua conta na Luna',
       html: `
-        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-          <h2 style="color: #333; text-align: center;">Bem-vindo à Luna!</h2>
-          <p style="color: #666; font-size: 16px; line-height: 1.5;">
-            Obrigado por se cadastrar. Para começar a usar sua conta, precisamos confirmar seu endereço de email.
-          </p>
-          <div style="text-align: center; margin: 30px 0;">
-            <a href="${confirmLink}" 
-               style="background-color: #6366f1; color: white; padding: 12px 24px; 
-                      text-decoration: none; border-radius: 6px; font-weight: 500;">
-              Verificar minha conta
-            </a>
-          </div>
-          <p style="color: #666; font-size: 14px; line-height: 1.5;">
-            Se o botão não funcionar, você pode copiar e colar este link no seu navegador:
-            <br>
-            <a href="${confirmLink}" style="color: #6366f1; word-break: break-all;">
-              ${confirmLink}
-            </a>
-          </p>
-          <p style="color: #666; font-size: 14px; line-height: 1.5;">
-            Este link expira em 24 horas por motivos de segurança.
-          </p>
-          ${isDev ? `<p style="color: red; text-align: center;">MODO DE DESENVOLVIMENTO - Email original: ${email}</p>` : ''}
-          <hr style="border: none; border-top: 1px solid #eee; margin: 30px 0;">
-          <p style="color: #999; font-size: 12px; text-align: center;">
-            Se você não se cadastrou na Luna, pode ignorar este email com segurança.
-          </p>
-        </div>
+        <!DOCTYPE html>
+        <html>
+          <head>
+            <title>Verificação de Email</title>
+            <meta charset="utf-8" />
+          </head>
+          <body>
+            <div style="max-width: 600px; margin: 0 auto; padding: 20px;">
+              <h1 style="color: #333; text-align: center;">Bem-vindo à Luna!</h1>
+              <p style="color: #666; font-size: 16px; line-height: 1.5;">
+                Obrigado por se cadastrar. Para começar a usar sua conta, 
+                precisamos verificar seu endereço de email.
+              </p>
+              <div style="text-align: center; margin: 30px 0;">
+                <a href="${verificationLink}"
+                   style="background-color: #0070f3; color: white; padding: 12px 24px; 
+                          text-decoration: none; border-radius: 5px; font-weight: bold;">
+                  Verificar Email
+                </a>
+              </div>
+              <p style="color: #666; font-size: 14px;">
+                Se o botão não funcionar, você pode copiar e colar este link no seu navegador:
+                <br>
+                <a href="${verificationLink}" style="color: #0070f3; word-break: break-all;">
+                  ${verificationLink}
+                </a>
+              </p>
+              <p style="color: #999; font-size: 12px; margin-top: 30px;">
+                Este link expira em 24 horas. Se você não solicitou esta verificação, 
+                pode ignorar este email com segurança.
+              </p>
+            </div>
+          </body>
+        </html>
       `,
     });
 
-    console.log('[VERIFICATION_EMAIL] Email enviado com sucesso:', {
-      to: recipient,
-      timestamp
-    });
-    
-    return { success: true };
+    if (error) {
+      console.error('[VERIFICATION_EMAIL] Erro ao enviar:', error);
+      throw error;
+    }
 
-  } catch (error: any) {
-    console.error('[VERIFICATION_EMAIL] Erro ao enviar:', {
-      error: error.message,
-      code: error.code,
-      name: error.name,
-      statusCode: error.statusCode,
-      response: error.response,
+    console.log('[VERIFICATION_EMAIL] Enviado com sucesso:', {
+      id: data?.id,
       to: recipient,
-      timestamp
     });
-    return { success: false, error };
+
+    return { success: true };
+  } catch (error) {
+    console.error('[VERIFICATION_EMAIL] Erro:', error);
+    throw error;
   }
 };
 

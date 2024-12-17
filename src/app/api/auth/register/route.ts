@@ -76,8 +76,15 @@ export async function POST(req: Request) {
       email: user.email 
     })
 
+    if (!user.email) {
+      throw new Error('Email do usuário não encontrado após criação')
+    }
+
     // Envia o email de verificação
-    await sendVerificationEmail(user.email, verificationToken)
+    await sendVerificationEmail({ 
+      email: user.email, 
+      token: verificationToken 
+    })
 
     console.log('[REGISTER] Email enviado com sucesso')
 
