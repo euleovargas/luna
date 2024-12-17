@@ -5,6 +5,7 @@ import { Heading } from "@/components/ui/heading"
 import { Separator } from "@/components/ui/separator"
 import { getCurrentUser } from "@/lib/session"
 import { UserRole } from "@prisma/client"
+import { User } from "@/types/user"
 
 interface EditUserPageProps {
   params: {
@@ -19,7 +20,7 @@ export default async function EditUserPage({ params }: EditUserPageProps) {
     redirect("/")
   }
 
-  const user = await db.user.findUnique({
+  const dbUser = await db.user.findUnique({
     where: { id: params.id },
     select: {
       id: true,
@@ -31,8 +32,14 @@ export default async function EditUserPage({ params }: EditUserPageProps) {
     },
   })
 
-  if (!user) {
+  if (!dbUser) {
     notFound()
+  }
+
+  // Converte o usuário do DB para o tipo User
+  const user: User = {
+    ...dbUser,
+    createdAt: dbUser.createdAt.toISOString(),
   }
 
   async function onSubmit(data: any) {
