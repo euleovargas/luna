@@ -15,7 +15,7 @@ const isDev = process.env.NODE_ENV === 'development';
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://luna-lemon.vercel.app';
 
 // Email verificado no Resend para testes
-const TEST_EMAIL = 'eu.leovargas@gmail.com';
+const TEST_EMAIL = 'contato@leovargas.com.br';
 
 interface SendVerificationEmailParams {
   email: string;
