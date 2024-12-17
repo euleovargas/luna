@@ -45,9 +45,12 @@ export default function VerifyEmailPage() {
         description: "Verifique sua caixa de entrada.",
       })
     } catch (error) {
+      console.error("[VERIFY_EMAIL] Erro ao reenviar:", error)
       toast({
-        title: "Erro",
-        description: error instanceof Error ? error.message : "Erro ao reenviar email de verificação",
+        title: "Erro ao reenviar email",
+        description: error instanceof Error 
+          ? `${error.message} (${error.name})`
+          : "Erro desconhecido ao reenviar email de verificação",
         variant: "destructive",
       })
     } finally {

@@ -101,7 +101,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
       vercelEnv: process.env.VERCEL_ENV
     });
 
-    const data = await resend.emails.send({
+    const emailData = {
       from: EMAIL_FROM,
       to: recipient,
       subject: `Verificação Luna Platform [${timestamp}]`,
@@ -130,11 +130,16 @@ export const sendVerificationEmail = async (email: string, token: string) => {
           </p>
         </div>
       `,
-    });
+    };
+
+    console.log('[VERIFICATION_EMAIL] Dados do email:', emailData);
+
+    const data = await resend.emails.send(emailData);
 
     console.log('[VERIFICATION_EMAIL] Email enviado com sucesso:', {
       to: recipient,
-      timestamp
+      timestamp,
+      response: data
     });
     
     return { success: true };
@@ -147,9 +152,10 @@ export const sendVerificationEmail = async (email: string, token: string) => {
       statusCode: error.statusCode,
       response: error.response,
       to: recipient,
-      timestamp
+      timestamp,
+      stack: error.stack
     });
-    return { success: false, error };
+    throw error; // Propaga o erro para ser tratado pela rota
   }
 };
 
