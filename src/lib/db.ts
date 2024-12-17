@@ -5,28 +5,29 @@ declare global {
 }
 
 const prismaClientSingleton = () => {
-  return new PrismaClient({
+  const prisma = new PrismaClient({
     log: ['error', 'warn'],
     datasources: {
       db: {
         url: process.env.DATABASE_URL
       },
     },
-  }).$extends({
-    query: {
-      $allOperations({ operation, model, args, query }) {
-        const start = performance.now()
-        return query(args).finally(() => {
-          const end = performance.now()
-          console.log(`${model}.${operation} took ${end - start}ms`)
-        })
-      },
-    },
   })
+
+  // Add performance monitoring
+  prisma.$use(async (params, next) => {
+    const start = performance.now()
+    const result = await next(params)
+    const end = performance.now()
+    console.log(`${params.model}.${params.action} took ${end - start}ms`)
+    return result
+  })
+
+  return prisma
 }
 
-const prisma = globalThis.prisma ?? prismaClientSingleton()
+export const prisma = globalThis.prisma ?? prismaClientSingleton()
 
 export const db = prisma
 
-if (process.env.NODE_ENV !== "production") globalThis.prisma = prisma
+if (process.env.NODE_ENV !== 'production') globalThis.prisma = prisma
