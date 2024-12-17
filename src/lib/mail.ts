@@ -84,7 +84,7 @@ export const sendTestEmail = async (to: string) => {
 export const sendVerificationEmail = async (email: string, token: string) => {
   // Em desenvolvimento, sempre envia para o email de teste
   const recipient = isDev ? TEST_EMAIL : email;
-  const confirmLink = `${APP_URL}/auth/verify?token=${token}`;
+  const confirmLink = `${APP_URL}/verify-email?token=${token}`;
   const timestamp = new Date().toISOString();
   
   try {

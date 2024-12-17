@@ -2,6 +2,7 @@ import { NextResponse } from "next/server"
 import { hash } from "bcryptjs"
 import { db } from "@/lib/db"
 import { generateVerificationToken } from "@/lib/tokens"
+import { sendVerificationEmail } from "@/lib/mail"
 import { z } from "zod"
 import { Prisma } from "@prisma/client"
 
@@ -29,6 +30,8 @@ export async function POST(req: Request) {
     const json = await req.json()
     const body = registerSchema.parse(json)
 
+    console.log('[REGISTER] Iniciando registro:', { email: body.email })
+
     // Primeiro, verifica se o email já existe
     const existingUser = await db.user.findUnique({
       where: { email: body.email },
@@ -36,6 +39,7 @@ export async function POST(req: Request) {
     })
 
     if (existingUser) {
+      console.log('[REGISTER] Email já cadastrado:', { email: body.email })
       return NextResponse.json(
         { error: "Email já cadastrado" },
         { status: 400 }
@@ -45,6 +49,11 @@ export async function POST(req: Request) {
     // Hash da senha
     const hashedPassword = await hash(body.password, 10)
     const verificationToken = await generateVerificationToken()
+
+    console.log('[REGISTER] Criando usuário:', { 
+      email: body.email,
+      tokenLength: verificationToken.length 
+    })
 
     // Cria o usuário
     const user = await db.user.create({
@@ -62,7 +71,17 @@ export async function POST(req: Request) {
       },
     })
 
-    // Retorna sucesso imediatamente
+    console.log('[REGISTER] Usuário criado, enviando email:', { 
+      userId: user.id,
+      email: user.email 
+    })
+
+    // Envia o email de verificação
+    await sendVerificationEmail(user.email, verificationToken)
+
+    console.log('[REGISTER] Email enviado com sucesso')
+
+    // Retorna sucesso
     return NextResponse.json({
       user: {
         id: user.id,
