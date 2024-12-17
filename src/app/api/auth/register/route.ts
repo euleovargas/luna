@@ -41,7 +41,7 @@ export async function POST(req: Request) {
 
     await db.verificationToken.create({
       data: {
-        email,
+        identifier: email,
         token: verificationToken,
         expires: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
       }
