@@ -7,12 +7,12 @@ if (!process.env.RESEND_API_KEY) {
 const resend = new Resend(process.env.RESEND_API_KEY);
 
 // Configurações de email
-const EMAIL_FROM = 'Luna Platform <noreply@lpclass.com.br>';
+const EMAIL_FROM = 'Luna Platform <onboarding@resend.dev>';
 const isDev = process.env.NODE_ENV === 'development';
+const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://luna-lemon.vercel.app';
 
 // Email verificado no Resend para testes
 const TEST_EMAIL = 'eu.leovargas@gmail.com';
-const SENDER_EMAIL = 'onboarding@resend.dev';
 
 interface SendVerificationEmailParams {
   email: string;
@@ -50,35 +50,16 @@ export const sendTestEmail = async (to: string) => {
           <p style="color: #666; font-size: 16px; line-height: 1.5;">
             Este é um email de teste enviado em: ${timestamp}
           </p>
-          <p style="color: #666; font-size: 14px;">
-            Se você está vendo este email, significa que o sistema de envio está funcionando corretamente.
-          </p>
+          ${isDev ? `<p style="color: red; text-align: center;">MODO DE DESENVOLVIMENTO - Email original: ${to}</p>` : ''}
         </div>
       `,
-    }).catch(error => {
-      console.error('[TEST_EMAIL] Erro detalhado:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-        code: error.code,
-        response: error.response,
-        statusCode: error?.statusCode,
-      });
-      throw error;
     });
 
-    console.log('[TEST_EMAIL] Resposta da API:', data);
-    return { success: true, data };
-  } catch (error: any) {
-    console.error('[TEST_EMAIL] Erro capturado:', {
-      error,
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-      code: error.code,
-      response: error.response,
-      statusCode: error?.statusCode,
-    });
+    console.log('[TEST_EMAIL] Email enviado:', data);
+    return { success: true };
+
+  } catch (error) {
+    console.error('[TEST_EMAIL] Erro ao enviar:', error);
     return { success: false, error };
   }
 };
@@ -86,7 +67,7 @@ export const sendTestEmail = async (to: string) => {
 export const sendVerificationEmail = async (email: string, token: string) => {
   // Em desenvolvimento, sempre envia para o email de teste
   const recipient = isDev ? TEST_EMAIL : email;
-  const confirmLink = `${process.env.NEXTAUTH_URL}/api/auth/verify?token=${token}`;
+  const confirmLink = `${APP_URL}/auth/verify?token=${token}`;
   const timestamp = new Date().toISOString();
   
   console.log('[EMAIL] Configurações:', {
@@ -96,7 +77,7 @@ export const sendVerificationEmail = async (email: string, token: string) => {
     confirmLink,
     apiKey: process.env.RESEND_API_KEY?.substring(0, 8) + '...',
     isDev,
-    nextAuthUrl: process.env.NEXTAUTH_URL,
+    appUrl: APP_URL,
     timestamp
   });
 
@@ -128,86 +109,62 @@ export const sendVerificationEmail = async (email: string, token: string) => {
               ${confirmLink}
             </a>
           </p>
-          <p style="color: #666; font-size: 14px;">
-            Email enviado em: ${timestamp}
-          </p>
         </div>
       `,
-    }).catch(error => {
-      console.error('[EMAIL] Erro detalhado:', {
-        name: error.name,
-        message: error.message,
-        stack: error.stack,
-        code: error.code,
-        response: error.response,
-        statusCode: error?.statusCode,
-      });
-      throw error;
     });
 
-    console.log('[EMAIL] Resposta da API:', data);
-    return { success: true, data };
-  } catch (error: any) {
-    console.error('[EMAIL] Erro capturado:', {
-      error,
-      name: error.name,
-      message: error.message,
-      stack: error.stack,
-      code: error.code,
-      response: error.response,
-      statusCode: error?.statusCode,
-    });
+    console.log('[EMAIL] Email enviado:', data);
+    return { success: true };
+
+  } catch (error) {
+    console.error('[EMAIL] Erro ao enviar:', error);
     return { success: false, error };
   }
 };
 
-export async function sendPasswordResetEmail({ email, token }: SendPasswordResetEmailParams) {
+export const sendPasswordResetEmail = async ({ email, token }: SendPasswordResetEmailParams) => {
   // Em desenvolvimento, sempre envia para o email de teste
   const recipient = isDev ? TEST_EMAIL : email;
-  const resetUrl = `${process.env.NEXTAUTH_URL}/reset-password?token=${token}`;
-
-  console.log('[RESET_PASSWORD_EMAIL] Configurações:', {
-    from: EMAIL_FROM,
-    to: recipient,
-    resetUrl,
-    apiKey: process.env.RESEND_API_KEY?.substring(0, 8) + '...',
-    isDev,
-    originalTo: email,
-    timestamp: new Date().toISOString()
-  });
+  const resetLink = `${APP_URL}/auth/reset?token=${token}`;
+  const timestamp = new Date().toISOString();
 
   try {
     const data = await resend.emails.send({
       from: EMAIL_FROM,
-      to: [recipient],
-      subject: 'Recuperação de Senha - Luna',
+      to: recipient,
+      subject: `Redefinir Senha - Luna Platform [${timestamp}]`,
       html: `
         <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto;">
-          <h1 style="color: #333; text-align: center;">Recuperação de Senha</h1>
-          <p>Olá,</p>
-          <p>Recebemos uma solicitação para redefinir sua senha.</p>
-          <p>Clique no botão abaixo para criar uma nova senha:</p>
+          <h2 style="color: #333; text-align: center;">Redefinir sua senha</h2>
+          ${isDev ? `<p style="color: red; text-align: center;">MODO DE DESENVOLVIMENTO - Email original: ${email}</p>` : ''}
+          <p style="color: #666; font-size: 16px; line-height: 1.5;">
+            Você solicitou a redefinição de senha. Clique no botão abaixo para criar uma nova senha:
+          </p>
           <div style="text-align: center; margin: 30px 0;">
-            <a href="${resetUrl}" 
+            <a href="${resetLink}" 
                style="background-color: #0070f3; color: white; padding: 12px 24px; 
-                      text-decoration: none; border-radius: 5px; display: inline-block;">
+                      text-decoration: none; border-radius: 5px; font-weight: bold;">
               Redefinir Senha
             </a>
           </div>
-          <p>Se você não solicitou a redefinição de senha, ignore este email.</p>
-          <p>O link expira em 15 minutos.</p>
-          <hr style="margin: 30px 0; border: none; border-top: 1px solid #eaeaea;" />
-          <p style="color: #666; font-size: 12px; text-align: center;">
-            Este é um email automático, por favor não responda.
+          <p style="color: #666; font-size: 14px;">
+            Se você não solicitou a redefinição de senha, pode ignorar este email.
+          </p>
+          <p style="color: #666; font-size: 14px;">
+            Se o botão não funcionar, copie e cole este link no seu navegador:<br>
+            <a href="${resetLink}" style="color: #0070f3; word-break: break-all;">
+              ${resetLink}
+            </a>
           </p>
         </div>
       `,
     });
 
-    console.log('[RESET_PASSWORD_EMAIL] Email enviado:', data);
-    return data;
+    console.log('[PASSWORD_RESET] Email enviado:', data);
+    return { success: true };
+
   } catch (error) {
-    console.error('[RESET_PASSWORD_EMAIL] Erro ao enviar email:', error);
-    throw error;
+    console.error('[PASSWORD_RESET] Erro ao enviar:', error);
+    return { success: false, error };
   }
-}
+};
