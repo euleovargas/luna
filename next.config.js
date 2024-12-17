@@ -9,6 +9,9 @@ const nextConfig = {
   images: {
     domains: ['uploadthing.com', 'utfs.io'],
   },
+  serverRuntimeConfig: {
+    maxDuration: 60
+  },
   webpack: (config, { buildId, dev, isServer, defaultLoaders, webpack }) => {
     // Ignore browser extension errors in development
     if (dev && !isServer) {

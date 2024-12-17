@@ -6,7 +6,6 @@ import { sendVerificationEmail } from "@/lib/mail"
 import { z } from "zod"
 
 export const dynamic = 'force-dynamic'
-export const maxDuration = 60 // 60 segundos (limite do plano hobby da Vercel)
 
 const registerSchema = z.object({
   name: z
