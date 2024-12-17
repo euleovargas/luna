@@ -100,10 +100,20 @@ model SecurityLog {
 model BlockedIP {
   id          String   @id @default(auto()) @map("_id") @db.ObjectId
   ip          String   @unique
-  reason      String
-  blockedAt   DateTime @default(now())
-  expiresAt   DateTime?
+  reason      String?
   isPermanent Boolean  @default(false)
+  expiresAt   DateTime?
+  createdAt   DateTime @default(now())
 
   @@map("blocked_ips")
+}
+
+// Modelo para rate limiting
+model RateLimit {
+  id        String   @id @default(auto()) @map("_id") @db.ObjectId
+  key       String   // Formato: tipo:ip:path
+  timestamp DateTime @default(now())
+
+  @@index([key, timestamp])
+  @@map("rate_limits")
 }

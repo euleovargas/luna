@@ -1,91 +1,84 @@
-import rateLimit from 'express-rate-limit'
 import { NextResponse } from 'next/server'
+import { db } from './db'
 
 // Verifica se estamos em desenvolvimento
 const isDevelopment = process.env.NODE_ENV === 'development'
 
-// Função que retorna um "fake" rate limiter para desenvolvimento
-const createDevLimiter = () => ({
-  // eslint-disable-next-line @typescript-eslint/no-explicit-any
-  handle: (_req: any, _res: any, next: any) => next(),
-})
-
-// Limite mais permissivo para registro (20 tentativas por hora)
-export const registerLimiter = isDevelopment 
-  ? createDevLimiter()
-  : rateLimit({
-      windowMs: 60 * 60 * 1000, // 1 hora
-      max: 20, // 20 tentativas
-      message: 'Too many registration attempts, please try again later',
-      standardHeaders: true,
-      legacyHeaders: false,
-    })
-
-// Limite moderado para reenvio de email (10 tentativas por hora)
-export const emailResendLimiter = isDevelopment
-  ? createDevLimiter()
-  : rateLimit({
-      windowMs: 60 * 60 * 1000, // 1 hora
-      max: 10, // 10 tentativas
-      message: 'Too many email resend attempts, please try again later',
-      standardHeaders: true,
-      legacyHeaders: false,
-    })
-
-// Limite mais restritivo para tentativas de login (5 tentativas por 15 minutos)
-export const loginLimiter = isDevelopment
-  ? createDevLimiter()
-  : rateLimit({
-      windowMs: 15 * 60 * 1000, // 15 minutos
-      max: 5, // 5 tentativas
-      message: 'Too many login attempts, please try again later',
-      standardHeaders: true,
-      legacyHeaders: false,
-    })
+// Configurações de limite por tipo
+const limitConfigs = {
+  register: {
+    windowMs: 60 * 60 * 1000, // 1 hora
+    max: 20, // 20 tentativas
+    message: 'Muitas tentativas de registro. Por favor, tente novamente mais tarde.',
+  },
+  email: {
+    windowMs: 60 * 60 * 1000, // 1 hora
+    max: 10, // 10 tentativas
+    message: 'Muitas tentativas de reenvio de email. Por favor, tente novamente mais tarde.',
+  },
+  login: {
+    windowMs: 15 * 60 * 1000, // 15 minutos
+    max: 5, // 5 tentativas
+    message: 'Muitas tentativas de login. Por favor, tente novamente mais tarde.',
+  },
+}
 
 export function withRateLimit(
   handler: (req: Request) => Promise<Response>,
-  limiterType: 'register' | 'email' | 'login' = 'login'
+  limiterType: keyof typeof limitConfigs = 'login'
 ) {
   // Em desenvolvimento, retorna o handler direto sem rate limit
   if (isDevelopment) {
     return handler
   }
 
-  const limiter = {
-    register: registerLimiter,
-    email: emailResendLimiter,
-    login: loginLimiter,
-  }[limiterType]
-
   return async (request: Request) => {
     try {
-      await new Promise((resolve, reject) => {
-        limiter(
-          { 
-            ip: request.headers.get('x-forwarded-for') || 'unknown',
-            path: new URL(request.url).pathname 
+      const config = limitConfigs[limiterType]
+      const ip = request.headers.get('x-forwarded-for') || request.headers.get('x-real-ip') || 'unknown'
+      const path = new URL(request.url).pathname
+      const key = `${limiterType}:${ip}:${path}`
+
+      // Busca tentativas recentes
+      const attempts = await db.rateLimit.findMany({
+        where: {
+          key,
+          timestamp: {
+            gte: new Date(Date.now() - config.windowMs),
           },
-          {},
-          (error: any) => {
-            if (error) reject(error)
-            resolve(true)
-          }
-        )
+        },
       })
-      
-      return handler(request)
-    } catch (error) {
-      const messages = {
-        register: 'Muitas tentativas de registro. Por favor, tente novamente mais tarde.',
-        email: 'Muitas tentativas de reenvio de email. Por favor, tente novamente mais tarde.',
-        login: 'Muitas tentativas de login. Por favor, tente novamente mais tarde.',
+
+      // Se excedeu o limite
+      if (attempts.length >= config.max) {
+        return NextResponse.json(
+          { error: config.message },
+          { status: 429 }
+        )
       }
 
-      return NextResponse.json(
-        { error: messages[limiterType] },
-        { status: 429 }
-      )
+      // Registra nova tentativa
+      await db.rateLimit.create({
+        data: {
+          key,
+          timestamp: new Date(),
+        },
+      })
+
+      // Limpa tentativas antigas
+      await db.rateLimit.deleteMany({
+        where: {
+          key,
+          timestamp: {
+            lt: new Date(Date.now() - config.windowMs),
+          },
+        },
+      })
+
+      return handler(request)
+    } catch (error) {
+      console.error('[RATE_LIMIT] Erro:', error)
+      return handler(request)
     }
   }
 }
