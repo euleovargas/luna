@@ -48,10 +48,10 @@ export async function POST(req: Request) {
     })
 
     // Enviando email de forma síncrona
-    await sendVerificationEmail(
-      verificationToken,
-      email
-    )
+    await sendVerificationEmail({
+      email,
+      token: verificationToken
+    })
 
     console.log("[REGISTER] Registro concluído com sucesso:", { email })
     return NextResponse.json({ success: true })
