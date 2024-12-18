@@ -21,7 +21,7 @@ import { Icons } from "@/components/ui/icons"
 
 import Link from "next/link"
 import { signIn } from "next-auth/react"
-import { Card, CardContent, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 
 const registerSchema = z.object({
   name: z
