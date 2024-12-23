@@ -39,10 +39,6 @@ export default async function UsersPage() {
       <DataTable
         columns={columns}
         data={users}
-        deleteUser={async () => {
-          'use server'
-          revalidatePath('/admin/users')
-        }}
       />
     </div>
   )
