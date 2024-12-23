@@ -31,11 +31,13 @@ import { useRouter } from "next/navigation"
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
+  deleteUser?: () => Promise<void>
 }
 
 export function DataTable<TData, TValue>({
   columns,
   data,
+  deleteUser,
 }: DataTableProps<TData, TValue>) {
   const [rowSelection, setRowSelection] = React.useState({})
   const [columnVisibility, setColumnVisibility] = React.useState<VisibilityState>({})
@@ -53,7 +55,7 @@ export function DataTable<TData, TValue>({
       columnFilters,
     },
     meta: {
-      deleteUser: async () => {
+      deleteUser: deleteUser || async () => {
         router.refresh()
       },
     },
