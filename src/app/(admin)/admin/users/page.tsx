@@ -3,18 +3,17 @@ import { getUsers } from "@/lib/api/users"
 import { DataTable } from "@/components/admin/users/data-table"
 import { columns } from "@/components/admin/users/columns"
 import { User } from "@/types/user"
-import { Heading } from "@/components/admin/heading"
-import { Button } from "@/components/admin/button"
-import { Link } from "next/link"
-import { Icons } from "@/components/icons"
-import { Separator } from "@/components/admin/separator"
+import { Button } from "@/components/ui/button"
+import Link from "next/link"
+import { Icons } from "@/components/ui/icons"
+import { Separator } from "@/components/ui/separator"
+import { revalidatePath } from "next/cache"
 
 export const metadata: Metadata = {
   title: "Usuários",
   description: "Gerencie os usuários do sistema.",
 }
 
-export const dynamic = "force-dynamic"
 export const revalidate = 0
 
 export default async function UsersPage() {
@@ -23,10 +22,12 @@ export default async function UsersPage() {
   return (
     <div className="flex-1 space-y-4 p-8 pt-6">
       <div className="flex items-center justify-between">
-        <Heading
-          title="Usuários"
-          description="Gerencie os usuários do sistema."
-        />
+        <div className="space-y-1">
+          <h2 className="text-2xl font-bold tracking-tight">Usuários</h2>
+          <p className="text-muted-foreground">
+            Gerencie os usuários do sistema.
+          </p>
+        </div>
         <Button asChild>
           <Link href="/admin/users/new">
             <Icons.add className="mr-2 h-4 w-4" />
