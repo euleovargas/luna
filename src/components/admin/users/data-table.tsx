@@ -55,8 +55,8 @@ export function DataTable<TData, TValue>({
       columnFilters,
     },
     meta: {
-      deleteUser: deleteUser || async () => {
-        router.refresh()
+      deleteUser: deleteUser ? deleteUser : function() {
+        return router.refresh();
       },
     },
     enableRowSelection: true,
