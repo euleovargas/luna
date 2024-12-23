@@ -25,22 +25,35 @@ import {
 } from "@/components/ui/alert-dialog"
 import { CustomSession } from "@/types"
 import { updateUserProfile } from "@/app/_actions/user"
+import { useForm } from "react-hook-form"
+import { zodResolver } from "@hookform/resolvers/zod"
+import { z } from "zod"
 
-export default async function ProfilePage() {
+const profileFormSchema = z.object({
+  name: z.string().min(1, "Nome é obrigatório"),
+})
+
+export default function ProfilePage() {
   const router = useRouter()
   const { data: sessionData, update } = useSession()
   const session = sessionData as CustomSession
-  const [name, setName] = useState("")
   const [isLoading, setIsLoading] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const [isDeleting, setIsDeleting] = useState(false)
   const { startUpload } = useUploadThing("imageUploader")
 
+  const form = useForm<z.infer<typeof profileFormSchema>>({
+    resolver: zodResolver(profileFormSchema),
+    defaultValues: {
+      name: session?.user?.name || "",
+    },
+  })
+
   useEffect(() => {
     if (session?.user?.name) {
-      setName(session.user.name)
+      form.setValue("name", session.user.name)
     }
-  }, [session?.user?.name])
+  }, [session?.user?.name, form])
 
   const onDrop = async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -106,11 +119,21 @@ export default async function ProfilePage() {
     maxFiles: 1,
   })
 
-  async function onSubmit(data: any) {
+  async function onSubmit(values: z.infer<typeof profileFormSchema>) {
     try {
-      const result = await updateUserProfile(session.user.id, data)
+      setIsLoading(true)
+      const result = await updateUserProfile(session.user.id, values)
       
       if (result.success) {
+        // Atualiza a sessão com os novos dados
+        await update({
+          ...session,
+          user: {
+            ...session?.user,
+            name: values.name,
+          }
+        })
+
         toast({
           title: "Perfil atualizado",
           description: "Suas informações foram atualizadas com sucesso.",
@@ -124,6 +147,8 @@ export default async function ProfilePage() {
         description: "Ocorreu um erro ao atualizar o perfil.",
         variant: "destructive",
       })
+    } finally {
+      setIsLoading(false)
     }
   }
 
@@ -214,15 +239,31 @@ export default async function ProfilePage() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="name">Nome</Label>
-            <Input
-              id="name"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              placeholder="Seu nome completo"
-            />
-          </div>
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <div className="grid gap-2">
+              <div className="grid gap-1">
+                <Label htmlFor="name">Nome</Label>
+                <Input
+                  id="name"
+                  className="w-[400px]"
+                  size={32}
+                  {...form.register("name")}
+                  disabled={isLoading}
+                />
+                {form.formState.errors.name && (
+                  <p className="text-sm text-red-500">
+                    {form.formState.errors.name.message}
+                  </p>
+                )}
+              </div>
+            </div>
+            <Button type="submit" disabled={isLoading}>
+              {isLoading && (
+                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+              )}
+              Atualizar perfil
+            </Button>
+          </form>
 
           <div className="space-y-2">
             <Label htmlFor="email">Email</Label>
@@ -233,21 +274,6 @@ export default async function ProfilePage() {
               placeholder="seu@email.com"
             />
           </div>
-
-          <Button
-            onClick={() => onSubmit({ name })}
-            disabled={isLoading}
-            className="w-full"
-          >
-            {isLoading ? (
-              <>
-                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                Atualizando...
-              </>
-            ) : (
-              "Salvar alterações"
-            )}
-          </Button>
 
           <div className="pt-4 border-t">
             <AlertDialog>

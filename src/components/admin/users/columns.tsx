@@ -243,39 +243,50 @@ export const columns: ColumnDef<User>[] = [
       const user = row.original
 
       return (
-        <AlertDialog>
-          <AlertDialogTrigger asChild>
+        <DropdownMenu>
+          <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
-              <span className="sr-only">Open menu</span>
+              <span className="sr-only">Abrir menu</span>
               <MoreHorizontal className="h-4 w-4" />
             </Button>
-          </AlertDialogTrigger>
-          <AlertDialogContent>
-            <AlertDialogHeader>
-              <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-              <AlertDialogDescription>
-                Esta ação não pode ser desfeita.
-              </AlertDialogDescription>
-            </AlertDialogHeader>
-            <AlertDialogFooter>
-              <AlertDialogCancel>Cancelar</AlertDialogCancel>
-              <AlertDialogAction
-                onClick={async () => {
-                  const result = await deleteUser(user.id)
-                  if (!result.success) {
-                    toast({
-                      title: "Erro",
-                      description: "Erro ao deletar usuário",
-                      variant: "destructive",
-                    })
-                  }
-                }}
-              >
-                Continuar
-              </AlertDialogAction>
-            </AlertDialogFooter>
-          </AlertDialogContent>
-        </AlertDialog>
+          </DropdownMenuTrigger>
+          <DropdownMenuContent align="end">
+            <DropdownMenuLabel>Ações</DropdownMenuLabel>
+            <DropdownMenuSeparator />
+            <AlertDialog>
+              <AlertDialogTrigger asChild>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                  Excluir usuário
+                </DropdownMenuItem>
+              </AlertDialogTrigger>
+              <AlertDialogContent>
+                <AlertDialogHeader>
+                  <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                  <AlertDialogDescription>
+                    Esta ação não pode ser desfeita.
+                  </AlertDialogDescription>
+                </AlertDialogHeader>
+                <AlertDialogFooter>
+                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                  <AlertDialogAction
+                    onClick={async () => {
+                      const result = await deleteUser(user.id)
+                      if (!result.success) {
+                        toast({
+                          title: "Erro",
+                          description: "Erro ao deletar usuário",
+                          variant: "destructive",
+                        })
+                      }
+                    }}
+                  >
+                    Continuar
+                  </AlertDialogAction>
+                </AlertDialogFooter>
+              </AlertDialogContent>
+            </AlertDialog>
+          </DropdownMenuContent>
+        </DropdownMenu>
       )
     },
   },
