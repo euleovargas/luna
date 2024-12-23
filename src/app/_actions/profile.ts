@@ -12,7 +12,7 @@ export async function updateProfile(data: { name: string }) {
       return { success: false, error: 'Usuário não autenticado' }
     }
 
-    await db.user.update({
+    const updatedUser = await db.user.update({
       where: { id: session.user.id },
       data: {
         name: data.name,
@@ -24,7 +24,15 @@ export async function updateProfile(data: { name: string }) {
     revalidatePath('/profile')
     revalidatePath('/admin/users')
     
-    return { success: true }
+    return { 
+      success: true,
+      user: {
+        id: updatedUser.id,
+        name: updatedUser.name,
+        email: updatedUser.email,
+        role: updatedUser.role,
+      }
+    }
   } catch (error) {
     console.error('[PROFILE_UPDATE]', error)
     return { success: false, error: 'Erro ao atualizar perfil' }

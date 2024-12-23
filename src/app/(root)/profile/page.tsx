@@ -1,17 +1,11 @@
 "use client"
 
-import { useEffect, useState } from "react"
-import { useSession, signOut } from "next-auth/react"
-import { useRouter } from "next/navigation"
-import { useUploadThing } from "@/lib/uploadthing"
+import { Icons } from "@/components/ui/icons"
 import { Button } from "@/components/ui/button"
+import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "@/components/ui/card"
 import { Input } from "@/components/ui/input"
 import { Label } from "@/components/ui/label"
 import { toast } from "@/components/ui/use-toast"
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from "@/components/ui/card"
-import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
-import { useDropzone } from "react-dropzone"
-import { Icons } from "@/components/ui/icons"
 import {
   AlertDialog,
   AlertDialogAction,
@@ -23,11 +17,16 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { CustomSession } from "@/types"
-import { updateProfile } from "@/app/_actions/profile"
+import { useSession } from "next-auth/react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
+import { updateProfile } from "@/app/_actions/profile"
+import { useRouter } from "next/navigation"
+import { signOut } from "next-auth/react"
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
+import { useDropzone } from "react-dropzone"
+import { useUploadThing } from "@/lib/uploadthing"
 
 const profileFormSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
@@ -35,11 +34,10 @@ const profileFormSchema = z.object({
 
 export default function ProfilePage() {
   const router = useRouter()
-  const { data: sessionData, update } = useSession()
-  const session = sessionData as CustomSession
-  const [isLoading, setIsLoading] = useState(false)
-  const [isUploading, setIsUploading] = useState(false)
-  const [isDeleting, setIsDeleting] = useState(false)
+  const { data: session, update } = useSession()
+  const [isLoading, setIsLoading] = React.useState(false)
+  const [isDeleting, setIsDeleting] = React.useState(false)
+  const [isUploading, setIsUploading] = React.useState(false)
   const { startUpload } = useUploadThing("imageUploader")
 
   const form = useForm<z.infer<typeof profileFormSchema>>({
@@ -49,11 +47,12 @@ export default function ProfilePage() {
     },
   })
 
-  useEffect(() => {
+  // Atualiza o formulário quando a sessão mudar
+  React.useEffect(() => {
     if (session?.user?.name) {
       form.setValue("name", session.user.name)
     }
-  }, [session?.user?.name, form])
+  }, [session, form])
 
   const onDrop = async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -159,30 +158,22 @@ export default function ProfilePage() {
         method: "DELETE",
       })
 
-      const data = await response.json()
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to delete account")
+      if (!response?.ok) {
+        throw new Error("Erro ao deletar conta")
       }
 
-      if (data.success) {
-        toast({
-          title: "Conta deletada",
-          description: "Sua conta foi deletada com sucesso.",
-        })
-        // Fazer logout e redirecionar
-        await signOut({
-          redirect: true,
-          callbackUrl: "/account-deleted"
-        })
-      } else {
-        throw new Error(data.message || "Erro ao deletar conta")
-      }
+      toast({
+        title: "Conta deletada",
+        description: "Sua conta foi deletada com sucesso.",
+      })
+
+      signOut({
+        callbackUrl: "/",
+      })
     } catch (error) {
-      console.error("[PROFILE_DELETE] Error:", error)
       toast({
         title: "Erro",
-        description: error instanceof Error ? error.message : "Não foi possível deletar a conta.",
+        description: "Ocorreu um erro ao deletar sua conta.",
         variant: "destructive",
       })
     } finally {
@@ -190,12 +181,8 @@ export default function ProfilePage() {
     }
   }
 
-  if (!session?.user) {
-    return (
-      <div className="flex items-center justify-center min-h-screen">
-        <Icons.spinner className="h-8 w-8 animate-spin" />
-      </div>
-    )
+  if (!session) {
+    return null
   }
 
   return (
