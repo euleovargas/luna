@@ -1,5 +1,7 @@
-"use client"
+'use client'
 
+import * as React from "react"
+import { useState, useEffect } from "react"
 import { Icons } from "@/components/ui/icons"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "@/components/ui/card"
@@ -17,13 +19,12 @@ import {
   AlertDialogTitle,
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
-import { useSession } from "next-auth/react"
+import { useSession, signOut } from "next-auth/react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
 import { updateProfile } from "@/app/_actions/profile"
 import { useRouter } from "next/navigation"
-import { signOut } from "next-auth/react"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useDropzone } from "react-dropzone"
 import { useUploadThing } from "@/lib/uploadthing"
@@ -35,9 +36,9 @@ const profileFormSchema = z.object({
 export default function ProfilePage() {
   const router = useRouter()
   const { data: session, update } = useSession()
-  const [isLoading, setIsLoading] = React.useState(false)
-  const [isDeleting, setIsDeleting] = React.useState(false)
-  const [isUploading, setIsUploading] = React.useState(false)
+  const [isLoading, setIsLoading] = useState(false)
+  const [isDeleting, setIsDeleting] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const { startUpload } = useUploadThing("imageUploader")
 
   const form = useForm<z.infer<typeof profileFormSchema>>({
@@ -48,7 +49,7 @@ export default function ProfilePage() {
   })
 
   // Atualiza o formulário quando a sessão mudar
-  React.useEffect(() => {
+  useEffect(() => {
     if (session?.user?.name) {
       form.setValue("name", session.user.name)
     }
