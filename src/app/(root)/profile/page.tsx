@@ -138,6 +138,8 @@ export default function ProfilePage() {
           title: "Perfil atualizado",
           description: "Suas informações foram atualizadas com sucesso.",
         })
+        // Revalida a página
+        await router.refresh()
       } else {
         throw new Error(result.error)
       }
@@ -239,6 +241,16 @@ export default function ProfilePage() {
             </div>
           </div>
 
+          <div className="space-y-2">
+            <Label htmlFor="email">Email</Label>
+            <Input
+              id="email"
+              type="email"
+              disabled
+              value={session?.user?.email || ""}
+            />
+          </div>
+
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
             <div className="grid gap-2">
               <div className="grid gap-1">
@@ -264,16 +276,6 @@ export default function ProfilePage() {
               Atualizar perfil
             </Button>
           </form>
-
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              value={session.user.email || ""}
-              disabled
-              placeholder="seu@email.com"
-            />
-          </div>
 
           <div className="pt-4 border-t">
             <AlertDialog>
