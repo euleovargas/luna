@@ -15,6 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/ui/icons"
+import { Copy, MoreHorizontal, Pen, Trash, User } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 import Link from "next/link"
 import { toast } from "@/components/ui/use-toast"
@@ -37,13 +38,12 @@ import {
   TooltipTrigger,
 } from "@/components/ui/tooltip"
 import { useSession } from "next-auth/react"
-import { User } from "@/types/user"
+import { User as UserType } from "@/types/user"
 import { CustomSession } from "@/types"
 import { deleteUser } from "@/app/_actions/user"
-import { MoreHorizontal } from "lucide-react"
 
 interface DataTableRowActionsProps {
-  user: User
+  user: UserType
   onDelete?: () => Promise<void>
 }
 
@@ -99,19 +99,19 @@ export function DataTableRowActions({ user, onDelete }: DataTableRowActionsProps
         <DropdownMenuItem
           onClick={() => navigator.clipboard.writeText(user.id)}
         >
-          <Icons.copy className="mr-2 h-4 w-4" />
+          <Copy className="mr-2 h-4 w-4" />
           Copiar ID
         </DropdownMenuItem>
         <DropdownMenuSeparator />
         <DropdownMenuItem asChild>
           <Link href={`/admin/users/${user.id}`} className="flex items-center">
-            <Icons.eye className="mr-2 h-4 w-4" />
+            <User className="mr-2 h-4 w-4" />
             Ver detalhes
           </Link>
         </DropdownMenuItem>
         <DropdownMenuItem asChild>
           <Link href={`/admin/users/${user.id}/edit`} className="flex items-center">
-            <Icons.edit className="mr-2 h-4 w-4" />
+            <Pen className="mr-2 h-4 w-4" />
             Editar
           </Link>
         </DropdownMenuItem>
@@ -126,7 +126,7 @@ export function DataTableRowActions({ user, onDelete }: DataTableRowActionsProps
                       className="text-destructive focus:text-destructive"
                       disabled={isCurrentUser}
                     >
-                      <Icons.trash className="mr-2 h-4 w-4" />
+                      <Trash className="mr-2 h-4 w-4" />
                       Deletar
                     </DropdownMenuItem>
                   </AlertDialogTrigger>
@@ -177,7 +177,7 @@ declare module '@tanstack/table-core' {
   }
 }
 
-export const columns: ColumnDef<User>[] = [
+export const columns: ColumnDef<UserType>[] = [
   {
     id: "select",
     header: ({ table }) => (
@@ -253,9 +253,35 @@ export const columns: ColumnDef<User>[] = [
           <DropdownMenuContent align="end">
             <DropdownMenuLabel>Ações</DropdownMenuLabel>
             <DropdownMenuSeparator />
+            <DropdownMenuItem
+              onClick={() => {
+                navigator.clipboard.writeText(user.id)
+                toast({
+                  title: "ID copiado",
+                  description: "ID do usuário copiado para a área de transferência",
+                })
+              }}
+            >
+              <Copy className="mr-2 h-4 w-4" />
+              Copiar ID
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/admin/users/${user.id}`}>
+                <User className="mr-2 h-4 w-4" />
+                Visualizar detalhes
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuItem asChild>
+              <Link href={`/admin/users/${user.id}/edit`}>
+                <Pen className="mr-2 h-4 w-4" />
+                Editar
+              </Link>
+            </DropdownMenuItem>
+            <DropdownMenuSeparator />
             <AlertDialog>
               <AlertDialogTrigger asChild>
-                <DropdownMenuItem onSelect={(e) => e.preventDefault()}>
+                <DropdownMenuItem onSelect={(e) => e.preventDefault()} className="text-red-600">
+                  <Trash className="mr-2 h-4 w-4" />
                   Excluir usuário
                 </DropdownMenuItem>
               </AlertDialogTrigger>
