@@ -40,6 +40,7 @@ import { useSession } from "next-auth/react"
 import { User } from "@/types/user"
 import { CustomSession } from "@/types"
 import { deleteUser } from "@/app/_actions/user"
+import { MoreHorizontal } from "lucide-react"
 
 interface DataTableRowActionsProps {
   user: User
@@ -246,7 +247,7 @@ export const columns: ColumnDef<User>[] = [
           <AlertDialogTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <span className="sr-only">Open menu</span>
-              <Icons.moreHorizontal className="h-4 w-4" />
+              <MoreHorizontal className="h-4 w-4" />
             </Button>
           </AlertDialogTrigger>
           <AlertDialogContent>
