@@ -69,6 +69,9 @@ export function DataTableRowActions({ user, onDelete }: DataTableRowActionsProps
         title: "Usuário deletado",
         description: "O usuário foi deletado com sucesso.",
       })
+
+      // Força a atualização da página para refletir a mudança
+      window.location.reload()
     } catch (error) {
       console.error("Error deleting user:", error)
       toast({
