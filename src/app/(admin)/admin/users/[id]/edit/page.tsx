@@ -9,7 +9,6 @@ import { User } from "@/types/user"
 import { BackButton } from "@/components/ui/back-button"
 import { DeleteUserButton } from "@/components/admin/users/delete-user-button"
 import { toast } from "@/components/ui/use-toast"
-import { useRouter } from "next/router"
 
 interface EditUserPageProps {
   params: {
@@ -19,7 +18,6 @@ interface EditUserPageProps {
 
 export default async function EditUserPage({ params }: EditUserPageProps) {
   const currentUser = await getCurrentUser()
-  const router = useRouter()
 
   if (!currentUser || currentUser.role !== UserRole.ADMIN) {
     redirect("/")
