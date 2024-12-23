@@ -7,6 +7,9 @@ import { getCurrentUser } from "@/lib/session"
 import { UserRole } from "@prisma/client"
 import { User } from "@/types/user"
 import { BackButton } from "@/components/ui/back-button"
+import { DeleteUserButton } from "@/components/admin/users/delete-user-button"
+import { toast } from "@/components/ui/use-toast"
+import { useRouter } from "next/router"
 
 interface EditUserPageProps {
   params: {
@@ -16,6 +19,7 @@ interface EditUserPageProps {
 
 export default async function EditUserPage({ params }: EditUserPageProps) {
   const currentUser = await getCurrentUser()
+  const router = useRouter()
 
   if (!currentUser || currentUser.role !== UserRole.ADMIN) {
     redirect("/")
@@ -60,7 +64,10 @@ export default async function EditUserPage({ params }: EditUserPageProps) {
 
   return (
     <div className="container mx-auto py-10">
-      <BackButton href="/admin/users" />
+      <div className="flex justify-between items-center mb-6">
+        <BackButton href="/admin/users" />
+        <DeleteUserButton userId={params.id} />
+      </div>
       <div className="space-y-6">
         <div>
           <h3 className="text-lg font-medium">Editar Usuário</h3>
