@@ -128,16 +128,21 @@ export default function ProfilePage() {
         // Atualiza a sessão com os novos dados
         await update({
           ...session,
-          user: {
-            ...session?.user,
-            name: values.name,
-          }
+          user: result.user // Usa os dados retornados do servidor
         })
+
+        // Força um refresh da página
+        router.refresh()
 
         toast({
           title: "Perfil atualizado",
           description: "Suas informações foram atualizadas com sucesso.",
         })
+
+        // Recarrega a página após um breve delay para garantir que tudo foi atualizado
+        setTimeout(() => {
+          window.location.reload()
+        }, 1000)
       } else {
         throw new Error(result.error)
       }

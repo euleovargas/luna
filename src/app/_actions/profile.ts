@@ -1,7 +1,7 @@
 'use server'
 
 import { db } from "@/lib/db"
-import { revalidatePath } from "next/cache"
+import { revalidatePath, revalidateTag } from "next/cache"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
 
@@ -19,10 +19,12 @@ export async function updateProfile(data: { name: string }) {
       }
     })
 
-    // Força a revalidação de todas as rotas que mostram dados do usuário
-    revalidatePath('/', 'layout') // Revalida todo o layout que inclui o header
-    revalidatePath('/profile')
-    revalidatePath('/admin/users')
+    // Revalidação agressiva de todas as rotas e tags
+    revalidateTag('user') // Revalida todos os dados de usuário
+    revalidateTag('session') // Revalida dados da sessão
+    revalidatePath('/', 'layout') // Revalida todo o layout
+    revalidatePath('/profile') // Revalida a página de perfil
+    revalidatePath('/admin/users') // Revalida a lista de usuários
     
     return { 
       success: true,
