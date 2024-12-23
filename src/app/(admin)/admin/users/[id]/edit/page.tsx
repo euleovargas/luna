@@ -6,6 +6,7 @@ import { Separator } from "@/components/ui/separator"
 import { getCurrentUser } from "@/lib/session"
 import { UserRole } from "@prisma/client"
 import { User } from "@/types/user"
+import { BackButton } from "@/components/ui/back-button"
 
 interface EditUserPageProps {
   params: {
@@ -58,16 +59,19 @@ export default async function EditUserPage({ params }: EditUserPageProps) {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <Heading
-          title="Editar Usuário"
-          description="Edite as informações do usuário."
-        />
-      </div>
-      <Separator />
-      <div className="grid gap-6">
-        <UserForm user={user} onSubmit={onSubmit} />
+    <div className="container mx-auto py-10">
+      <BackButton href="/admin/users" />
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-medium">Editar Usuário</h3>
+          <p className="text-sm text-muted-foreground">
+            Faça alterações nas informações do usuário
+          </p>
+        </div>
+        <Separator />
+        <div className="grid gap-6">
+          <UserForm user={user} onSubmit={onSubmit} />
+        </div>
       </div>
     </div>
   )
