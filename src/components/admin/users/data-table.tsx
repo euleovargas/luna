@@ -31,7 +31,7 @@ import { useRouter } from "next/navigation"
 interface DataTableProps<TData, TValue> {
   columns: ColumnDef<TData, TValue>[]
   data: TData[]
-  deleteUser?: (userId: string) => Promise<void>
+  deleteUser?: () => Promise<void>
 }
 
 export function DataTable<TData, TValue>({
@@ -55,9 +55,8 @@ export function DataTable<TData, TValue>({
       columnFilters,
     },
     meta: {
-      deleteUser: deleteUser ? deleteUser : async (userId: string) => {
-        router.refresh();
-        return Promise.resolve();
+      deleteUser: deleteUser ? deleteUser : function() {
+        return router.refresh();
       },
     },
     enableRowSelection: true,

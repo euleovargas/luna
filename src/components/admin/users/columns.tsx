@@ -39,6 +39,7 @@ import {
 import { useSession } from "next-auth/react"
 import { User } from "@/types/user"
 import { CustomSession } from "@/types"
+import { deleteUser } from "@/app/_actions/user"
 
 interface DataTableRowActionsProps {
   user: User
@@ -237,10 +238,44 @@ export const columns: ColumnDef<User>[] = [
   },
   {
     id: "actions",
-    cell: ({ row, table }) => {
-      const deleteUser = table.options.meta?.deleteUser
-      const handleDelete = deleteUser ? () => deleteUser(row.original.id) : undefined
-      return <DataTableRowActions user={row.original} onDelete={handleDelete} />
+    cell: ({ row }) => {
+      const user = row.original
+
+      return (
+        <AlertDialog>
+          <AlertDialogTrigger asChild>
+            <Button variant="ghost" className="h-8 w-8 p-0">
+              <span className="sr-only">Open menu</span>
+              <Icons.moreHorizontal className="h-4 w-4" />
+            </Button>
+          </AlertDialogTrigger>
+          <AlertDialogContent>
+            <AlertDialogHeader>
+              <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+              <AlertDialogDescription>
+                Esta ação não pode ser desfeita.
+              </AlertDialogDescription>
+            </AlertDialogHeader>
+            <AlertDialogFooter>
+              <AlertDialogCancel>Cancelar</AlertDialogCancel>
+              <AlertDialogAction
+                onClick={async () => {
+                  const result = await deleteUser(user.id)
+                  if (!result.success) {
+                    toast({
+                      title: "Erro",
+                      description: "Erro ao deletar usuário",
+                      variant: "destructive",
+                    })
+                  }
+                }}
+              >
+                Continuar
+              </AlertDialogAction>
+            </AlertDialogFooter>
+          </AlertDialogContent>
+        </AlertDialog>
+      )
     },
   },
 ]

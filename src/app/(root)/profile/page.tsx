@@ -24,8 +24,9 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { CustomSession } from "@/types"
+import { updateUserProfile } from "@/app/_actions/user"
 
-export default function ProfilePage() {
+export default async function ProfilePage() {
   const router = useRouter()
   const { data: sessionData, update } = useSession()
   const session = sessionData as CustomSession
@@ -105,62 +106,24 @@ export default function ProfilePage() {
     maxFiles: 1,
   })
 
-  const updateProfile = async () => {
+  async function onSubmit(data: any) {
     try {
-      setIsLoading(true)
-      console.log("[PROFILE_UPDATE] Starting update with name:", name)
+      const result = await updateUserProfile(session.user.id, data)
       
-      const response = await fetch("/api/user/profile", {
-        method: "PUT",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name,
-        }),
-        cache: 'no-store'
-      })
-
-      const data = await response.json()
-      console.log("[PROFILE_UPDATE] API Response:", data)
-
-      if (!response.ok) {
-        throw new Error(data.message || "Failed to update profile")
-      }
-
-      if (data.success) {
-        // Atualiza o estado local primeiro
-        setName(name)
-        
-        // Atualiza a sessão com os novos dados
-        await update({
-          ...session,
-          user: {
-            ...session?.user,
-            name: name,
-          }
-        })
-
-        // Força a revalidação da página
-        router.refresh()
-
+      if (result.success) {
         toast({
           title: "Perfil atualizado",
           description: "Suas informações foram atualizadas com sucesso.",
         })
       } else {
-        throw new Error(data.message || "Erro ao atualizar perfil")
+        throw new Error(result.error)
       }
-
     } catch (error) {
-      console.error("[PROFILE_UPDATE] Error:", error)
       toast({
         title: "Erro",
-        description: error instanceof Error ? error.message : "Erro ao atualizar perfil",
+        description: "Ocorreu um erro ao atualizar o perfil.",
         variant: "destructive",
       })
-    } finally {
-      setIsLoading(false)
     }
   }
 
@@ -272,7 +235,7 @@ export default function ProfilePage() {
           </div>
 
           <Button
-            onClick={updateProfile}
+            onClick={() => onSubmit({ name })}
             disabled={isLoading}
             className="w-full"
           >
