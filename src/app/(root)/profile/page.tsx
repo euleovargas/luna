@@ -24,7 +24,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { CustomSession } from "@/types"
-import { updateUserProfile } from "@/app/_actions/user"
+import { updateProfile } from "@/app/_actions/profile"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
@@ -122,7 +122,7 @@ export default function ProfilePage() {
   async function onSubmit(values: z.infer<typeof profileFormSchema>) {
     try {
       setIsLoading(true)
-      const result = await updateUserProfile(session.user.id, values)
+      const result = await updateProfile(values)
       
       if (result.success) {
         // Atualiza a sessão com os novos dados
@@ -138,8 +138,6 @@ export default function ProfilePage() {
           title: "Perfil atualizado",
           description: "Suas informações foram atualizadas com sucesso.",
         })
-        // Revalida a página
-        await router.refresh()
       } else {
         throw new Error(result.error)
       }
@@ -154,7 +152,7 @@ export default function ProfilePage() {
     }
   }
 
-  const deleteAccount = async () => {
+  const handleDeleteAccount = async () => {
     try {
       setIsDeleting(true)
       const response = await fetch("/api/user/profile", {
@@ -241,18 +239,8 @@ export default function ProfilePage() {
             </div>
           </div>
 
-          <div className="space-y-2">
-            <Label htmlFor="email">Email</Label>
-            <Input
-              id="email"
-              type="email"
-              disabled
-              value={session?.user?.email || ""}
-            />
-          </div>
-
           <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
-            <div className="grid gap-2">
+            <div className="grid gap-4">
               <div className="grid gap-1">
                 <Label htmlFor="name">Nome</Label>
                 <Input
@@ -268,50 +256,56 @@ export default function ProfilePage() {
                   </p>
                 )}
               </div>
-            </div>
-            <Button type="submit" disabled={isLoading}>
-              {isLoading && (
-                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-              )}
-              Atualizar perfil
-            </Button>
-          </form>
 
-          <div className="pt-4 border-t">
-            <AlertDialog>
-              <AlertDialogTrigger asChild>
-                <Button variant="destructive" className="w-full">
-                  Deletar conta
-                </Button>
-              </AlertDialogTrigger>
-              <AlertDialogContent>
-                <AlertDialogHeader>
-                  <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
-                  <AlertDialogDescription>
-                    Esta ação não pode ser desfeita. Isso irá deletar permanentemente sua conta
-                    e remover seus dados dos nossos servidores.
-                  </AlertDialogDescription>
-                </AlertDialogHeader>
-                <AlertDialogFooter>
-                  <AlertDialogCancel>Cancelar</AlertDialogCancel>
-                  <AlertDialogAction
-                    onClick={deleteAccount}
-                    disabled={isDeleting}
-                    className="bg-destructive text-destructive-foreground hover:bg-destructive/90"
-                  >
-                    {isDeleting ? (
-                      <>
-                        <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                        Deletando...
-                      </>
-                    ) : (
-                      "Continuar"
-                    )}
-                  </AlertDialogAction>
-                </AlertDialogFooter>
-              </AlertDialogContent>
-            </AlertDialog>
-          </div>
+              <div className="grid gap-1">
+                <Label htmlFor="email">Email</Label>
+                <Input
+                  id="email"
+                  type="email"
+                  disabled
+                  value={session?.user?.email || ""}
+                  className="w-[400px]"
+                />
+                <p className="text-sm text-muted-foreground">
+                  O email não pode ser alterado.
+                </p>
+              </div>
+            </div>
+
+            <div className="flex justify-between items-center">
+              <Button type="submit" disabled={isLoading}>
+                {isLoading && (
+                  <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                )}
+                Atualizar perfil
+              </Button>
+
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button variant="ghost" className="text-muted-foreground hover:text-destructive">
+                    Excluir conta
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Esta ação não pode ser desfeita. Sua conta será permanentemente excluída.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={handleDeleteAccount}
+                      className="bg-destructive hover:bg-destructive/90"
+                    >
+                      Excluir conta
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+            </div>
+          </form>
         </CardContent>
       </Card>
     </div>
