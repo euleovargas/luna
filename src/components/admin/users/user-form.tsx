@@ -161,7 +161,7 @@ export function UserForm({ user, onSubmit }: UserFormProps) {
           {isPending && (
             <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
           )}
-          Salvar
+          {user ? "Salvar alterações" : "Criar usuário"}
         </Button>
       </form>
     </Form>

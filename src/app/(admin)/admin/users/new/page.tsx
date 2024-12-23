@@ -7,6 +7,7 @@ import { getCurrentUser } from "@/lib/session"
 import { UserRole } from "@prisma/client"
 import { generateVerificationToken } from "@/lib/tokens"
 import { sendVerificationEmail } from "@/lib/mail"
+import { BackButton } from "@/components/ui/back-button"
 
 export default async function NewUserPage() {
   const currentUser = await getCurrentUser()
@@ -52,16 +53,19 @@ export default async function NewUserPage() {
   }
 
   return (
-    <div className="flex-1 space-y-4 p-8 pt-6">
-      <div className="flex items-center justify-between">
-        <Heading
-          title="Novo Usuário"
-          description="Adicione um novo usuário ao sistema."
-        />
-      </div>
-      <Separator />
-      <div className="grid gap-6">
-        <UserForm onSubmit={onSubmit} />
+    <div className="container mx-auto py-10">
+      <BackButton href="/admin/users" />
+      <div className="space-y-6">
+        <div>
+          <h3 className="text-lg font-medium">Criar Novo Usuário</h3>
+          <p className="text-sm text-muted-foreground">
+            Adicione um novo usuário ao sistema
+          </p>
+        </div>
+        <Separator />
+        <div className="grid gap-6">
+          <UserForm onSubmit={onSubmit} />
+        </div>
       </div>
     </div>
   )
