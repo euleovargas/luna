@@ -58,6 +58,7 @@ export async function PUT(req: Request) {
       headers: {
         'Cache-Control': 'no-store, must-revalidate',
         'Pragma': 'no-cache',
+        'Expires': '0'
       }
     });
   } catch (error) {

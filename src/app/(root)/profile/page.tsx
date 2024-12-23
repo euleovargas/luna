@@ -141,6 +141,9 @@ export default function ProfilePage() {
           }
         })
 
+        // Força a revalidação da página
+        router.refresh()
+
         toast({
           title: "Perfil atualizado",
           description: "Suas informações foram atualizadas com sucesso.",
