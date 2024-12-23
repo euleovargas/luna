@@ -125,7 +125,7 @@ export function DataTableRowActions({ user, onDelete }: DataTableRowActionsProps
                       Deletar
                     </DropdownMenuItem>
                   </AlertDialogTrigger>
-                  <AlertDialogContent inert="true">
+                  <AlertDialogContent initialFocus={true}>
                     <AlertDialogHeader>
                       <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
                       <AlertDialogDescription>
