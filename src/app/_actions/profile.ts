@@ -1,53 +1,83 @@
 "use server"
 
-import { db } from "@/lib/db"
 import { revalidatePath } from "next/cache"
+import { db } from "@/lib/db"
 import { getCurrentUser } from "@/lib/session"
 
-export async function updateProfile(data: { name: string }) {
-  const currentUser = await getCurrentUser()
+export async function updateProfile({ name }: { name: string }) {
+  try {
+    const user = await getCurrentUser()
 
-  if (!currentUser?.id) {
-    throw new Error("Usuário não encontrado")
+    if (!user) {
+      throw new Error("Unauthorized")
+    }
+
+    await db.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        name,
+      },
+    })
+
+    revalidatePath("/profile")
+    revalidatePath("/")
+  } catch (error) {
+    console.error("[PROFILE_UPDATE]", error)
+    throw error
   }
-
-  await db.user.update({
-    where: { id: currentUser.id },
-    data: {
-      name: data.name,
-    },
-  })
-
-  revalidatePath("/profile")
 }
 
-export async function updateProfileImage(data: { image: string }) {
-  const currentUser = await getCurrentUser()
+export async function updateProfileImage({ image }: { image: string }) {
+  try {
+    const user = await getCurrentUser()
 
-  if (!currentUser?.id) {
-    throw new Error("Usuário não encontrado")
+    if (!user) {
+      throw new Error("Unauthorized")
+    }
+
+    await db.user.update({
+      where: {
+        id: user.id,
+      },
+      data: {
+        image,
+      },
+    })
+
+    // Revalidar todas as rotas que mostram a imagem do usuário
+    revalidatePath("/profile")
+    revalidatePath("/")
+    revalidatePath("/admin")
+    revalidatePath("/dashboard")
+    
+    // Forçar revalidação da sessão
+    revalidatePath("/api/auth/session")
+  } catch (error) {
+    console.error("[PROFILE_IMAGE_UPDATE]", error)
+    throw error
   }
-
-  await db.user.update({
-    where: { id: currentUser.id },
-    data: {
-      image: data.image,
-    },
-  })
-
-  revalidatePath("/profile")
 }
 
 export async function deleteProfile() {
-  const currentUser = await getCurrentUser()
+  try {
+    const user = await getCurrentUser()
 
-  if (!currentUser?.id) {
-    throw new Error("Usuário não encontrado")
+    if (!user) {
+      throw new Error("Unauthorized")
+    }
+
+    await db.user.delete({
+      where: {
+        id: user.id,
+      },
+    })
+
+    revalidatePath("/profile")
+    revalidatePath("/")
+  } catch (error) {
+    console.error("[PROFILE_DELETE]", error)
+    throw error
   }
-
-  await db.user.delete({
-    where: { id: currentUser.id },
-  })
-
-  revalidatePath("/profile")
 }
