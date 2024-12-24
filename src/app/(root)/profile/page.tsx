@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from "react"
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Icons } from "@/components/ui/icons"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "@/components/ui/card"
@@ -50,9 +50,88 @@ export default function ProfilePage() {
   // Atualiza o formulário quando a sessão mudar
   useEffect(() => {
     if (session?.user?.name) {
-      form.setValue("name", session.user.name)
+      form.reset({ name: session.user.name })
     }
   }, [session, form])
+
+  const updateProfile = useCallback(async (values: { name: string }) => {
+    try {
+      const response = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: { "Content-Type": "application/json" },
+        body: JSON.stringify(values),
+      })
+
+      if (!response.ok) {
+        throw new Error("Falha ao atualizar perfil")
+      }
+
+      const data = await response.json()
+      return data
+    } catch (error) {
+      console.error("Erro ao atualizar perfil:", error)
+      throw error
+    }
+  }, [])
+
+  const onSubmit = async (values: z.infer<typeof profileFormSchema>) => {
+    try {
+      setIsLoading(true)
+      const data = await updateProfile(values)
+
+      // Atualiza a sessão com os novos dados
+      await update({
+        ...session,
+        user: data.user,
+      })
+
+      // Força atualização da interface
+      router.refresh()
+
+      toast({
+        title: "Perfil atualizado",
+        description: "Suas informações foram atualizadas com sucesso.",
+      })
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao atualizar o perfil.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsLoading(false)
+    }
+  }
+
+  const handleDeleteAccount = async () => {
+    try {
+      setIsDeleting(true)
+      const response = await fetch("/api/user/profile", {
+        method: "DELETE",
+      })
+
+      if (!response?.ok) {
+        throw new Error("Erro ao deletar conta")
+      }
+
+      toast({
+        title: "Conta deletada",
+        description: "Sua conta foi deletada com sucesso.",
+      })
+
+      signOut({
+        callbackUrl: "/",
+      })
+    } catch (error) {
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao deletar sua conta.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsDeleting(false)
+    }
+  }
 
   const onDrop = async (acceptedFiles: File[]) => {
     if (acceptedFiles.length > 0) {
@@ -117,80 +196,6 @@ export default function ProfilePage() {
     },
     maxFiles: 1,
   })
-
-  async function onSubmit(values: z.infer<typeof profileFormSchema>) {
-    try {
-      setIsLoading(true)
-
-      const response = await fetch("/api/user/profile", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify({
-          name: values.name,
-        }),
-      })
-
-      if (!response.ok) {
-        throw new Error("Falha ao atualizar perfil")
-      }
-
-      const data = await response.json()
-      
-      // Atualiza a sessão com os novos dados
-      await update({
-        ...session,
-        user: data.user
-      })
-
-      // Força atualização da interface
-      router.refresh()
-
-      toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram atualizadas com sucesso.",
-      })
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao atualizar o perfil.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
-  }
-
-  const handleDeleteAccount = async () => {
-    try {
-      setIsDeleting(true)
-      const response = await fetch("/api/user/profile", {
-        method: "DELETE",
-      })
-
-      if (!response?.ok) {
-        throw new Error("Erro ao deletar conta")
-      }
-
-      toast({
-        title: "Conta deletada",
-        description: "Sua conta foi deletada com sucesso.",
-      })
-
-      signOut({
-        callbackUrl: "/",
-      })
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao deletar sua conta.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsDeleting(false)
-    }
-  }
 
   if (!session) {
     return null

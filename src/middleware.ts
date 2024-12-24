@@ -22,8 +22,16 @@ export async function middleware(request: NextRequest) {
     return NextResponse.redirect(new URL('/login', request.url))
   }
 
+  // Adiciona um cabeçalho de cache personalizado para forçar revalidação
+  const response = NextResponse.next()
+  response.headers.set('x-middleware-cache', 'no-cache')
+  
+  if (request.nextUrl.pathname === "/profile") {
+    response.headers.set('Cache-Control', 'no-store, must-revalidate')
+  }
+
   // Se estiver autenticado, permite acesso
-  return NextResponse.next()
+  return response
 }
 
 export const config = {
