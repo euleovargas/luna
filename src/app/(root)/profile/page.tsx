@@ -63,10 +63,24 @@ export default function ProfilePage() {
     }
   }, [session, form])
 
-  async function onSubmit(data: ProfileFormValues) {
+  async function handleSubmit(data: ProfileFormValues) {
     try {
       startTransition(() => {
         updateProfile(data)
+          .then(() => {
+            toast({
+              title: "Perfil atualizado",
+              description: "Suas informações foram atualizadas com sucesso.",
+            })
+          })
+          .catch((error) => {
+            console.error("[PROFILE_UPDATE]", error)
+            toast({
+              title: "Erro",
+              description: "Ocorreu um erro ao atualizar o perfil.",
+              variant: "destructive",
+            })
+          })
       })
     } catch (error) {
       console.error("[PROFILE_UPDATE]", error)
@@ -79,39 +93,28 @@ export default function ProfilePage() {
   }
 
   async function updateProfile(data: ProfileFormValues) {
-    try {
-      const response = await fetch("/api/user/profile", {
-        method: "PATCH",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      })
+    const response = await fetch("/api/user/profile", {
+      method: "PATCH",
+      headers: {
+        "Content-Type": "application/json",
+      },
+      body: JSON.stringify(data),
+    })
 
-      if (!response.ok) {
-        throw new Error("Falha ao atualizar perfil")
-      }
-
-      const result = await response.json()
-
-      // Atualiza a sessão com os novos dados
-      await update({
-        ...session,
-        user: result.user,
-      })
-
-      toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram atualizadas com sucesso.",
-      })
-    } catch (error) {
-      console.error("[PROFILE_UPDATE]", error)
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao atualizar o perfil.",
-        variant: "destructive",
-      })
+    if (!response.ok) {
+      throw new Error("Falha ao atualizar perfil")
     }
+
+    const result = await response.json()
+
+    // Atualiza a sessão com os novos dados
+    await update({
+      ...session,
+      user: result.user,
+    })
+
+    // Força um refresh da página
+    router.refresh()
   }
 
   const onDrop = async (acceptedFiles: File[]) => {
@@ -149,6 +152,9 @@ export default function ProfilePage() {
             title: "Foto atualizada",
             description: "Sua foto de perfil foi atualizada com sucesso.",
           })
+
+          // Força um refresh da página
+          router.refresh()
         }
       } catch (error) {
         console.error("Erro ao fazer upload:", error)
@@ -243,7 +249,7 @@ export default function ProfilePage() {
           </div>
 
           <Form {...form}>
-            <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-8">
+            <form onSubmit={form.handleSubmit(handleSubmit)} className="space-y-8">
               <FormField
                 control={form.control}
                 name="name"
