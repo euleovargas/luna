@@ -2,9 +2,15 @@ import { getServerSession } from "next-auth";
 import { NextResponse } from "next/server";
 import { z } from "zod";
 import { authOptions } from "@/lib/auth";
-import prisma from "@/lib/prisma";
+import { db } from "@/lib/db";
 import { UserRole } from "@prisma/client";
 import { CustomSession } from "@/types";
+
+const userUpdateSchema = z.object({
+  name: z.string().min(2).optional(),
+  email: z.string().email().optional(),
+  role: z.enum([UserRole.ADMIN, UserRole.USER]).optional(),
+});
 
 interface RouteContextSchema {
   params: {
@@ -16,12 +22,6 @@ const routeContextSchema = z.object({
   params: z.object({
     id: z.string(),
   }),
-});
-
-const userUpdateSchema = z.object({
-  name: z.string().min(2).optional(),
-  email: z.string().email().optional(),
-  role: z.enum([UserRole.ADMIN, UserRole.USER]).optional(),
 });
 
 export async function PUT(req: Request, context: z.infer<typeof routeContextSchema>) {
@@ -41,7 +41,7 @@ export async function PUT(req: Request, context: z.infer<typeof routeContextSche
     const body = userUpdateSchema.parse(json);
 
     // Verificar se o usuário existe
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await db.user.findUnique({
       where: { id: params.id },
     });
 
@@ -53,7 +53,7 @@ export async function PUT(req: Request, context: z.infer<typeof routeContextSche
     }
 
     // Atualizar usuário
-    const updatedUser = await prisma.user.update({
+    const updatedUser = await db.user.update({
       where: { id: params.id },
       data: {
         ...(body.name && { name: body.name }),
@@ -104,7 +104,7 @@ export async function DELETE(req: Request, context: z.infer<typeof routeContextS
     const { params } = routeContextSchema.parse(context);
 
     // Verificar se o usuário existe
-    const existingUser = await prisma.user.findUnique({
+    const existingUser = await db.user.findUnique({
       where: { id: params.id },
     });
 
@@ -124,7 +124,7 @@ export async function DELETE(req: Request, context: z.infer<typeof routeContextS
     }
 
     // Deletar usuário
-    await prisma.user.delete({
+    await db.user.delete({
       where: { id: params.id },
     });
 
