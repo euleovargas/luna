@@ -1,7 +1,7 @@
 'use client'
 
 import * as React from "react"
-import { useState, useEffect, useCallback } from "react"
+import { useState } from "react"
 import { Icons } from "@/components/ui/icons"
 import { Button } from "@/components/ui/button"
 import { Card, CardContent, CardHeader, CardDescription, CardTitle } from "@/components/ui/card"
@@ -27,20 +27,23 @@ import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useDropzone } from "react-dropzone"
 import { useUploadThing } from "@/lib/uploadthing"
+import { useProfile } from "@/hooks/use-profile"
 
 const profileFormSchema = z.object({
   name: z.string().min(1, "Nome é obrigatório"),
 })
 
+type ProfileFormValues = z.infer<typeof profileFormSchema>
+
 export default function ProfilePage() {
   const router = useRouter()
-  const { data: session, update } = useSession()
-  const [isLoading, setIsLoading] = useState(false)
+  const { data: session } = useSession()
   const [isDeleting, setIsDeleting] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
+  const { updateProfile } = useProfile()
   const { startUpload } = useUploadThing("imageUploader")
 
-  const form = useForm<z.infer<typeof profileFormSchema>>({
+  const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
     defaultValues: {
       name: session?.user?.name || "",
@@ -48,59 +51,14 @@ export default function ProfilePage() {
   })
 
   // Atualiza o formulário quando a sessão mudar
-  useEffect(() => {
+  React.useEffect(() => {
     if (session?.user?.name) {
-      form.reset({ name: session.user.name })
+      form.setValue("name", session.user.name)
     }
   }, [session, form])
 
-  const updateProfile = useCallback(async (values: { name: string }) => {
-    try {
-      const response = await fetch("/api/user/profile", {
-        method: "PATCH",
-        headers: { "Content-Type": "application/json" },
-        body: JSON.stringify(values),
-      })
-
-      if (!response.ok) {
-        throw new Error("Falha ao atualizar perfil")
-      }
-
-      const data = await response.json()
-      return data
-    } catch (error) {
-      console.error("Erro ao atualizar perfil:", error)
-      throw error
-    }
-  }, [])
-
-  const onSubmit = async (values: z.infer<typeof profileFormSchema>) => {
-    try {
-      setIsLoading(true)
-      const data = await updateProfile(values)
-
-      // Atualiza a sessão com os novos dados
-      await update({
-        ...session,
-        user: data.user,
-      })
-
-      // Força atualização da interface
-      router.refresh()
-
-      toast({
-        title: "Perfil atualizado",
-        description: "Suas informações foram atualizadas com sucesso.",
-      })
-    } catch (error) {
-      toast({
-        title: "Erro",
-        description: "Ocorreu um erro ao atualizar o perfil.",
-        variant: "destructive",
-      })
-    } finally {
-      setIsLoading(false)
-    }
+  const onSubmit = async (values: ProfileFormValues) => {
+    updateProfile.mutate(values)
   }
 
   const handleDeleteAccount = async () => {
@@ -160,13 +118,7 @@ export default function ProfilePage() {
           
           if (data.success) {
             // Atualiza a sessão com a nova imagem
-            await update({
-              ...session,
-              user: {
-                ...session?.user,
-                image: imageUrl,
-              }
-            })
+            await updateProfile.mutate({ image: imageUrl })
 
             toast({
               title: "Foto atualizada",
@@ -251,7 +203,7 @@ export default function ProfilePage() {
                   className="w-[400px]"
                   size={32}
                   {...form.register("name")}
-                  disabled={isLoading}
+                  disabled={updateProfile.isPending}
                 />
                 {form.formState.errors.name && (
                   <p className="text-sm text-red-500">
@@ -276,8 +228,8 @@ export default function ProfilePage() {
             </div>
 
             <div className="flex justify-between items-center">
-              <Button type="submit" disabled={isLoading}>
-                {isLoading && (
+              <Button type="submit" disabled={updateProfile.isPending}>
+                {updateProfile.isPending && (
                   <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
                 )}
                 Atualizar perfil
