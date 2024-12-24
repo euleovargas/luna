@@ -23,7 +23,6 @@ import { useSession, signOut } from "next-auth/react"
 import { useForm } from "react-hook-form"
 import { zodResolver } from "@hookform/resolvers/zod"
 import { z } from "zod"
-import { updateProfile } from "@/app/_actions/profile"
 import { useRouter } from "next/navigation"
 import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar"
 import { useDropzone } from "react-dropzone"
@@ -122,30 +121,36 @@ export default function ProfilePage() {
   async function onSubmit(values: z.infer<typeof profileFormSchema>) {
     try {
       setIsLoading(true)
-      const result = await updateProfile(values)
-      
-      if (result.success) {
-        // Atualiza a sessão com os novos dados
-        await update({
-          ...session,
-          user: result.user // Usa os dados retornados do servidor
-        })
 
-        // Força um refresh da página
-        router.refresh()
+      const response = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify({
+          name: values.name,
+        }),
+      })
 
-        toast({
-          title: "Perfil atualizado",
-          description: "Suas informações foram atualizadas com sucesso.",
-        })
-
-        // Recarrega a página após um breve delay para garantir que tudo foi atualizado
-        setTimeout(() => {
-          window.location.reload()
-        }, 1000)
-      } else {
-        throw new Error(result.error)
+      if (!response.ok) {
+        throw new Error("Falha ao atualizar perfil")
       }
+
+      const data = await response.json()
+      
+      // Atualiza a sessão com os novos dados
+      await update({
+        ...session,
+        user: data.user
+      })
+
+      // Força atualização da interface
+      router.refresh()
+
+      toast({
+        title: "Perfil atualizado",
+        description: "Suas informações foram atualizadas com sucesso.",
+      })
     } catch (error) {
       toast({
         title: "Erro",
