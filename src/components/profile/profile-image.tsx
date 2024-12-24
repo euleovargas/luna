@@ -48,10 +48,8 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
         console.log("[PROFILE_IMAGE] Updating profile with URL:", imageUrl)
         await updateProfileImage({ image: imageUrl })
 
-        // Atualizar a sessão do NextAuth
-        await updateSession({
-          image: imageUrl
-        })
+        // Forçar atualização da sessão
+        await updateSession()
 
         toast({
           title: "Foto atualizada",

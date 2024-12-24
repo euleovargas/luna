@@ -1,6 +1,7 @@
 "use server"
 
 import { revalidatePath } from "next/cache"
+import { unstable_noStore as noStore } from "next/cache"
 import { db } from "@/lib/db"
 import { getCurrentUser } from "@/lib/session"
 
@@ -23,6 +24,7 @@ export async function updateProfile({ name }: { name: string }) {
 
     revalidatePath("/profile")
     revalidatePath("/")
+    noStore()
   } catch (error) {
     console.error("[PROFILE_UPDATE]", error)
     throw error
@@ -30,6 +32,7 @@ export async function updateProfile({ name }: { name: string }) {
 }
 
 export async function updateProfileImage({ image }: { image: string }) {
+  noStore()
   try {
     const user = await getCurrentUser()
 
@@ -47,13 +50,10 @@ export async function updateProfileImage({ image }: { image: string }) {
     })
 
     // Revalidar todas as rotas que mostram a imagem do usuário
-    revalidatePath("/profile")
-    revalidatePath("/")
-    revalidatePath("/admin")
-    revalidatePath("/dashboard")
-    
-    // Forçar revalidação da sessão
-    revalidatePath("/api/auth/session")
+    revalidatePath("/", "layout")
+    revalidatePath("/profile", "layout")
+    revalidatePath("/admin", "layout")
+    revalidatePath("/dashboard", "layout")
   } catch (error) {
     console.error("[PROFILE_IMAGE_UPDATE]", error)
     throw error
