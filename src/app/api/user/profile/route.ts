@@ -1,7 +1,7 @@
 import { NextResponse } from "next/server"
 import { getServerSession } from "next-auth"
 import { authOptions } from "@/lib/auth"
-import { prisma } from "@/lib/prisma"
+import { db } from "@/lib/db"
 
 export async function PATCH(req: Request) {
   try {
@@ -18,7 +18,7 @@ export async function PATCH(req: Request) {
     if (name) updateData.name = name
     if (image) updateData.image = image
 
-    const user = await prisma.user.update({
+    const user = await db.user.update({
       where: {
         email: session.user.email,
       },
@@ -40,7 +40,7 @@ export async function DELETE(req: Request) {
       return new NextResponse("Não autorizado", { status: 401 })
     }
 
-    await prisma.user.delete({
+    await db.user.delete({
       where: {
         email: session.user.email,
       },

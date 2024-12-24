@@ -97,13 +97,18 @@ export default function ProfilePage() {
         setIsUploading(true)
         const file = acceptedFiles[0]
 
-        const [res] = await startUpload([file])
-
-        if (res) {
-          const imageUrl = res.url
+        const uploadResult = await startUpload([file])
+        
+        if (uploadResult && uploadResult[0]) {
+          const imageUrl = uploadResult[0].url
           
           // Atualiza o perfil com a nova imagem
           await updateProfile.mutate({ image: imageUrl })
+
+          toast({
+            title: "Foto atualizada",
+            description: "Sua foto de perfil foi atualizada com sucesso.",
+          })
         }
       } catch (error) {
         console.error("Erro ao fazer upload:", error)
