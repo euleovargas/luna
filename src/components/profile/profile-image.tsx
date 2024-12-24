@@ -1,13 +1,14 @@
 "use client"
 
 import { useState } from "react"
-import { useSession } from "next-auth/react"
+import { useSession, signIn } from "next-auth/react"
 import imageCompression from "browser-image-compression"
 import { useUploadThing } from "@/lib/uploadthing"
 import { toast } from "@/components/ui/use-toast"
 import { Icons } from "@/components/ui/icons"
 import { updateProfileImage } from "@/app/_actions/profile"
 import { ImageCropModal } from "@/components/profile/image-crop-modal"
+import { useRouter } from "next/navigation"
 
 interface ProfileImageProps {
   imageUrl?: string | null
@@ -18,6 +19,8 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [isCropModalOpen, setIsCropModalOpen] = useState(false)
   const { startUpload } = useUploadThing("imageUploader")
+  const router = useRouter()
+  const { update: updateSession } = useSession()
 
   const handleImageSave = async (croppedImage: Blob) => {
     try {
@@ -40,13 +43,20 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
         const imageUrl = uploadResult[0].url
         await updateProfileImage({ image: imageUrl })
 
+        // Forçar nova sessão
+        await signIn("credentials", {
+          redirect: false,
+          email: "", // será ignorado pois já estamos autenticados
+          password: "", // será ignorado pois já estamos autenticados
+        })
+
         toast({
           title: "Foto atualizada",
           description: "Sua foto de perfil foi atualizada com sucesso.",
         })
 
-        // Recarregar a página para atualizar todos os componentes
-        window.location.reload()
+        // Forçar atualização dos dados
+        router.refresh()
       }
     } catch (error) {
       console.error("[PROFILE_IMAGE] Error:", error)
