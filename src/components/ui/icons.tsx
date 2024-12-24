@@ -35,11 +35,12 @@ import {
   UserPlus,
   LogIn,
   LogOut,
-  type LucideIcon,
   Copy,
   Pencil,
   Eye,
   Edit,
+  Upload,
+  type LucideIcon,
 } from "lucide-react"
 
 export type Icon = LucideIcon
@@ -125,4 +126,5 @@ export const Icons = {
   circleX: CircleX,
   refresh: RefreshCw,
   users: Users,
+  upload: Upload,
 } as const
