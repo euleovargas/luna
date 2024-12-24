@@ -51,6 +51,9 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
         // Forçar atualização da sessão
         await updateSession()
 
+        // Disparar evento de atualização
+        window.dispatchEvent(new Event('profile-updated'))
+
         toast({
           title: "Foto atualizada",
           description: "Sua foto de perfil foi atualizada com sucesso.",

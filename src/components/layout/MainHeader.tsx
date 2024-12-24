@@ -88,8 +88,15 @@ MainHeader.Actions = function MainHeaderActions({ children }: MainHeaderActionsP
 }
 
 MainHeader.User = function MainHeaderUser() {
-  const { data: sessionData } = useSession()
+  const { data: sessionData, update } = useSession()
   const session = sessionData as CustomSession
+  const [key, setKey] = React.useState(0)
+
+  React.useEffect(() => {
+    const updateKey = () => setKey(prev => prev + 1)
+    window.addEventListener('profile-updated', updateKey)
+    return () => window.removeEventListener('profile-updated', updateKey)
+  }, [])
 
   if (!session?.user) {
     return null
@@ -99,8 +106,11 @@ MainHeader.User = function MainHeaderUser() {
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8">
-            <AvatarImage src={session.user.image || undefined} alt={session.user.name || ""} />
+          <Avatar className="h-8 w-8" key={key}>
+            <AvatarImage 
+              src={session.user.image || undefined} 
+              alt={session.user.name || ""} 
+            />
             <AvatarFallback>{session.user.name?.charAt(0)}</AvatarFallback>
           </Avatar>
         </Button>
