@@ -1,7 +1,7 @@
 "use client"
 
-import { useCallback, useState } from "react"
-import ReactCrop, { Crop, PixelCrop } from "react-image-crop"
+import { useCallback, useState, useRef } from "react"
+import ReactCrop, { Crop, PixelCrop, centerCrop, makeAspectCrop } from "react-image-crop"
 import "react-image-crop/dist/ReactCrop.css"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
@@ -13,17 +13,32 @@ interface ImageCropModalProps {
   onSave: (croppedImage: Blob) => Promise<void>
 }
 
+function centerAspectCrop(
+  mediaWidth: number,
+  mediaHeight: number,
+  aspect: number
+) {
+  return centerCrop(
+    makeAspectCrop(
+      {
+        unit: "%",
+        width: 90,
+      },
+      aspect,
+      mediaWidth,
+      mediaHeight
+    ),
+    mediaWidth,
+    mediaHeight
+  )
+}
+
 export function ImageCropModal({ isOpen, onClose, onSave }: ImageCropModalProps) {
   const [imgSrc, setImgSrc] = useState("")
-  const [crop, setCrop] = useState<Crop>({
-    unit: "%",
-    width: 100,
-    height: 100,
-    x: 0,
-    y: 0
-  })
+  const [crop, setCrop] = useState<Crop>()
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
   const [isLoading, setIsLoading] = useState(false)
+  const imgRef = useRef<HTMLImageElement>(null)
 
   const onSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
@@ -37,45 +52,52 @@ export function ImageCropModal({ isOpen, onClose, onSave }: ImageCropModalProps)
 
   const onImageLoad = useCallback((e: React.SyntheticEvent<HTMLImageElement>) => {
     const { width, height } = e.currentTarget
-    const crop = centerAspectCrop(width, height, 1)
-    setCrop(crop)
+    setCrop(centerAspectCrop(width, height, 1))
   }, [])
 
   const handleSave = useCallback(async () => {
     try {
       setIsLoading(true)
-      if (!completedCrop) return
+      if (!imgRef.current || !completedCrop) return
 
+      const image = imgRef.current
       const canvas = document.createElement("canvas")
-      const image = new Image()
-      image.src = imgSrc
-
-      const scaleX = image.naturalWidth / image.width
-      const scaleY = image.naturalHeight / image.height
       const ctx = canvas.getContext("2d")
-
-      const pixelRatio = window.devicePixelRatio
-      canvas.width = completedCrop.width * pixelRatio
-      canvas.height = completedCrop.height * pixelRatio
-
       if (!ctx) return
 
-      ctx.setTransform(pixelRatio, 0, 0, pixelRatio, 0, 0)
+      // Calculate pixel ratio
+      const pixelRatio = window.devicePixelRatio
+      const scaleX = image.naturalWidth / image.width
+      const scaleY = image.naturalHeight / image.height
+
+      // Set canvas size to match the desired crop size
+      canvas.width = completedCrop.width * pixelRatio * scaleX
+      canvas.height = completedCrop.height * pixelRatio * scaleY
+
+      // Set canvas scaling
+      ctx.scale(pixelRatio, pixelRatio)
       ctx.imageSmoothingQuality = "high"
 
+      // Calculate scaled crop coordinates
+      const cropX = completedCrop.x * scaleX
+      const cropY = completedCrop.y * scaleY
+      const cropWidth = completedCrop.width * scaleX
+      const cropHeight = completedCrop.height * scaleY
+
+      // Draw the cropped image
       ctx.drawImage(
         image,
-        completedCrop.x * scaleX,
-        completedCrop.y * scaleY,
-        completedCrop.width * scaleX,
-        completedCrop.height * scaleY,
+        cropX,
+        cropY,
+        cropWidth,
+        cropHeight,
         0,
         0,
-        completedCrop.width,
-        completedCrop.height
+        cropWidth,
+        cropHeight
       )
 
-      // Convert canvas to blob
+      // Convert to blob
       canvas.toBlob(
         async (blob) => {
           if (!blob) return
@@ -83,14 +105,14 @@ export function ImageCropModal({ isOpen, onClose, onSave }: ImageCropModalProps)
           onClose()
         },
         "image/jpeg",
-        0.95
+        1 // max quality
       )
     } catch (error) {
       console.error("[IMAGE_CROP]", error)
     } finally {
       setIsLoading(false)
     }
-  }, [completedCrop, imgSrc, onSave, onClose])
+  }, [completedCrop, onSave, onClose])
 
   return (
     <Dialog open={isOpen} onOpenChange={onClose}>
@@ -128,8 +150,10 @@ export function ImageCropModal({ isOpen, onClose, onSave }: ImageCropModalProps)
                   onComplete={(c) => setCompletedCrop(c)}
                   aspect={1}
                   circularCrop
+                  keepSelection
                 >
                   <img
+                    ref={imgRef}
                     src={imgSrc}
                     alt="Crop me"
                     onLoad={onImageLoad}
@@ -166,23 +190,4 @@ export function ImageCropModal({ isOpen, onClose, onSave }: ImageCropModalProps)
       </DialogContent>
     </Dialog>
   )
-}
-
-function centerAspectCrop(
-  mediaWidth: number,
-  mediaHeight: number,
-  aspect: number
-) {
-  const width = 90
-  const height = width / aspect
-  const y = (100 - height) / 2
-  const x = (100 - width) / 2
-
-  return {
-    unit: "%",
-    width,
-    height,
-    x,
-    y,
-  } as Crop
 }
