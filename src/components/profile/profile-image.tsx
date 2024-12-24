@@ -1,6 +1,7 @@
 "use client"
 
 import { useState } from "react"
+import { useSession } from "next-auth/react"
 import imageCompression from "browser-image-compression"
 import { useUploadThing } from "@/lib/uploadthing"
 import { toast } from "@/components/ui/use-toast"
@@ -19,6 +20,7 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
   const [isCropModalOpen, setIsCropModalOpen] = useState(false)
   const { startUpload } = useUploadThing("imageUploader")
   const router = useRouter()
+  const { update: updateSession } = useSession()
 
   const handleImageSave = async (croppedImage: Blob) => {
     try {
@@ -45,6 +47,11 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
         const imageUrl = uploadResult[0].url
         console.log("[PROFILE_IMAGE] Updating profile with URL:", imageUrl)
         await updateProfileImage({ image: imageUrl })
+
+        // Atualizar a sessão do NextAuth
+        await updateSession({
+          image: imageUrl
+        })
 
         toast({
           title: "Foto atualizada",

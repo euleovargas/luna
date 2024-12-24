@@ -37,7 +37,7 @@ export function ImageCropModal({ isOpen, onClose, onSave }: ImageCropModalProps)
   const [imgSrc, setImgSrc] = useState("")
   const [crop, setCrop] = useState<Crop>()
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
-  const [isLoading, setIsLoading] = useState(false)
+  const [isSaving, setIsSaving] = useState(false)
   const imgRef = useRef<HTMLImageElement>(null)
 
   const onSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
@@ -57,7 +57,7 @@ export function ImageCropModal({ isOpen, onClose, onSave }: ImageCropModalProps)
 
   const handleSave = useCallback(async () => {
     try {
-      setIsLoading(true)
+      setIsSaving(true)
       if (!imgRef.current || !completedCrop) return
 
       const image = imgRef.current
@@ -110,7 +110,7 @@ export function ImageCropModal({ isOpen, onClose, onSave }: ImageCropModalProps)
     } catch (error) {
       console.error("[IMAGE_CROP]", error)
     } finally {
-      setIsLoading(false)
+      setIsSaving(false)
     }
   }, [completedCrop, onSave, onClose])
 
@@ -176,8 +176,8 @@ export function ImageCropModal({ isOpen, onClose, onSave }: ImageCropModalProps)
                   <Button variant="outline" onClick={onClose}>
                     Cancelar
                   </Button>
-                  <Button onClick={handleSave} disabled={isLoading}>
-                    {isLoading ? (
+                  <Button onClick={handleSave} disabled={isSaving}>
+                    {isSaving ? (
                       <>
                         <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
                         Salvando...
