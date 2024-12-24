@@ -24,7 +24,6 @@ export async function updateProfile({ name }: { name: string }) {
 
     revalidatePath("/profile")
     revalidatePath("/")
-    noStore()
   } catch (error) {
     console.error("[PROFILE_UPDATE]", error)
     throw error
@@ -40,12 +39,25 @@ export async function updateProfileImage({ image }: { image: string }) {
       throw new Error("Unauthorized")
     }
 
+    // Atualizar o usuário
     await db.user.update({
       where: {
         id: user.id,
       },
       data: {
         image,
+      },
+    })
+
+    // Atualizar a sessão no banco de dados
+    await db.session.updateMany({
+      where: {
+        userId: user.id,
+      },
+      data: {
+        user: {
+          image,
+        },
       },
     })
 
