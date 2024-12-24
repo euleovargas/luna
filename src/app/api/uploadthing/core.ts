@@ -1,29 +1,26 @@
-import { getServerSession } from "next-auth";
-import { createUploadthing, type FileRouter } from "uploadthing/next";
-import { authOptions } from "@/lib/auth";
-import { CustomSession } from "@/types";
+import { createUploadthing, type FileRouter } from "uploadthing/next"
+import { getCurrentUser } from "@/lib/session"
 
-const f = createUploadthing();
+const f = createUploadthing()
 
 const handleAuth = async () => {
-  const session = await getServerSession(authOptions) as CustomSession;
-  if (!session) throw new Error("Unauthorized");
-  return session;
-};
+  const user = await getCurrentUser()
+  if (!user) throw new Error("Unauthorized")
+  return user
+}
 
 export const ourFileRouter = {
-  imageUploader: f({
-    image: { maxFileSize: "4MB", maxFileCount: 1 }
-  })
+  imageUploader: f({ image: { maxFileSize: "4MB" } })
     .middleware(async () => {
-      const session = await handleAuth();
-      return { userId: session.user.id };
+      const user = await handleAuth()
+      return { userId: user.id }
     })
     .onUploadComplete(async ({ metadata, file }) => {
-      console.log("Upload complete for userId:", metadata.userId);
-      console.log("File URL:", file.url);
-      // Não retornamos nada aqui, apenas logamos as informações
-    })
-} satisfies FileRouter;
+      console.log("Upload complete for userId:", metadata.userId)
+      console.log("File URL:", file.url)
+      
+      return { uploadedBy: metadata.userId }
+    }),
+} satisfies FileRouter
 
-export type OurFileRouter = typeof ourFileRouter;
+export type OurFileRouter = typeof ourFileRouter

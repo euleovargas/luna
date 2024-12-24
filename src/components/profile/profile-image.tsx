@@ -1,11 +1,12 @@
 "use client"
 
 import { useState } from "react"
-import { useDropzone } from "react-dropzone"
+import imageCompression from "browser-image-compression"
 import { useUploadThing } from "@/lib/uploadthing"
 import { toast } from "@/components/ui/use-toast"
 import { Icons } from "@/components/ui/icons"
 import { updateProfileImage } from "@/app/_actions/profile"
+import { ImageCropModal } from "@/components/profile/image-crop-modal"
 
 interface ProfileImageProps {
   imageUrl?: string | null
@@ -14,52 +15,61 @@ interface ProfileImageProps {
 
 export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
   const [isUploading, setIsUploading] = useState(false)
+  const [uploadProgress, setUploadProgress] = useState(0)
+  const [isCropModalOpen, setIsCropModalOpen] = useState(false)
   const { startUpload } = useUploadThing("imageUploader")
 
-  const onDrop = async (acceptedFiles: File[]) => {
-    if (acceptedFiles.length > 0) {
-      try {
-        setIsUploading(true)
-        const file = acceptedFiles[0]
+  const handleImageSave = async (croppedImage: Blob) => {
+    try {
+      setIsUploading(true)
+      setUploadProgress(0)
 
-        const uploadResult = await startUpload([file])
-        
-        if (uploadResult && uploadResult[0]) {
-          const imageUrl = uploadResult[0].url
-          
-          await updateProfileImage({ image: imageUrl })
-
-          toast({
-            title: "Foto atualizada",
-            description: "Sua foto de perfil foi atualizada com sucesso.",
-          })
+      // Compress image
+      const compressedFile = await imageCompression(
+        new File([croppedImage], "profile.jpg", { type: "image/jpeg" }),
+        {
+          maxSizeMB: 1,
+          maxWidthOrHeight: 1024,
+          useWebWorker: true,
+          onProgress: (p) => setUploadProgress(Math.round(p * 50)) // First 50% is compression
         }
-      } catch (error) {
-        console.error("Erro ao fazer upload:", error)
+      )
+
+      // Upload
+      const uploadResult = await startUpload([compressedFile])
+      setUploadProgress(75) // 75% after upload
+
+      if (uploadResult && uploadResult[0]) {
+        const imageUrl = uploadResult[0].url
+        await updateProfileImage({ image: imageUrl })
+        setUploadProgress(100)
+
         toast({
-          title: "Erro",
-          description: "Ocorreu um erro ao atualizar sua foto.",
-          variant: "destructive",
+          title: "Foto atualizada",
+          description: "Sua foto de perfil foi atualizada com sucesso.",
         })
-      } finally {
-        setIsUploading(false)
       }
+    } catch (error) {
+      console.error("[PROFILE_IMAGE]", error)
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao atualizar sua foto.",
+        variant: "destructive",
+      })
+    } finally {
+      setIsUploading(false)
+      setUploadProgress(0)
     }
   }
 
-  const { getRootProps, getInputProps } = useDropzone({
-    onDrop,
-    accept: {
-      "image/*": [],
-    },
-    maxFiles: 1,
-  })
-
   return (
-    <div {...getRootProps()} className="mb-6">
-      <input {...getInputProps()} />
-      <div className="flex items-center space-x-4">
-        <div className="relative h-20 w-20 cursor-pointer rounded-full border-2 border-dashed border-gray-300 p-1">
+    <>
+      <div 
+        onClick={() => setIsCropModalOpen(true)}
+        className="group relative h-20 w-20 cursor-pointer rounded-full"
+      >
+        {/* Imagem atual */}
+        <div className="h-full w-full rounded-full border-2 border-gray-200 p-1">
           {imageUrl ? (
             <img
               src={imageUrl}
@@ -71,19 +81,27 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
               <Icons.user className="h-8 w-8 text-gray-400" />
             </div>
           )}
-          {isUploading && (
-            <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black bg-opacity-50">
-              <Icons.spinner className="h-6 w-6 animate-spin text-white" />
-            </div>
-          )}
         </div>
-        <div>
-          <h3 className="text-sm font-medium">Foto de perfil</h3>
-          <p className="text-sm text-muted-foreground">
-            Clique para fazer upload de uma nova foto
-          </p>
+
+        {/* Overlay de hover */}
+        <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/50 opacity-0 transition-opacity group-hover:opacity-100">
+          <Icons.edit className="h-6 w-6 text-white" />
         </div>
+
+        {/* Overlay de loading */}
+        {isUploading && (
+          <div className="absolute inset-0 flex flex-col items-center justify-center rounded-full bg-black/70">
+            <Icons.spinner className="h-6 w-6 animate-spin text-white" />
+            <span className="mt-1 text-xs text-white">{uploadProgress}%</span>
+          </div>
+        )}
       </div>
-    </div>
+
+      <ImageCropModal
+        isOpen={isCropModalOpen}
+        onClose={() => setIsCropModalOpen(false)}
+        onSave={handleImageSave}
+      />
+    </>
   )
 }
