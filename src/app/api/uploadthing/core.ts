@@ -19,7 +19,7 @@ export const ourFileRouter = {
       console.log("Upload complete for userId:", metadata.userId)
       console.log("File URL:", file.url)
       
-      return { uploadedBy: metadata.userId }
+      // Não retornamos nada aqui
     }),
 } satisfies FileRouter
 
