@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useSession, signIn } from "next-auth/react"
+import { useSession, getSession } from "next-auth/react"
 import imageCompression from "browser-image-compression"
 import { useUploadThing } from "@/lib/uploadthing"
 import { toast } from "@/components/ui/use-toast"
@@ -43,12 +43,17 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
         const imageUrl = uploadResult[0].url
         await updateProfileImage({ image: imageUrl })
 
-        // Forçar nova sessão
-        await signIn("credentials", {
-          redirect: false,
-          email: "", // será ignorado pois já estamos autenticados
-          password: "", // será ignorado pois já estamos autenticados
-        })
+        // Atualizar a sessão com a nova imagem
+        const session = await getSession()
+        if (session) {
+          await updateSession({
+            ...session,
+            user: {
+              ...session.user,
+              image: imageUrl,
+            },
+          })
+        }
 
         toast({
           title: "Foto atualizada",

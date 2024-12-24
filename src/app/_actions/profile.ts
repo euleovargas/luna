@@ -4,8 +4,6 @@ import { revalidatePath } from "next/cache"
 import { unstable_noStore as noStore } from "next/cache"
 import { db } from "@/lib/db"
 import { getCurrentUser } from "@/lib/session"
-import { getServerSession } from "next-auth"
-import { authOptions } from "@/lib/auth"
 
 export async function updateProfile({ name }: { name: string }) {
   try {
@@ -35,25 +33,18 @@ export async function updateProfile({ name }: { name: string }) {
 export async function updateProfileImage({ image }: { image: string }) {
   noStore()
   try {
-    const session = await getServerSession(authOptions)
-    if (!session?.user) {
+    const user = await getCurrentUser()
+    if (!user) {
       throw new Error("Unauthorized")
     }
 
     // Atualizar o usuário
     await db.user.update({
       where: {
-        id: session.user.id,
+        id: user.id,
       },
       data: {
         image,
-      },
-    })
-
-    // Forçar expiração de todas as sessões do usuário
-    await db.session.deleteMany({
-      where: {
-        userId: session.user.id,
       },
     })
 
