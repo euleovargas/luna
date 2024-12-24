@@ -21,26 +21,35 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
 
   const handleImageSave = async (croppedImage: Blob) => {
     try {
+      console.log("[PROFILE_IMAGE] Starting upload process")
       setIsUploading(true)
       setUploadProgress(0)
 
       // Compress image
+      console.log("[PROFILE_IMAGE] Compressing image")
       const compressedFile = await imageCompression(
         new File([croppedImage], "profile.jpg", { type: "image/jpeg" }),
         {
           maxSizeMB: 1,
           maxWidthOrHeight: 1024,
           useWebWorker: true,
-          onProgress: (p) => setUploadProgress(Math.round(p * 50)) // First 50% is compression
+          onProgress: (p) => {
+            const progress = Math.round(p * 50)
+            console.log("[PROFILE_IMAGE] Compression progress:", progress)
+            setUploadProgress(progress)
+          }
         }
       )
 
       // Upload
+      console.log("[PROFILE_IMAGE] Starting uploadthing upload")
       const uploadResult = await startUpload([compressedFile])
-      setUploadProgress(75) // 75% after upload
+      console.log("[PROFILE_IMAGE] Upload result:", uploadResult)
+      setUploadProgress(75)
 
       if (uploadResult && uploadResult[0]) {
         const imageUrl = uploadResult[0].url
+        console.log("[PROFILE_IMAGE] Updating profile with URL:", imageUrl)
         await updateProfileImage({ image: imageUrl })
         setUploadProgress(100)
 
@@ -48,9 +57,12 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
           title: "Foto atualizada",
           description: "Sua foto de perfil foi atualizada com sucesso.",
         })
+
+        // Force a page reload to update the image
+        window.location.reload()
       }
     } catch (error) {
-      console.error("[PROFILE_IMAGE]", error)
+      console.error("[PROFILE_IMAGE] Error:", error)
       toast({
         title: "Erro",
         description: "Ocorreu um erro ao atualizar sua foto.",
@@ -59,6 +71,7 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
     } finally {
       setIsUploading(false)
       setUploadProgress(0)
+      setIsCropModalOpen(false)
     }
   }
 
