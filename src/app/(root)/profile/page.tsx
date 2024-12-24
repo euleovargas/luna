@@ -95,44 +95,21 @@ export default function ProfilePage() {
     if (acceptedFiles.length > 0) {
       try {
         setIsUploading(true)
-        const uploadedFiles = await startUpload(acceptedFiles)
-        
-        if (uploadedFiles && uploadedFiles[0]) {
-          const imageUrl = uploadedFiles[0].url
-          const response = await fetch("/api/user/profile", {
-            method: "PUT",
-            headers: {
-              "Content-Type": "application/json",
-            },
-            body: JSON.stringify({
-              image: imageUrl,
-            }),
-            cache: 'no-store'
-          })
+        const file = acceptedFiles[0]
 
-          if (!response.ok) {
-            throw new Error("Erro ao atualizar foto")
-          }
+        const [res] = await startUpload([file])
 
-          const data = await response.json()
+        if (res) {
+          const imageUrl = res.url
           
-          if (data.success) {
-            // Atualiza a sessão com a nova imagem
-            await updateProfile.mutate({ image: imageUrl })
-
-            toast({
-              title: "Foto atualizada",
-              description: "Sua foto de perfil foi atualizada com sucesso.",
-            })
-          } else {
-            throw new Error(data.message || "Erro ao atualizar foto")
-          }
+          // Atualiza o perfil com a nova imagem
+          await updateProfile.mutate({ image: imageUrl })
         }
       } catch (error) {
-        console.error("[PROFILE_UPDATE] Error updating image:", error)
+        console.error("Erro ao fazer upload:", error)
         toast({
           title: "Erro",
-          description: error instanceof Error ? error.message : "Erro ao fazer upload da imagem",
+          description: "Ocorreu um erro ao atualizar sua foto.",
           variant: "destructive",
         })
       } finally {

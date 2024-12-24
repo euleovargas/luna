@@ -5,7 +5,8 @@ import { useSession } from 'next-auth/react'
 import { toast } from '@/components/ui/use-toast'
 
 interface ProfileData {
-  name: string
+  name?: string
+  image?: string
 }
 
 export function useProfile() {
