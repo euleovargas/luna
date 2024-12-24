@@ -8,7 +8,6 @@ import { toast } from "@/components/ui/use-toast"
 import { Icons } from "@/components/ui/icons"
 import { updateProfileImage } from "@/app/_actions/profile"
 import { ImageCropModal } from "@/components/profile/image-crop-modal"
-import { useRouter } from "next/navigation"
 
 interface ProfileImageProps {
   imageUrl?: string | null
@@ -19,16 +18,12 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [isCropModalOpen, setIsCropModalOpen] = useState(false)
   const { startUpload } = useUploadThing("imageUploader")
-  const router = useRouter()
-  const { update: updateSession } = useSession()
 
   const handleImageSave = async (croppedImage: Blob) => {
     try {
-      console.log("[PROFILE_IMAGE] Starting upload process")
       setIsUploading(true)
 
       // Compress image
-      console.log("[PROFILE_IMAGE] Compressing image")
       const compressedFile = await imageCompression(
         new File([croppedImage], "profile.jpg", { type: "image/jpeg" }),
         {
@@ -39,28 +34,19 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
       )
 
       // Upload
-      console.log("[PROFILE_IMAGE] Starting uploadthing upload")
       const uploadResult = await startUpload([compressedFile])
-      console.log("[PROFILE_IMAGE] Upload result:", uploadResult)
 
       if (uploadResult && uploadResult[0]) {
         const imageUrl = uploadResult[0].url
-        console.log("[PROFILE_IMAGE] Updating profile with URL:", imageUrl)
         await updateProfileImage({ image: imageUrl })
-
-        // Forçar atualização da sessão
-        await updateSession()
-
-        // Disparar evento de atualização
-        window.dispatchEvent(new Event('profile-updated'))
 
         toast({
           title: "Foto atualizada",
           description: "Sua foto de perfil foi atualizada com sucesso.",
         })
 
-        // Forçar atualização dos dados
-        router.refresh()
+        // Recarregar a página para atualizar todos os componentes
+        window.location.reload()
       }
     } catch (error) {
       console.error("[PROFILE_IMAGE] Error:", error)
