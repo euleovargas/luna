@@ -65,31 +65,44 @@ export default function ProfilePage() {
 
   async function onSubmit(data: ProfileFormValues) {
     try {
-      startTransition(async () => {
-        const response = await fetch("/api/user/profile", {
-          method: "PATCH",
-          headers: {
-            "Content-Type": "application/json",
-          },
-          body: JSON.stringify(data),
-        })
+      startTransition(() => {
+        updateProfile(data)
+      })
+    } catch (error) {
+      console.error("[PROFILE_UPDATE]", error)
+      toast({
+        title: "Erro",
+        description: "Ocorreu um erro ao atualizar o perfil.",
+        variant: "destructive",
+      })
+    }
+  }
 
-        if (!response.ok) {
-          throw new Error("Falha ao atualizar perfil")
-        }
+  async function updateProfile(data: ProfileFormValues) {
+    try {
+      const response = await fetch("/api/user/profile", {
+        method: "PATCH",
+        headers: {
+          "Content-Type": "application/json",
+        },
+        body: JSON.stringify(data),
+      })
 
-        const result = await response.json()
+      if (!response.ok) {
+        throw new Error("Falha ao atualizar perfil")
+      }
 
-        // Atualiza a sessão com os novos dados
-        await update({
-          ...session,
-          user: result.user,
-        })
+      const result = await response.json()
 
-        toast({
-          title: "Perfil atualizado",
-          description: "Suas informações foram atualizadas com sucesso.",
-        })
+      // Atualiza a sessão com os novos dados
+      await update({
+        ...session,
+        user: result.user,
+      })
+
+      toast({
+        title: "Perfil atualizado",
+        description: "Suas informações foram atualizadas com sucesso.",
       })
     } catch (error) {
       console.error("[PROFILE_UPDATE]", error)
