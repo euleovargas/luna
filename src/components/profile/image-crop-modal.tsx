@@ -177,10 +177,14 @@ export function ImageCropModal({ isOpen, onClose, onSave }: ImageCropModalProps)
                     Cancelar
                   </Button>
                   <Button onClick={handleSave} disabled={isLoading}>
-                    {isLoading && (
-                      <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                    {isLoading ? (
+                      <>
+                        <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                        Salvando...
+                      </>
+                    ) : (
+                      "Salvar"
                     )}
-                    Salvar
                   </Button>
                 </div>
               </div>

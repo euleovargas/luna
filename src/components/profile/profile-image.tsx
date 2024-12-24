@@ -7,6 +7,7 @@ import { toast } from "@/components/ui/use-toast"
 import { Icons } from "@/components/ui/icons"
 import { updateProfileImage } from "@/app/_actions/profile"
 import { ImageCropModal } from "@/components/profile/image-crop-modal"
+import { useRouter } from "next/navigation"
 
 interface ProfileImageProps {
   imageUrl?: string | null
@@ -15,15 +16,14 @@ interface ProfileImageProps {
 
 export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
   const [isUploading, setIsUploading] = useState(false)
-  const [uploadProgress, setUploadProgress] = useState(0)
   const [isCropModalOpen, setIsCropModalOpen] = useState(false)
   const { startUpload } = useUploadThing("imageUploader")
+  const router = useRouter()
 
   const handleImageSave = async (croppedImage: Blob) => {
     try {
       console.log("[PROFILE_IMAGE] Starting upload process")
       setIsUploading(true)
-      setUploadProgress(0)
 
       // Compress image
       console.log("[PROFILE_IMAGE] Compressing image")
@@ -33,11 +33,6 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
           maxSizeMB: 1,
           maxWidthOrHeight: 1024,
           useWebWorker: true,
-          onProgress: (p) => {
-            const progress = Math.round(p * 50)
-            console.log("[PROFILE_IMAGE] Compression progress:", progress)
-            setUploadProgress(progress)
-          }
         }
       )
 
@@ -45,21 +40,19 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
       console.log("[PROFILE_IMAGE] Starting uploadthing upload")
       const uploadResult = await startUpload([compressedFile])
       console.log("[PROFILE_IMAGE] Upload result:", uploadResult)
-      setUploadProgress(75)
 
       if (uploadResult && uploadResult[0]) {
         const imageUrl = uploadResult[0].url
         console.log("[PROFILE_IMAGE] Updating profile with URL:", imageUrl)
         await updateProfileImage({ image: imageUrl })
-        setUploadProgress(100)
 
         toast({
           title: "Foto atualizada",
           description: "Sua foto de perfil foi atualizada com sucesso.",
         })
 
-        // Force a page reload to update the image
-        window.location.reload()
+        // Forçar atualização dos dados
+        router.refresh()
       }
     } catch (error) {
       console.error("[PROFILE_IMAGE] Error:", error)
@@ -70,7 +63,6 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
       })
     } finally {
       setIsUploading(false)
-      setUploadProgress(0)
       setIsCropModalOpen(false)
     }
   }
@@ -103,9 +95,8 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
 
         {/* Overlay de loading */}
         {isUploading && (
-          <div className="absolute inset-0 flex flex-col items-center justify-center rounded-full bg-black/70">
+          <div className="absolute inset-0 flex items-center justify-center rounded-full bg-black/70">
             <Icons.spinner className="h-6 w-6 animate-spin text-white" />
-            <span className="mt-1 text-xs text-white">{uploadProgress}%</span>
           </div>
         )}
       </div>
