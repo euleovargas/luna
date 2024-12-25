@@ -176,7 +176,10 @@ export function ImageCropModal({ isOpen, onClose, onSave }: ImageCropModalProps)
                   <Button variant="outline" onClick={onClose}>
                     Cancelar
                   </Button>
-                  <Button onClick={handleSave} disabled={isSaving}>
+                  <Button 
+                    onClick={handleSave} 
+                    disabled={!completedCrop || isSaving}
+                  >
                     {isSaving ? (
                       <>
                         <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />

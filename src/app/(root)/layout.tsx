@@ -19,9 +19,7 @@ export default function RootLayout({
   // Sincronizar o estado global com a sessão
   useEffect(() => {
     if (session?.user) {
-      console.log("[DEBUG] Root Layout - Session changed:", session.user)
       setUser(session.user);
-      console.log("[DEBUG] Root Layout - Global state updated")
     }
   }, [session?.user, setUser]);
 
