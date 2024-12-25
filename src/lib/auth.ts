@@ -156,7 +156,7 @@ export const authOptions: NextAuthOptions = {
         session.user.id = token.id
         session.user.name = token.name
         session.user.email = token.email
-        session.user.image = token.picture
+        session.user.image = token.image
         session.user.role = token.role as UserRole
       }
 
@@ -166,6 +166,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         token.id = user.id
         token.role = user.role
+        token.image = user.image
       }
       return token
     },
