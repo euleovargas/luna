@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useSession } from "next-auth/react"
+import { useSession, signOut } from "next-auth/react"
 import { CustomSession } from "@/types"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
