@@ -1,7 +1,7 @@
 "use client"
 
 import { useState } from "react"
-import { useSession, getSession } from "next-auth/react"
+import { useSession } from "next-auth/react"
 import imageCompression from "browser-image-compression"
 import { useUploadThing } from "@/lib/uploadthing"
 import { toast } from "@/components/ui/use-toast"
@@ -9,6 +9,7 @@ import { Icons } from "@/components/ui/icons"
 import { updateProfileImage } from "@/app/_actions/profile"
 import { ImageCropModal } from "@/components/profile/image-crop-modal"
 import { useRouter } from "next/navigation"
+import { useUserStore } from "@/store/user-store"
 
 interface ProfileImageProps {
   imageUrl?: string | null
@@ -20,7 +21,7 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
   const [isCropModalOpen, setIsCropModalOpen] = useState(false)
   const { startUpload } = useUploadThing("imageUploader")
   const router = useRouter()
-  const { update: updateSession } = useSession()
+  const updateUser = useUserStore((state) => state.updateUser)
 
   const handleImageSave = async (croppedImage: Blob) => {
     try {
@@ -43,17 +44,8 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
         const imageUrl = uploadResult[0].url
         await updateProfileImage({ image: imageUrl })
 
-        // Atualizar a sessão com a nova imagem
-        const session = await getSession()
-        if (session) {
-          await updateSession({
-            ...session,
-            user: {
-              ...session.user,
-              image: imageUrl,
-            },
-          })
-        }
+        // Atualizar o estado global
+        updateUser({ image: imageUrl })
 
         toast({
           title: "Foto atualizada",

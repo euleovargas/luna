@@ -17,6 +17,7 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu"
 import { Icons } from "@/components/ui/icons"
+import { useUserStore } from "@/store/user-store"
 
 interface MainHeaderProps {
   children?: React.ReactNode
@@ -88,39 +89,43 @@ MainHeader.Actions = function MainHeaderActions({ children }: MainHeaderActionsP
 }
 
 MainHeader.User = function MainHeaderUser() {
-  const { data: sessionData, update } = useSession()
+  const { data: sessionData } = useSession()
   const session = sessionData as CustomSession
-  const [key, setKey] = React.useState(0)
+  const user = useUserStore((state) => state.user)
+  const setUser = useUserStore((state) => state.setUser)
 
   React.useEffect(() => {
-    const updateKey = () => setKey(prev => prev + 1)
-    window.addEventListener('profile-updated', updateKey)
-    return () => window.removeEventListener('profile-updated', updateKey)
-  }, [])
+    if (session?.user) {
+      setUser(session.user)
+    }
+  }, [session?.user, setUser])
 
   if (!session?.user) {
     return null
   }
 
+  // Usar o user da store que sempre estará atualizado
+  const currentUser = user || session.user
+
   return (
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
-          <Avatar className="h-8 w-8" key={key}>
+          <Avatar className="h-8 w-8">
             <AvatarImage 
-              src={session.user.image || undefined} 
-              alt={session.user.name || ""} 
+              src={currentUser.image || undefined} 
+              alt={currentUser.name || ""} 
             />
-            <AvatarFallback>{session.user.name?.charAt(0)}</AvatarFallback>
+            <AvatarFallback>{currentUser.name?.charAt(0)}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
       <DropdownMenuContent className="w-56" align="end" forceMount>
         <DropdownMenuLabel className="font-normal">
           <div className="flex flex-col space-y-1">
-            <p className="text-sm font-medium leading-none">{session.user.name}</p>
+            <p className="text-sm font-medium leading-none">{currentUser.name}</p>
             <p className="text-xs leading-none text-muted-foreground">
-              {session.user.email}
+              {currentUser.email}
             </p>
           </div>
         </DropdownMenuLabel>
@@ -131,7 +136,7 @@ MainHeader.User = function MainHeaderUser() {
             Perfil
           </Link>
         </DropdownMenuItem>
-        {session.user.role === "ADMIN" && (
+        {currentUser.role === "ADMIN" && (
           <DropdownMenuItem asChild>
             <Link href="/admin">
               <Icons.settings className="mr-2 h-4 w-4" />
