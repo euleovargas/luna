@@ -11,6 +11,7 @@ import { User } from "next-auth"
 import { JWT } from "next-auth/jwt"
 
 interface CustomToken extends JWT {
+  sub: string
   role: UserRole
   image: string | null
 }
@@ -155,7 +156,7 @@ export const authOptions: NextAuthOptions = {
       if (user) {
         return {
           ...token,
-          id: user.id,
+          sub: user.id,
           role: user.role,
           image: user.image,
         }
