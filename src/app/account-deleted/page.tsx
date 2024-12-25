@@ -22,7 +22,7 @@ export default function AccountDeletedPage() {
 
   return (
     <div className="container flex flex-col items-center justify-center min-h-screen max-w-md text-center space-y-8 py-10">
-      <Icons.userX className="h-24 w-24 text-muted-foreground" />
+      <Icons.userx className="h-24 w-24 text-muted-foreground" />
       
       <div className="space-y-2">
         <h1 className="text-3xl font-bold tracking-tighter">Conta excluída com sucesso</h1>
