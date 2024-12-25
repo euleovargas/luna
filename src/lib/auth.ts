@@ -11,9 +11,8 @@ import { User } from "next-auth"
 import { JWT } from "next-auth/jwt"
 
 interface CustomToken extends JWT {
-  id?: string
-  role?: UserRole
-  image?: string | null
+  role: UserRole
+  image: string | null
 }
 
 const prismaAdapter = PrismaAdapter(db) as Adapter
@@ -143,20 +142,23 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token }) {
       const customToken = token as CustomToken
       if (customToken) {
-        session.user.id = customToken.id as string
-        session.user.name = customToken.name as string
-        session.user.email = customToken.email as string
+        session.user.id = customToken.sub
+        session.user.name = customToken.name || ""
+        session.user.email = customToken.email || ""
         session.user.image = customToken.image
-        session.user.role = customToken.role as UserRole
+        session.user.role = customToken.role
       }
 
       return session
     },
     async jwt({ token, user }) {
       if (user) {
-        token.id = user.id
-        token.role = user.role
-        token.image = user.image
+        return {
+          ...token,
+          id: user.id,
+          role: user.role,
+          image: user.image,
+        }
       }
       return token
     },
