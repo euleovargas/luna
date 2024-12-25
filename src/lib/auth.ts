@@ -8,6 +8,13 @@ import { UserRole } from "@prisma/client"
 import { Adapter } from "next-auth/adapters"
 import { verifyJwt } from "./jwt"
 import { User } from "next-auth"
+import { JWT } from "next-auth/jwt"
+
+interface CustomToken extends JWT {
+  id?: string
+  role?: UserRole
+  image?: string | null
+}
 
 const prismaAdapter = PrismaAdapter(db) as Adapter
 
@@ -99,19 +106,21 @@ export const authOptions: NextAuthOptions = {
             return null;
           }
 
-          const isPasswordValid = await bcrypt.compare(
-            credentials.password,
-            user.password
-          );
+          const isValid = await bcrypt.compare(credentials.password, user.password);
 
-          if (!isPasswordValid) {
+          if (!isValid) {
             return null;
           }
 
-          const { password, ...userWithoutPass } = user;
-          return userWithoutPass;
+          return {
+            id: user.id,
+            email: user.email,
+            name: user.name,
+            image: user.image,
+            role: user.role,
+          };
         } catch (error) {
-          console.error("[AUTHORIZE_ERROR]", error);
+          console.error("[AUTH_ERROR]", error);
           return null;
         }
       },
@@ -119,45 +128,26 @@ export const authOptions: NextAuthOptions = {
   ],
   callbacks: {
     async signIn({ user, account, profile }) {
+      // Permitir login com Google
       if (account?.provider === "google") {
-        if (!user.email) {
-          return false
-        }
-
-        try {
-          const userExists = await db.user.findUnique({
-            where: {
-              email: user.email,
-            },
-          })
-
-          if (!userExists) {
-            await db.user.create({
-              data: {
-                email: user.email ?? '',
-                name: user.name ?? 'User',
-                image: user.image ?? '',
-                role: UserRole.USER,
-              },
-            })
-          }
-
-          return true
-        } catch (error) {
-          console.error("Error checking if user exists: ", error)
-          return false
-        }
+        return true;
       }
 
-      return true
+      // Verificar se é um login por token
+      if (account?.provider === "credentials" && user) {
+        return true;
+      }
+
+      return false;
     },
     async session({ session, token }) {
-      if (token) {
-        session.user.id = token.id
-        session.user.name = token.name
-        session.user.email = token.email
-        session.user.image = token.image
-        session.user.role = token.role as UserRole
+      const customToken = token as CustomToken
+      if (customToken) {
+        session.user.id = customToken.id as string
+        session.user.name = customToken.name as string
+        session.user.email = customToken.email as string
+        session.user.image = customToken.image
+        session.user.role = customToken.role as UserRole
       }
 
       return session
