@@ -5,6 +5,7 @@ import GoogleProvider from "next-auth/providers/google"
 import { compare } from "bcryptjs"
 import { db } from "@/lib/db"
 import { CustomToken } from "@/types"
+import { Adapter } from "next-auth/adapters"
 
 /**
  * Configuração do NextAuth
@@ -16,7 +17,7 @@ import { CustomToken } from "@/types"
  * - Callbacks personalizados para sessão e JWT
  */
 export const authOptions: NextAuthOptions = {
-  adapter: PrismaAdapter(db),
+  adapter: PrismaAdapter(db) as Adapter,
   secret: process.env.NEXTAUTH_SECRET,
   session: {
     strategy: "jwt",
