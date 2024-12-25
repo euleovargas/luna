@@ -3,7 +3,7 @@
 import * as React from "react"
 import Link from "next/link"
 import Image from "next/image"
-import { useSession, signOut } from "next-auth/react"
+import { useSession } from "next-auth/react"
 import { CustomSession } from "@/types"
 import { cn } from "@/lib/utils"
 import { Button } from "@/components/ui/button"
@@ -38,6 +38,12 @@ interface MainHeaderActionsProps {
   children?: React.ReactNode
 }
 
+/**
+ * MainHeader Component
+ * 
+ * Componente principal do cabeçalho da aplicação. Inclui logo, navegação e área do usuário.
+ * Usa Zustand para gerenciamento de estado global e NextAuth para autenticação.
+ */
 const MainHeader = ({ children, menuItems }: MainHeaderProps) => {
   return (
     <header className="sticky top-0 z-50 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60">
@@ -53,6 +59,9 @@ const MainHeader = ({ children, menuItems }: MainHeaderProps) => {
   )
 }
 
+/**
+ * Logo do cabeçalho
+ */
 MainHeader.Logo = function MainHeaderLogo() {
   return (
     <Link href="/" className="flex items-center space-x-2">
@@ -64,6 +73,9 @@ MainHeader.Logo = function MainHeaderLogo() {
   )
 }
 
+/**
+ * Navegação do cabeçalho
+ */
 MainHeader.Nav = function MainHeaderNav({ items }: MainHeaderNavProps) {
   return (
     <nav className="flex items-center space-x-6 px-6">
@@ -80,6 +92,9 @@ MainHeader.Nav = function MainHeaderNav({ items }: MainHeaderNavProps) {
   )
 }
 
+/**
+ * Área de ações do cabeçalho (ex: botões, controles)
+ */
 MainHeader.Actions = function MainHeaderActions({ children }: MainHeaderActionsProps) {
   return (
     <div className="flex items-center space-x-4">
@@ -88,23 +103,24 @@ MainHeader.Actions = function MainHeaderActions({ children }: MainHeaderActionsP
   )
 }
 
+/**
+ * Área do usuário no cabeçalho
+ * 
+ * Exibe a imagem do perfil do usuário e um menu dropdown com ações.
+ * Usa o estado global (Zustand) para manter a imagem atualizada.
+ */
 MainHeader.User = function MainHeaderUser() {
   const { data: sessionData } = useSession()
   const session = sessionData as CustomSession
   const user = useUserStore((state) => state.user)
   const setUser = useUserStore((state) => state.setUser)
 
+  // Sincronizar o estado global com a sessão
   React.useEffect(() => {
     if (session?.user) {
-      console.log("[DEBUG] MainHeader - Session:", session.user)
       setUser(session.user)
-      console.log("[DEBUG] MainHeader - Global state updated")
     }
   }, [session?.user, setUser])
-
-  React.useEffect(() => {
-    console.log("[DEBUG] MainHeader - Current user from store:", user)
-  }, [user])
 
   if (!session?.user) {
     return null
@@ -112,7 +128,6 @@ MainHeader.User = function MainHeaderUser() {
 
   // Usar o user da store que sempre estará atualizado
   const currentUser = user || session.user
-  console.log("[DEBUG] MainHeader - Using user:", currentUser)
 
   return (
     <DropdownMenu>
@@ -123,7 +138,6 @@ MainHeader.User = function MainHeaderUser() {
               src={currentUser.image || ""} 
               alt={currentUser.name || ""}
               onError={(e) => {
-                console.log("[DEBUG] MainHeader - Image error")
                 const target = e.target as HTMLImageElement
                 target.src = ""
               }}

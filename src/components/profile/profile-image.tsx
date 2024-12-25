@@ -16,6 +16,16 @@ interface ProfileImageProps {
   name?: string | null
 }
 
+/**
+ * Componente de imagem do perfil
+ * 
+ * Permite ao usuário visualizar e atualizar sua foto de perfil.
+ * Inclui:
+ * - Compressão de imagem antes do upload
+ * - Modal para cortar a imagem
+ * - Atualização automática do estado global e da sessão
+ * - Feedback visual durante o upload
+ */
 export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [isCropModalOpen, setIsCropModalOpen] = useState(false)
@@ -24,10 +34,13 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
   const updateUser = useUserStore((state) => state.updateUser)
   const { data: session, update: updateSession } = useSession()
 
+  /**
+   * Manipula o salvamento da imagem após o corte
+   * @param croppedImage - Blob da imagem cortada
+   */
   const handleImageSave = async (croppedImage: Blob) => {
     try {
       setIsUploading(true)
-      console.log("[DEBUG] Starting image upload...")
 
       // Compress image
       const compressedFile = await imageCompression(
@@ -44,27 +57,22 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
 
       if (uploadResult && uploadResult[0]) {
         const imageUrl = uploadResult[0].url
-        console.log("[DEBUG] Image uploaded:", imageUrl)
         
         // Atualizar no banco de dados
         await updateProfileImage({ image: imageUrl })
-        console.log("[DEBUG] Database updated")
 
         // Atualizar o estado global
         updateUser({ image: imageUrl })
-        console.log("[DEBUG] Global state updated")
 
         // Atualizar a sessão com todos os dados do usuário
         if (session?.user) {
-          console.log("[DEBUG] Current session:", session)
-          const result = await updateSession({
+          await updateSession({
             ...session,
             user: {
               ...session.user,
               image: imageUrl,
             },
           })
-          console.log("[DEBUG] Session update result:", result)
         }
 
         toast({
