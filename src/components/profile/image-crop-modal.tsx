@@ -11,6 +11,7 @@ interface ImageCropModalProps {
   isOpen: boolean
   onClose: () => void
   onSave: (croppedImage: Blob) => Promise<void>
+  isLoading?: boolean
 }
 
 function centerAspectCrop(
@@ -33,7 +34,7 @@ function centerAspectCrop(
   )
 }
 
-export function ImageCropModal({ isOpen, onClose, onSave }: ImageCropModalProps) {
+export function ImageCropModal({ isOpen, onClose, onSave, isLoading }: ImageCropModalProps) {
   const [imgSrc, setImgSrc] = useState("")
   const [crop, setCrop] = useState<Crop>()
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
@@ -114,8 +115,16 @@ export function ImageCropModal({ isOpen, onClose, onSave }: ImageCropModalProps)
     }
   }, [completedCrop, onSave, onClose])
 
+  const handleClose = () => {
+    if (!isLoading) {
+      setImgSrc("")
+      setCompletedCrop(undefined)
+      onClose()
+    }
+  }
+
   return (
-    <Dialog open={isOpen} onOpenChange={onClose}>
+    <Dialog open={isOpen} onOpenChange={handleClose}>
       <DialogContent className="sm:max-w-xl">
         <DialogHeader>
           <DialogTitle>Editar foto de perfil</DialogTitle>
@@ -173,12 +182,12 @@ export function ImageCropModal({ isOpen, onClose, onSave }: ImageCropModalProps)
                   Escolher outra
                 </Button>
                 <div className="space-x-2">
-                  <Button variant="outline" onClick={onClose}>
+                  <Button variant="outline" onClick={handleClose} disabled={isLoading}>
                     Cancelar
                   </Button>
                   <Button 
                     onClick={handleSave} 
-                    disabled={!completedCrop || isSaving}
+                    disabled={!completedCrop || isSaving || isLoading}
                   >
                     {isSaving ? (
                       <>

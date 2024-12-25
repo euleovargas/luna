@@ -99,7 +99,7 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
   return (
     <>
       <div 
-        onClick={() => setIsCropModalOpen(true)}
+        onClick={() => !isUploading && setIsCropModalOpen(true)}
         className="group relative h-20 w-20 cursor-pointer rounded-full"
       >
         {/* Imagem atual */}
@@ -138,6 +138,7 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
         isOpen={isCropModalOpen}
         onClose={() => setIsCropModalOpen(false)}
         onSave={handleImageSave}
+        isLoading={isUploading}
       />
     </>
   )
