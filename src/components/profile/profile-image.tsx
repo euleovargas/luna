@@ -22,6 +22,7 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
   const { startUpload } = useUploadThing("imageUploader")
   const router = useRouter()
   const updateUser = useUserStore((state) => state.updateUser)
+  const { update: updateSession } = useSession()
 
   const handleImageSave = async (croppedImage: Blob) => {
     try {
@@ -46,6 +47,11 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
 
         // Atualizar o estado global
         updateUser({ image: imageUrl })
+
+        // Atualizar a sessão
+        await updateSession({
+          image: imageUrl,
+        })
 
         toast({
           title: "Foto atualizada",
