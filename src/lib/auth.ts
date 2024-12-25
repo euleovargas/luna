@@ -140,7 +140,18 @@ export const authOptions: NextAuthOptions = {
 
       return false;
     },
-    async session({ session, token }) {
+    async session({ session, token, trigger, newSession }) {
+      console.log("[DEBUG] Session callback - Token:", token)
+      console.log("[DEBUG] Session callback - Trigger:", trigger)
+      console.log("[DEBUG] Session callback - New Session:", newSession)
+
+      // Se a sessão está sendo atualizada via update()
+      if (trigger === "update" && newSession) {
+        console.log("[DEBUG] Session callback - Updating with new session:", newSession)
+        return newSession as any;
+      }
+
+      // Caso contrário, use o token
       const customToken = token as CustomToken
       if (customToken) {
         session.user.id = customToken.sub
@@ -150,10 +161,26 @@ export const authOptions: NextAuthOptions = {
         session.user.role = customToken.role
       }
 
+      console.log("[DEBUG] Session callback - Final session:", session)
       return session
     },
-    async jwt({ token, user }) {
+    async jwt({ token, user, trigger, session }) {
+      console.log("[DEBUG] JWT callback - Token:", token)
+      console.log("[DEBUG] JWT callback - Trigger:", trigger)
+      console.log("[DEBUG] JWT callback - Session:", session)
+
+      // Se o token está sendo atualizado via update()
+      if (trigger === "update" && session) {
+        console.log("[DEBUG] JWT callback - Updating with session:", session)
+        return {
+          ...token,
+          ...session.user,
+        }
+      }
+
+      // Se é um novo login
       if (user) {
+        console.log("[DEBUG] JWT callback - New login with user:", user)
         return {
           ...token,
           sub: user.id,
@@ -161,6 +188,8 @@ export const authOptions: NextAuthOptions = {
           image: user.image,
         }
       }
+
+      console.log("[DEBUG] JWT callback - Returning existing token")
       return token
     },
   },
