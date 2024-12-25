@@ -89,17 +89,22 @@ MainHeader.Actions = function MainHeaderActions({ children }: MainHeaderActionsP
 }
 
 MainHeader.User = function MainHeaderUser() {
-  const { data: sessionData, update: updateSession } = useSession()
+  const { data: sessionData } = useSession()
   const session = sessionData as CustomSession
   const user = useUserStore((state) => state.user)
   const setUser = useUserStore((state) => state.setUser)
 
   React.useEffect(() => {
     if (session?.user) {
-      // Sincronizar o estado global com a sessão
+      console.log("[DEBUG] MainHeader - Session:", session.user)
       setUser(session.user)
+      console.log("[DEBUG] MainHeader - Global state updated")
     }
   }, [session?.user, setUser])
+
+  React.useEffect(() => {
+    console.log("[DEBUG] MainHeader - Current user from store:", user)
+  }, [user])
 
   if (!session?.user) {
     return null
@@ -107,6 +112,7 @@ MainHeader.User = function MainHeaderUser() {
 
   // Usar o user da store que sempre estará atualizado
   const currentUser = user || session.user
+  console.log("[DEBUG] MainHeader - Using user:", currentUser)
 
   return (
     <DropdownMenu>
@@ -117,6 +123,7 @@ MainHeader.User = function MainHeaderUser() {
               src={currentUser.image || ""} 
               alt={currentUser.name || ""}
               onError={(e) => {
+                console.log("[DEBUG] MainHeader - Image error")
                 const target = e.target as HTMLImageElement
                 target.src = ""
               }}

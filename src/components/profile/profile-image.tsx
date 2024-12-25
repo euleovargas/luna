@@ -27,6 +27,7 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
   const handleImageSave = async (croppedImage: Blob) => {
     try {
       setIsUploading(true)
+      console.log("[DEBUG] Starting image upload...")
 
       // Compress image
       const compressedFile = await imageCompression(
@@ -43,22 +44,27 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
 
       if (uploadResult && uploadResult[0]) {
         const imageUrl = uploadResult[0].url
+        console.log("[DEBUG] Image uploaded:", imageUrl)
         
         // Atualizar no banco de dados
         await updateProfileImage({ image: imageUrl })
+        console.log("[DEBUG] Database updated")
 
         // Atualizar o estado global
         updateUser({ image: imageUrl })
+        console.log("[DEBUG] Global state updated")
 
         // Atualizar a sessão com todos os dados do usuário
         if (session?.user) {
-          await updateSession({
+          console.log("[DEBUG] Current session:", session)
+          const result = await updateSession({
             ...session,
             user: {
               ...session.user,
               image: imageUrl,
             },
           })
+          console.log("[DEBUG] Session update result:", result)
         }
 
         toast({
