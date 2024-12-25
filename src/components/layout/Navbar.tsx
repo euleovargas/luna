@@ -2,14 +2,15 @@
 
 import { MainHeader } from '@/components/layout/MainHeader';
 import { ThemeToggle } from "@/components/theme/theme-toggle";
-import { User } from 'next-auth';
+import { useUserStore } from '@/store/user-store';
 
 interface NavbarProps {
-  user?: User | null;
   menuItems?: { href: string; title: string; }[];
 }
 
-export default function Navbar({ user, menuItems: propMenuItems }: NavbarProps) {
+export default function Navbar({ menuItems: propMenuItems }: NavbarProps) {
+  const user = useUserStore((state) => state.user)
+
   const defaultMenuItems = user?.role === 'ADMIN' 
     ? [
         { href: "/dashboard", title: "Dashboard" },
