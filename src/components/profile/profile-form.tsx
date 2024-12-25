@@ -146,7 +146,7 @@ export function ProfileForm({ user, onSubmit }: ProfileFormProps) {
               type="email"
               disabled
               value={user?.email || ""}
-              className="w-[400px]"
+              className="w-full"
             />
             <p className="text-sm text-muted-foreground">
               O email não pode ser alterado.
