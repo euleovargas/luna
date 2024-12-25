@@ -187,15 +187,18 @@ export function ImageCropModal({ isOpen, onClose, onSave, isLoading }: ImageCrop
                   </Button>
                   <Button 
                     onClick={handleSave} 
-                    disabled={!completedCrop || isSaving || isLoading}
+                    disabled={!completedCrop || isLoading}
                   >
-                    {isSaving ? (
+                    {isLoading ? (
                       <>
                         <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                        Salvando...
+                        Processando...
                       </>
                     ) : (
-                      "Salvar"
+                      <>
+                        <Icons.check className="mr-2 h-4 w-4" />
+                        Salvar
+                      </>
                     )}
                   </Button>
                 </div>

@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useRef, useState } from "react"
 import { useSession } from "next-auth/react"
 import imageCompression from "browser-image-compression"
 import { useUploadThing } from "@/lib/uploadthing"
@@ -29,10 +29,17 @@ interface ProfileImageProps {
 export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
   const [isUploading, setIsUploading] = useState(false)
   const [isCropModalOpen, setIsCropModalOpen] = useState(false)
+  const fileInputRef = useRef<HTMLInputElement>(null)
   const { startUpload } = useUploadThing("imageUploader")
   const router = useRouter()
   const updateUser = useUserStore((state) => state.updateUser)
   const { data: session, update: updateSession } = useSession()
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
+    if (e.target.files && e.target.files.length > 0) {
+      setIsCropModalOpen(true)
+    }
+  }
 
   /**
    * Manipula o salvamento da imagem após o corte
@@ -93,15 +100,26 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
     } finally {
       setIsUploading(false)
       setIsCropModalOpen(false)
+      if (fileInputRef.current) {
+        fileInputRef.current.value = ""
+      }
     }
   }
 
   return (
     <>
       <div 
-        onClick={() => !isUploading && setIsCropModalOpen(true)}
+        onClick={() => !isUploading && fileInputRef.current?.click()}
         className="group relative h-20 w-20 cursor-pointer rounded-full"
       >
+        <input
+          ref={fileInputRef}
+          type="file"
+          accept="image/*"
+          onChange={handleFileSelect}
+          className="hidden"
+        />
+
         {/* Imagem atual */}
         <div className="h-full w-full rounded-full border-2 border-gray-200 p-1">
           {imageUrl ? (
@@ -136,7 +154,12 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
 
       <ImageCropModal
         isOpen={isCropModalOpen}
-        onClose={() => setIsCropModalOpen(false)}
+        onClose={() => {
+          setIsCropModalOpen(false)
+          if (fileInputRef.current) {
+            fileInputRef.current.value = ""
+          }
+        }}
         onSave={handleImageSave}
         isLoading={isUploading}
       />
