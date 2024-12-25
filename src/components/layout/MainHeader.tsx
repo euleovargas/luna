@@ -89,13 +89,14 @@ MainHeader.Actions = function MainHeaderActions({ children }: MainHeaderActionsP
 }
 
 MainHeader.User = function MainHeaderUser() {
-  const { data: sessionData } = useSession()
+  const { data: sessionData, update: updateSession } = useSession()
   const session = sessionData as CustomSession
   const user = useUserStore((state) => state.user)
   const setUser = useUserStore((state) => state.setUser)
 
   React.useEffect(() => {
     if (session?.user) {
+      // Sincronizar o estado global com a sessão
       setUser(session.user)
     }
   }, [session?.user, setUser])
@@ -113,8 +114,12 @@ MainHeader.User = function MainHeaderUser() {
         <Button variant="ghost" className="relative h-8 w-8 rounded-full">
           <Avatar className="h-8 w-8">
             <AvatarImage 
-              src={currentUser.image || undefined} 
-              alt={currentUser.name || ""} 
+              src={currentUser.image || ""} 
+              alt={currentUser.name || ""}
+              onError={(e) => {
+                const target = e.target as HTMLImageElement
+                target.src = ""
+              }}
             />
             <AvatarFallback>{currentUser.name?.charAt(0)}</AvatarFallback>
           </Avatar>

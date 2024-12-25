@@ -22,7 +22,7 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
   const { startUpload } = useUploadThing("imageUploader")
   const router = useRouter()
   const updateUser = useUserStore((state) => state.updateUser)
-  const { update: updateSession } = useSession()
+  const { data: session, update: updateSession } = useSession()
 
   const handleImageSave = async (croppedImage: Blob) => {
     try {
@@ -43,15 +43,23 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
 
       if (uploadResult && uploadResult[0]) {
         const imageUrl = uploadResult[0].url
+        
+        // Atualizar no banco de dados
         await updateProfileImage({ image: imageUrl })
 
         // Atualizar o estado global
         updateUser({ image: imageUrl })
 
-        // Atualizar a sessão
-        await updateSession({
-          image: imageUrl,
-        })
+        // Atualizar a sessão com todos os dados do usuário
+        if (session?.user) {
+          await updateSession({
+            ...session,
+            user: {
+              ...session.user,
+              image: imageUrl,
+            },
+          })
+        }
 
         toast({
           title: "Foto atualizada",
@@ -87,6 +95,10 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
               src={imageUrl}
               alt={name || "Avatar"}
               className="h-full w-full rounded-full object-cover"
+              onError={(e) => {
+                const target = e.target as HTMLImageElement
+                target.src = ""
+              }}
             />
           ) : (
             <div className="flex h-full w-full items-center justify-center rounded-full bg-gray-100">
