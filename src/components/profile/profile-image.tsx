@@ -45,7 +45,7 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
    * Manipula o salvamento da imagem após o corte
    * @param croppedImage - Blob da imagem cortada
    */
-  const handleImageSave = async (croppedImage: Blob) => {
+  const handleImageSave = async (croppedImage: Blob): Promise<{ url: string } | undefined> => {
     try {
       setIsUploading(true)
 
@@ -68,9 +68,6 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
         // Atualizar no banco de dados
         await updateProfileImage({ image: imageUrl })
 
-        // Atualizar o estado global
-        updateUser({ image: imageUrl })
-
         // Atualizar a sessão com todos os dados do usuário
         if (session?.user) {
           await updateSession({
@@ -89,6 +86,8 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
 
         // Forçar atualização dos dados
         router.refresh()
+
+        return { url: imageUrl }
       }
     } catch (error) {
       console.error("[PROFILE_IMAGE] Error:", error)
