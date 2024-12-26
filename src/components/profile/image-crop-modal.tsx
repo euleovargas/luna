@@ -8,11 +8,12 @@ import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/ui/icons"
 import { useDropzone } from 'react-dropzone'
 import { cn } from "@/lib/utils"
+import { useUserStore } from "@/store/user-store"
 
 interface ImageCropModalProps {
   isOpen: boolean
   onClose: () => void
-  onSave: (croppedImage: Blob) => Promise<void>
+  onImageUpload: (croppedImage: Blob) => Promise<{ url: string } | undefined>
   isLoading?: boolean
 }
 
@@ -36,13 +37,14 @@ function centerAspectCrop(
   )
 }
 
-export function ImageCropModal({ isOpen, onClose, onSave, isLoading }: ImageCropModalProps) {
+export function ImageCropModal({ isOpen, onClose, onImageUpload, isLoading }: ImageCropModalProps) {
   const [imgSrc, setImgSrc] = useState("")
   const [crop, setCrop] = useState<Crop>()
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
   const [isSaving, setIsSaving] = useState(false)
   const [isUploading, setIsUploading] = useState(false)
   const imgRef = useRef<HTMLImageElement>(null)
+  const updateUser = useUserStore((state) => state.updateUser)
 
   const { getRootProps, getInputProps, isDragActive } = useDropzone({
     accept: {
@@ -118,7 +120,12 @@ export function ImageCropModal({ isOpen, onClose, onSave, isLoading }: ImageCrop
       canvas.toBlob(
         async (blob) => {
           if (!blob) return
-          await onSave(blob)
+          if (onImageUpload) {
+            const response = await onImageUpload(blob)
+            if (response?.url) {
+              updateUser({ image: response.url })
+            }
+          }
           onClose()
         },
         "image/jpeg",
@@ -129,7 +136,7 @@ export function ImageCropModal({ isOpen, onClose, onSave, isLoading }: ImageCrop
     } finally {
       setIsSaving(false)
     }
-  }, [completedCrop, onSave, onClose])
+  }, [completedCrop, onImageUpload, onClose, updateUser])
 
   const handleClose = () => {
     if (!isLoading) {

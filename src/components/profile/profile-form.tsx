@@ -34,6 +34,7 @@ import {
 } from "@/components/ui/alert-dialog"
 import { deleteProfile } from "@/app/_actions/profile"
 import { signOut } from "next-auth/react"
+import { useUserStore } from "@/store/user-store"
 
 const profileFormSchema = z.object({
   name: z
@@ -55,6 +56,7 @@ interface ProfileFormProps {
 
 export function ProfileForm({ user, onSubmit }: ProfileFormProps) {
   const [isPending, startTransition] = useTransition()
+  const updateUser = useUserStore((state) => state.updateUser)
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
@@ -70,6 +72,7 @@ export function ProfileForm({ user, onSubmit }: ProfileFormProps) {
       startTransition(() => {
         onSubmit(data)
           .then(() => {
+            updateUser({ name: data.name })
             toast({
               title: "Perfil atualizado",
               description: "As alterações foram salvas com sucesso.",
