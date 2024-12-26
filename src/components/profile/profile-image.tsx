@@ -109,7 +109,7 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
   return (
     <>
       <div 
-        onClick={() => !isUploading && fileInputRef.current?.click()}
+        onClick={() => !isUploading && setIsCropModalOpen(true)}
         className="group relative h-20 w-20 cursor-pointer rounded-full"
       >
         <input
