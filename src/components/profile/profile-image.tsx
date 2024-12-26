@@ -156,11 +156,11 @@ export function ProfileImage({ imageUrl, name }: ProfileImageProps) {
         isOpen={isCropModalOpen}
         onClose={() => {
           setIsCropModalOpen(false)
-          if (fileInputRef.current) {
-            fileInputRef.current.value = ""
+          if (!isUploading) {
+            fileInputRef.current!.value = ""
           }
         }}
-        onSave={handleImageSave}
+        onImageUpload={handleImageSave}
         isLoading={isUploading}
       />
     </>
