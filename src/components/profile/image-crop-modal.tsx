@@ -7,6 +7,7 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/u
 import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/ui/icons"
 import { useDropzone } from 'react-dropzone'
+import { cn } from "@/lib/utils"
 
 interface ImageCropModalProps {
   isOpen: boolean
