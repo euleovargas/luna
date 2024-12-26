@@ -15,7 +15,7 @@ import {
 } from "@/components/ui/dropdown-menu"
 import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/ui/icons"
-import { Copy, MoreHorizontal, Pen, Trash, User } from "lucide-react"
+import { Copy, MoreHorizontal, MoreVertical, Pen, Trash, User } from "lucide-react"
 import { formatDate } from "@/lib/utils"
 import Link from "next/link"
 import { toast } from "@/components/ui/use-toast"
@@ -90,7 +90,7 @@ export function DataTableRowActions({ user, onDelete }: DataTableRowActionsProps
     <DropdownMenu>
       <DropdownMenuTrigger asChild>
         <Button variant="ghost" className="h-8 w-8 p-0">
-          <Icons.more className="h-4 w-4" />
+          <Icons.moreVertical className="h-4 w-4" />
           <span className="sr-only">Abrir menu</span>
         </Button>
       </DropdownMenuTrigger>
@@ -247,7 +247,7 @@ export const columns: ColumnDef<UserType>[] = [
           <DropdownMenuTrigger asChild>
             <Button variant="ghost" className="h-8 w-8 p-0">
               <span className="sr-only">Abrir menu</span>
-              <MoreHorizontal className="h-4 w-4" />
+              <MoreVertical className="h-4 w-4" />
             </Button>
           </DropdownMenuTrigger>
           <DropdownMenuContent align="end">
