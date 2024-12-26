@@ -154,7 +154,7 @@ export function ImageCropModal({ isOpen, onClose, onSave, isLoading }: ImageCrop
               onComplete={(c) => setCompletedCrop(c)}
               aspect={1}
               circularCrop
-              disabled={isUploading}
+              disabled={isLoading}
             >
               <img
                 ref={imgRef}
