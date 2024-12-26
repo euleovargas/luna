@@ -49,7 +49,7 @@ export async function GET(request: NextRequest) {
       return NextResponse.redirect(loginUrl.toString());
     }
 
-    // Verifica se o token é o mais recente
+    // Verifica se o token expirou (24 horas)
     const latestUser = await db.user.findUnique({
       where: { id: user.id },
       select: { 
@@ -58,10 +58,20 @@ export async function GET(request: NextRequest) {
       }
     })
 
-    if (!latestUser || latestUser.verifyToken !== token) {
-      console.log('[VERIFY_EMAIL] Token não é o mais recente')
+    if (!latestUser?.lastEmailSent) {
+      console.log('[VERIFY_EMAIL] Data de envio não encontrada')
       const loginUrl = new URL("/login", APP_URL);
       loginUrl.searchParams.set("error", "invalid_token");
+      return NextResponse.redirect(loginUrl.toString());
+    }
+
+    const tokenAge = Date.now() - latestUser.lastEmailSent.getTime()
+    const TOKEN_EXPIRY = 24 * 60 * 60 * 1000 // 24 horas
+
+    if (tokenAge > TOKEN_EXPIRY) {
+      console.log('[VERIFY_EMAIL] Token expirado')
+      const loginUrl = new URL("/login", APP_URL);
+      loginUrl.searchParams.set("error", "expired_token");
       return NextResponse.redirect(loginUrl.toString());
     }
 
