@@ -6,6 +6,7 @@ import "react-image-crop/dist/ReactCrop.css"
 import { Dialog, DialogContent, DialogHeader, DialogTitle } from "@/components/ui/dialog"
 import { Button } from "@/components/ui/button"
 import { Icons } from "@/components/ui/icons"
+import { useDropzone } from 'react-dropzone'
 
 interface ImageCropModalProps {
   isOpen: boolean
@@ -39,15 +40,29 @@ export function ImageCropModal({ isOpen, onClose, onSave, isLoading }: ImageCrop
   const [crop, setCrop] = useState<Crop>()
   const [completedCrop, setCompletedCrop] = useState<PixelCrop>()
   const [isSaving, setIsSaving] = useState(false)
+  const [isUploading, setIsUploading] = useState(false)
   const imgRef = useRef<HTMLImageElement>(null)
 
-  const onSelectFile = (e: React.ChangeEvent<HTMLInputElement>) => {
+  const { getRootProps, getInputProps, isDragActive } = useDropzone({
+    accept: {
+      'image/*': ['.jpeg', '.jpg', '.png', '.gif']
+    },
+    maxSize: 5242880, // 5MB
+    onDrop: (acceptedFiles) => {
+      handleFileSelect({ target: { files: acceptedFiles } } as any)
+    },
+    disabled: isUploading
+  })
+
+  const handleFileSelect = (e: React.ChangeEvent<HTMLInputElement>) => {
     if (e.target.files && e.target.files.length > 0) {
+      setIsUploading(true)
       const reader = new FileReader()
       reader.addEventListener("load", () =>
         setImgSrc(reader.result?.toString() || "")
       )
       reader.readAsDataURL(e.target.files[0])
+      setIsUploading(false)
     }
   }
 
@@ -131,80 +146,74 @@ export function ImageCropModal({ isOpen, onClose, onSave, isLoading }: ImageCrop
         </DialogHeader>
 
         <div className="space-y-4">
-          {!imgSrc ? (
-            <div className="flex flex-col items-center justify-center gap-4 p-8">
-              <input
-                type="file"
-                accept="image/*"
-                onChange={onSelectFile}
-                className="hidden"
-                id="image-input"
+          {imgSrc ? (
+            <ReactCrop
+              crop={crop}
+              onChange={(c) => setCrop(c)}
+              onComplete={(c) => setCompletedCrop(c)}
+              aspect={1}
+              circularCrop
+              disabled={isUploading}
+            >
+              <img
+                ref={imgRef}
+                alt="Crop me"
+                src={imgSrc}
+                style={{ transform: `scale(${1}) rotate(${0}deg)` }}
+                onLoad={onImageLoad}
               />
-              <label
-                htmlFor="image-input"
-                className="flex flex-col items-center justify-center gap-2 rounded-lg border-2 border-dashed border-gray-300 p-8 hover:border-gray-400 cursor-pointer"
-              >
-                <Icons.upload className="h-8 w-8 text-gray-400" />
-                <span className="text-sm text-gray-500">
-                  Clique para selecionar uma imagem
-                </span>
-              </label>
-            </div>
+            </ReactCrop>
           ) : (
-            <>
-              <div className="flex items-center justify-center">
-                <ReactCrop
-                  crop={crop}
-                  onChange={(_, percentCrop) => setCrop(percentCrop)}
-                  onComplete={(c) => setCompletedCrop(c)}
-                  aspect={1}
-                  circularCrop
-                  keepSelection
-                >
-                  <img
-                    ref={imgRef}
-                    src={imgSrc}
-                    alt="Crop me"
-                    onLoad={onImageLoad}
-                    className="max-h-[400px]"
-                  />
-                </ReactCrop>
-              </div>
-
-              <div className="flex justify-between">
-                <Button
-                  variant="outline"
-                  onClick={() => {
-                    setImgSrc("")
-                    setCompletedCrop(undefined)
-                  }}
-                >
-                  Escolher outra
-                </Button>
-                <div className="space-x-2">
-                  <Button variant="outline" onClick={handleClose} disabled={isLoading}>
-                    Cancelar
-                  </Button>
-                  <Button 
-                    onClick={handleSave} 
-                    disabled={!completedCrop || isLoading}
-                  >
-                    {isLoading ? (
-                      <>
-                        <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                        Processando...
-                      </>
-                    ) : (
-                      <>
-                        <Icons.check className="mr-2 h-4 w-4" />
-                        Salvar
-                      </>
-                    )}
-                  </Button>
-                </div>
-              </div>
-            </>
+            <div
+              {...getRootProps()}
+              className={cn(
+                "flex flex-col items-center justify-center p-8 border-2 border-dashed rounded-lg cursor-pointer",
+                isDragActive ? "border-primary bg-primary/10" : "border-gray-300",
+                isUploading && "cursor-not-allowed opacity-50"
+              )}
+            >
+              <input {...getInputProps()} />
+              <Icons.upload className="h-8 w-8 text-gray-400" />
+              <p className="text-sm text-gray-500 text-center">
+                {isDragActive 
+                  ? "Solte a imagem aqui..."
+                  : "Arraste uma imagem ou clique para selecionar"
+                }
+              </p>
+            </div>
           )}
+          <div className="flex justify-between">
+            <Button
+              variant="outline"
+              onClick={() => {
+                setImgSrc("")
+                setCompletedCrop(undefined)
+              }}
+            >
+              Escolher outra
+            </Button>
+            <div className="space-x-2">
+              <Button variant="outline" onClick={handleClose} disabled={isLoading}>
+                Cancelar
+              </Button>
+              <Button 
+                onClick={handleSave} 
+                disabled={!completedCrop || isLoading}
+              >
+                {isLoading ? (
+                  <>
+                    <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+                    Processando...
+                  </>
+                ) : (
+                  <>
+                    <Icons.check className="mr-2 h-4 w-4" />
+                    Salvar
+                  </>
+                )}
+              </Button>
+            </div>
+          </div>
         </div>
       </DialogContent>
     </Dialog>
