@@ -72,7 +72,7 @@ export function RegisterForm() {
           }
 
           // Redireciona para a página de verificação
-          router.push(`/resend-verification?email=${encodeURIComponent(data.email)}`)
+          router.push("/resend-verification")
           
           toast({
             title: "Registro realizado!",
