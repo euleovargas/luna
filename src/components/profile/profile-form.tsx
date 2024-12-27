@@ -33,7 +33,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { deleteProfile } from "@/app/_actions/profile"
-import { signOut, useSession, update } from "next-auth/react"
+import { signOut, useSession } from "next-auth/react"
 import { useUserStore } from "@/store/user-store"
 
 const profileFormSchema = z.object({
@@ -57,6 +57,7 @@ interface ProfileFormProps {
 export function ProfileForm({ user, onSubmit }: ProfileFormProps) {
   const [isPending, startTransition] = useTransition()
   const updateUser = useUserStore((state) => state.updateUser)
+  const { update } = useSession()
 
   const form = useForm<ProfileFormValues>({
     resolver: zodResolver(profileFormSchema),
