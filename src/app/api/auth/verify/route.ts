@@ -16,10 +16,7 @@ export async function GET(request: NextRequest) {
 
     // Busca o usuário pelo token
     const user = await db.user.findFirst({
-      where: { 
-        verifyToken: token,
-        emailVerified: null
-      },
+      where: { verifyToken: token },
       select: {
         id: true,
         email: true,
@@ -40,6 +37,18 @@ export async function GET(request: NextRequest) {
       console.log('[VERIFY] Token inválido');
       return NextResponse.json(
         { error: "Token inválido" },
+        { status: 400 }
+      );
+    }
+
+    // Se já foi verificado, retorna erro
+    if (user.emailVerified) {
+      console.log('[VERIFY] Email já verificado:', {
+        email: user.email,
+        verificadoEm: user.emailVerified
+      });
+      return NextResponse.json(
+        { error: "Email já foi verificado" },
         { status: 400 }
       );
     }
