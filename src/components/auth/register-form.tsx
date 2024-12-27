@@ -55,35 +55,43 @@ export function RegisterForm() {
   const password = form.watch("password")
 
   async function onSubmit(data: RegisterValues) {
-    startTransition(async () => {
-      try {
-        const response = await fetch("/api/auth/register", {
+    try {
+      startTransition(() => {
+        fetch("/api/auth/register", {
           method: "POST",
           headers: {
             "Content-Type": "application/json",
           },
           body: JSON.stringify(data),
         })
+          .then(async (response) => {
+            if (!response.ok) {
+              const error = await response.json()
+              throw new Error(error.error)
+            }
 
-        if (!response.ok) {
-          const error = await response.json()
-          throw new Error(error.error)
-        }
+            toast({
+              title: "Conta criada com sucesso!",
+              description: "Verifique seu email para ativar sua conta.",
+            })
 
-        toast({
-          title: "Conta criada com sucesso!",
-          description: "Verifique seu email para ativar sua conta.",
-        })
-
-        router.push("/login?success=register")
-      } catch (error) {
-        toast({
-          title: "Erro ao criar conta",
-          description: error instanceof Error ? error.message : "Erro desconhecido",
-          variant: "destructive",
-        })
-      }
-    })
+            router.push("/login?success=register")
+          })
+          .catch((error) => {
+            toast({
+              title: "Erro ao criar conta",
+              description: error instanceof Error ? error.message : "Erro desconhecido",
+              variant: "destructive",
+            })
+          })
+      })
+    } catch (error) {
+      toast({
+        title: "Erro ao criar conta",
+        description: error instanceof Error ? error.message : "Erro desconhecido",
+        variant: "destructive",
+      })
+    }
   }
 
   const loginWithGoogle = async () => {
