@@ -6,7 +6,7 @@ import { useRouter } from "next/navigation";
 import { toast } from "sonner";
 
 export default function VerifyPage() {
-  const searchParams = useSearchParams();
+  const searchParams = useSearchParams()!; // Adicionado ! pois sabemos que sempre existirá
   const router = useRouter();
 
   useEffect(() => {
