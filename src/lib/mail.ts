@@ -91,6 +91,9 @@ export const sendVerificationEmail = async ({ email, token }: SendVerificationEm
       to: recipient,
       link: verificationLink,
       isDev,
+      tokenLength: token.length,
+      environment: process.env.NODE_ENV,
+      vercelEnv: process.env.VERCEL_ENV
     });
 
     const { data, error } = await resend.emails.send({

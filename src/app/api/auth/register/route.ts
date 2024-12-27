@@ -38,6 +38,10 @@ export async function POST(req: Request) {
     })
 
     const verificationToken = generateVerificationToken()
+    console.log("[REGISTER] Token gerado:", { 
+      tokenLength: verificationToken.length,
+      emailToVerify: email 
+    })
 
     // Atualiza o usuário com o token de verificação
     await db.user.update({
@@ -46,6 +50,13 @@ export async function POST(req: Request) {
         verifyToken: verificationToken,
         lastEmailSent: new Date()
       }
+    })
+
+    console.log("[REGISTER] Usuário atualizado com token:", { 
+      userId: user.id,
+      email,
+      tokenLength: verificationToken.length,
+      lastEmailSent: new Date()
     })
 
     // Enviando email de forma síncrona

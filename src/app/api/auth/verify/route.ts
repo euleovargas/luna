@@ -15,7 +15,11 @@ export async function GET(request: NextRequest) {
   try {
     const token = request.nextUrl.searchParams.get("token");
 
-    console.log('[VERIFY_EMAIL] Iniciando verificação:', { token })
+    console.log('[VERIFY_EMAIL] Iniciando verificação:', { 
+      token,
+      tokenLength: token?.length,
+      url: request.url
+    })
 
     if (!token) {
       console.log('[VERIFY_EMAIL] Token não fornecido')
@@ -38,9 +42,14 @@ export async function GET(request: NextRequest) {
       },
     });
 
-    console.log('[VERIFY_EMAIL] Usuário encontrado:', { 
+    console.log('[VERIFY_EMAIL] Resultado da busca:', { 
       found: !!user,
       email: user?.email,
+      tokenMatch: user?.verifyToken === token,
+      tokenLength: user?.verifyToken?.length,
+      lastEmailSent: user?.lastEmailSent,
+      now: new Date(),
+      tokenAge: user?.lastEmailSent ? Date.now() - user.lastEmailSent.getTime() : null
     })
 
     if (!user || !user.verifyToken || user.verifyToken !== token) {
