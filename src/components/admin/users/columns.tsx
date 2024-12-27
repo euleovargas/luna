@@ -226,10 +226,15 @@ export const columns: ColumnDef<UserType>[] = [
   },
   {
     accessorKey: "role",
-    header: "Tipo",
+    header: "Função",
     cell: ({ row }) => {
       const role = row.getValue("role") as UserRole
-      return <Badge variant="outline">{role}</Badge>
+      const roleLabels = {
+        [UserRole.ADMIN]: "Administrador",
+        [UserRole.MANAGER]: "Gerente",
+        [UserRole.USER]: "Usuário",
+      }
+      return <Badge variant="outline">{roleLabels[role]}</Badge>
     },
   },
   {
