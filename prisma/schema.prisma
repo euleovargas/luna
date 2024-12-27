@@ -71,16 +71,6 @@ model Session {
   @@map("sessions")
 }
 
-// Modelo para tokens de verificação (email, reset de senha)
-model VerificationToken {
-  id         String   @id @default(auto()) @map("_id") @db.ObjectId
-  identifier String
-  token      String
-  expires    DateTime
-
-  @@map("verification_tokens")
-}
-
 // Modelo para logs de segurança
 model SecurityLog {
   id        String   @id @default(auto()) @map("_id") @db.ObjectId

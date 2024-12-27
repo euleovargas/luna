@@ -5,8 +5,8 @@ import { randomBytes } from "crypto"
  * @returns string Token hexadecimal de 32 bytes
  */
 export function generateVerificationToken() {
-  // Gerando um token mais simples para debug
-  return randomBytes(32).toString('hex');
+  // Gerando um token mais curto para debug
+  return randomBytes(8).toString('hex');
 }
 
 /**
