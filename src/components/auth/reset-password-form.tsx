@@ -22,6 +22,7 @@ import {
 import { useToast } from "@/components/ui/use-toast"
 import { Icons } from "@/components/ui/icons"
 import { passwordSchema, PasswordRules } from "./password-rules"
+import { PasswordInput } from "@/components/ui/password-input"
 
 const resetPasswordSchema = z.object({
   password: passwordSchema,
@@ -39,7 +40,6 @@ export function ResetPasswordForm() {
   const searchParams = useSearchParams()
   const [isLoading, setIsLoading] = useState(false)
   const [password, setPassword] = useState("")
-  const [showRules, setShowRules] = useState(false)
 
   const token = searchParams.get("token")
 
@@ -111,42 +111,31 @@ export function ResetPasswordForm() {
         <CardContent className="grid gap-4">
           <div className="grid gap-2">
             <Label htmlFor="password">Nova senha</Label>
-            <div className="relative">
-              <Icons.lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="password"
-                {...form.register("password")}
-                onChange={(e) => {
-                  form.register("password").onChange(e)
-                  setPassword(e.target.value)
-                }}
-                onFocus={() => setShowRules(true)}
-                type="password"
-                placeholder="••••••••"
-                className="pl-10"
-                disabled={isLoading}
-              />
-            </div>
+            <PasswordInput
+              id="password"
+              {...form.register("password")}
+              onChange={(e) => {
+                form.register("password").onChange(e)
+                setPassword(e.target.value)
+              }}
+              placeholder="••••••••"
+              disabled={isLoading}
+            />
             {form.formState.errors.password && (
               <p className="text-sm font-medium text-destructive">
                 {form.formState.errors.password.message}
               </p>
             )}
-            <PasswordRules password={password} showRules={showRules} />
+            <PasswordRules password={password} showRules={true} />
           </div>
           <div className="grid gap-2">
             <Label htmlFor="confirmPassword">Confirmar senha</Label>
-            <div className="relative">
-              <Icons.lock className="absolute left-3 top-3 h-4 w-4 text-muted-foreground" />
-              <Input
-                id="confirmPassword"
-                {...form.register("confirmPassword")}
-                type="password"
-                placeholder="••••••••"
-                className="pl-10"
-                disabled={isLoading}
-              />
-            </div>
+            <PasswordInput
+              id="confirmPassword"
+              {...form.register("confirmPassword")}
+              placeholder="••••••••"
+              disabled={isLoading}
+            />
             {form.formState.errors.confirmPassword && (
               <p className="text-sm font-medium text-destructive">
                 {form.formState.errors.confirmPassword.message}

@@ -23,6 +23,7 @@ import Link from "next/link"
 import { signIn } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
 import { passwordSchema, PasswordRules } from "./password-rules"
+import { PasswordInput } from "@/components/ui/password-input"
 
 const registerSchema = z.object({
   name: z
@@ -41,7 +42,6 @@ export function RegisterForm() {
   const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
   const [isLoadingGoogle, setIsLoadingGoogle] = React.useState(false)
-  const [showRules, setShowRules] = React.useState(false)
 
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
@@ -153,19 +153,16 @@ export function RegisterForm() {
                 <FormItem>
                   <FormLabel>Senha</FormLabel>
                   <FormControl>
-                    <Input 
-                      type="password" 
+                    <PasswordInput 
                       placeholder="••••••••" 
-                      {...field} 
-                      onFocus={() => setShowRules(true)}
-                      onBlur={() => setShowRules(false)}
+                      {...field}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <PasswordRules password={password} showRules={showRules} />
+            <PasswordRules password={password} showRules={true} />
             <Button
               type="submit"
               className="w-full"
