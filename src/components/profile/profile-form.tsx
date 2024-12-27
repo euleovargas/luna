@@ -33,7 +33,7 @@ import {
   AlertDialogTrigger,
 } from "@/components/ui/alert-dialog"
 import { deleteProfile } from "@/app/_actions/profile"
-import { signOut } from "next-auth/react"
+import { signOut, useSession, update } from "next-auth/react"
 import { useUserStore } from "@/store/user-store"
 
 const profileFormSchema = z.object({
@@ -72,7 +72,17 @@ export function ProfileForm({ user, onSubmit }: ProfileFormProps) {
       startTransition(() => {
         onSubmit(data)
           .then(() => {
+            // Atualiza o estado global
             updateUser({ name: data.name })
+
+            // Atualiza a sessão do NextAuth
+            const session = {
+              user: {
+                name: data.name,
+              },
+            }
+            update(session)
+
             toast({
               title: "Perfil atualizado",
               description: "As alterações foram salvas com sucesso.",

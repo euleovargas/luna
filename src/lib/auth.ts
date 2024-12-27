@@ -166,7 +166,14 @@ export const authOptions: NextAuthOptions = {
     async session({ session, token, trigger, newSession }) {
       // Se a sessão está sendo atualizada via update()
       if (trigger === "update" && newSession) {
-        return newSession as any
+        // Atualiza a sessão com os novos dados
+        return {
+          ...session,
+          user: {
+            ...session.user,
+            ...(newSession as any).user,
+          },
+        }
       }
 
       // Caso contrário, use o token

@@ -110,7 +110,7 @@ MainHeader.Actions = function MainHeaderActions({ children }: MainHeaderActionsP
  * Usa o estado global (Zustand) para manter a imagem atualizada.
  */
 MainHeader.User = function MainHeaderUser() {
-  const { data: sessionData } = useSession()
+  const { data: sessionData, update: updateSession } = useSession()
   const session = sessionData as CustomSession
   const user = useUserStore((state) => state.user)
   const setUser = useUserStore((state) => state.setUser)
@@ -142,7 +142,7 @@ MainHeader.User = function MainHeaderUser() {
                 target.src = ""
               }}
             />
-            <AvatarFallback>{currentUser.name?.charAt(0)}</AvatarFallback>
+            <AvatarFallback>{currentUser.name?.charAt(0).toUpperCase()}</AvatarFallback>
           </Avatar>
         </Button>
       </DropdownMenuTrigger>
