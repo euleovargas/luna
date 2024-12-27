@@ -84,7 +84,7 @@ export const sendTestEmail = async (to: string) => {
 export const sendVerificationEmail = async ({ email, token }: SendVerificationEmailParams) => {
   // Em desenvolvimento, sempre envia para o email de teste
   const recipient = isDev ? TEST_EMAIL : email;
-  const verificationLink = `${APP_URL}/verify-email?token=${token}`;
+  const verificationLink = `${APP_URL}/api/auth/verify?token=${token}`;
 
   try {
     console.log('[VERIFICATION_EMAIL] Iniciando envio:', {
