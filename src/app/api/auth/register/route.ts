@@ -3,16 +3,18 @@ import { NextResponse } from "next/server"
 import { generateVerificationToken } from "@/lib/tokens"
 import { sendVerificationEmail } from "@/lib/mail"
 import { z } from "zod"
+import { hash } from "bcryptjs"
 
 const registerSchema = z.object({
   email: z.string().email(),
   name: z.string().optional(),
+  password: z.string().min(6, "A senha deve ter pelo menos 6 caracteres")
 })
 
 export async function POST(req: Request) {
   try {
     const body = await req.json()
-    const { email, name } = registerSchema.parse(body)
+    const { email, name, password } = registerSchema.parse(body)
 
     console.log('[REGISTER] Iniciando:', { email });
 
@@ -40,10 +42,14 @@ export async function POST(req: Request) {
       existe: !!existingToken 
     });
 
+    // Hash da senha
+    const hashedPassword = await hash(password, 10);
+
     const user = await db.user.create({
       data: {
         email,
         name,
+        password: hashedPassword,
         verifyToken: token,
         lastEmailSent: new Date()
       },
@@ -66,6 +72,12 @@ export async function POST(req: Request) {
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[REGISTER] Erro:", error);
+    if (error instanceof z.ZodError) {
+      return NextResponse.json(
+        { error: error.errors[0].message },
+        { status: 400 }
+      )
+    }
     return NextResponse.json(
       { error: "Erro ao registrar usuário" },
       { status: 500 }
