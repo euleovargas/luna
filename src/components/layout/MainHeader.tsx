@@ -171,10 +171,10 @@ MainHeader.User = function MainHeaderUser() {
           </DropdownMenuItem>
         )}
         <DropdownMenuItem
-          onClick={() => signOut({ callbackUrl: "/login" })}
+          onClick={() => signOut()}
           className="cursor-pointer"
         >
-          <Icons.logout className="mr-2 h-4 w-4" />
+          <Icons.logOut className="mr-2 h-4 w-4" />
           Sair
         </DropdownMenuItem>
       </DropdownMenuContent>
