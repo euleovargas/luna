@@ -34,7 +34,7 @@ export default function AccountDeletedPage() {
       <div className="flex flex-col w-full gap-4">
         <Button asChild>
           <Link href="/login">
-            <Icons.login className="mr-2 h-4 w-4" />
+            <Icons.logIn className="mr-2 h-4 w-4" />
             Fazer login
           </Link>
         </Button>
