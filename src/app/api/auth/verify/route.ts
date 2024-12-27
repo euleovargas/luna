@@ -1,8 +1,6 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
 
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://luna-lemon.vercel.app';
-
 export async function GET(request: NextRequest) {
   try {
     const token = request.nextUrl.searchParams.get("token");
@@ -10,7 +8,10 @@ export async function GET(request: NextRequest) {
 
     if (!token) {
       console.log('[VERIFY] Token não fornecido');
-      return NextResponse.redirect(`${APP_URL}/login?error=missing_token`);
+      return NextResponse.json(
+        { error: "Token não fornecido" },
+        { status: 400 }
+      );
     }
 
     // Busca o usuário pelo token
@@ -29,7 +30,10 @@ export async function GET(request: NextRequest) {
 
     if (!user) {
       console.log('[VERIFY] Token inválido');
-      return NextResponse.redirect(`${APP_URL}/login?error=invalid_token`);
+      return NextResponse.json(
+        { error: "Token inválido" },
+        { status: 400 }
+      );
     }
 
     // Verifica o email
@@ -42,9 +46,12 @@ export async function GET(request: NextRequest) {
     });
 
     console.log('[VERIFY] Email verificado:', { email: user.email });
-    return NextResponse.redirect(`${APP_URL}/login?success=email_verified`);
+    return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[VERIFY] Erro:", error);
-    return NextResponse.redirect(`${APP_URL}/login?error=unknown`);
+    return NextResponse.json(
+      { error: "Erro ao verificar email" },
+      { status: 500 }
+    );
   }
 }
