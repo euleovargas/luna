@@ -75,7 +75,8 @@ export function RegisterForm() {
               description: "Verifique seu email para ativar sua conta.",
             })
 
-            router.push("/login?success=register")
+            // Redireciona para a página de reenvio de verificação com o email
+            router.push(`/resend-verification?email=${encodeURIComponent(data.email)}`)
           })
           .catch((error) => {
             toast({
