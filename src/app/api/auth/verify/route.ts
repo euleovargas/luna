@@ -16,9 +16,11 @@ export async function GET(request: NextRequest) {
     const token = request.nextUrl.searchParams.get("token");
 
     console.log('[VERIFY_EMAIL] Iniciando verificação:', { 
-      token,
+      token, // Temporário para debug
       tokenLength: token?.length,
-      url: request.url
+      url: request.url,
+      fullUrl: request.nextUrl.toString(),
+      searchParams: Object.fromEntries(request.nextUrl.searchParams.entries())
     })
 
     if (!token) {
@@ -27,6 +29,28 @@ export async function GET(request: NextRequest) {
       loginUrl.searchParams.set("error", "missing_token");
       return NextResponse.redirect(loginUrl.toString());
     }
+
+    // Busca todos os usuários não verificados para debug
+    const allUnverified = await db.user.findMany({
+      where: { 
+        emailVerified: null
+      },
+      select: {
+        id: true,
+        email: true,
+        verifyToken: true,
+        lastEmailSent: true
+      }
+    });
+
+    console.log('[VERIFY_EMAIL] Todos usuários não verificados:', 
+      allUnverified.map(u => ({
+        email: u.email,
+        token: u.verifyToken, // Temporário para debug
+        tokenLength: u.verifyToken?.length,
+        lastEmailSent: u.lastEmailSent
+      }))
+    );
 
     // Busca o usuário pelo token
     const user = await db.user.findFirst({
@@ -45,6 +69,8 @@ export async function GET(request: NextRequest) {
     console.log('[VERIFY_EMAIL] Resultado da busca:', { 
       found: !!user,
       email: user?.email,
+      requestToken: token, // Temporário para debug
+      userToken: user?.verifyToken, // Temporário para debug
       tokenMatch: user?.verifyToken === token,
       tokenLength: user?.verifyToken?.length,
       lastEmailSent: user?.lastEmailSent,

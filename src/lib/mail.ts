@@ -90,10 +90,12 @@ export const sendVerificationEmail = async ({ email, token }: SendVerificationEm
     console.log('[VERIFICATION_EMAIL] Iniciando envio:', {
       to: recipient,
       link: verificationLink,
+      token,
       isDev,
       tokenLength: token.length,
       environment: process.env.NODE_ENV,
-      vercelEnv: process.env.VERCEL_ENV
+      vercelEnv: process.env.VERCEL_ENV,
+      appUrl: APP_URL
     });
 
     const { data, error } = await resend.emails.send({
