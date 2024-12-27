@@ -18,7 +18,7 @@ interface SendPasswordResetEmailParams {
  * Envia um email de verificação
  */
 export async function sendVerificationEmail({ email, token }: SendVerificationEmailParams) {
-  const verificationLink = `${APP_URL}/api/auth/verify?token=${token}`;
+  const verificationLink = `${APP_URL}/auth/verify?token=${token}`;
   
   console.log('[EMAIL] Enviando verificação:', {
     to: email,
