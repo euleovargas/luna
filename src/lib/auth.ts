@@ -102,17 +102,56 @@ export const authOptions: NextAuthOptions = {
     /**
      * Callback de autorização de login
      * Permite login via Google ou credenciais
+     * Se o usuário já tem uma conta com o mesmo email, vincula a conta do Google
      */
     async signIn({ user, account, profile }) {
-      if (account?.provider === "google") {
-        return true
-      }
+      try {
+        // Login com credenciais (email/senha)
+        if (account?.provider === "credentials" && user) {
+          return true
+        }
 
-      if (account?.provider === "credentials" && user) {
-        return true
-      }
+        // Login com Google
+        if (account?.provider === "google" && user.email) {
+          // Verifica se já existe uma conta com este email
+          const existingUser = await db.user.findUnique({
+            where: { email: user.email },
+            include: {
+              accounts: {
+                where: {
+                  provider: "google"
+                }
+              }
+            }
+          })
 
-      return false
+          // Se existe usuário mas não tem conta Google vinculada
+          if (existingUser && existingUser.accounts.length === 0) {
+            // Vincula a conta do Google à conta existente
+            await db.account.create({
+              data: {
+                userId: existingUser.id,
+                type: account.type,
+                provider: account.provider,
+                providerAccountId: account.providerAccountId,
+                access_token: account.access_token,
+                refresh_token: account.refresh_token,
+                expires_at: account.expires_at,
+                token_type: account.token_type,
+                scope: account.scope,
+                id_token: account.id_token,
+              }
+            })
+          }
+
+          return true
+        }
+
+        return false
+      } catch (error) {
+        console.error("[AUTH_ERROR]", error)
+        return false
+      }
     },
 
     /**
