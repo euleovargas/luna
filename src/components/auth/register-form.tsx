@@ -22,6 +22,7 @@ import { Icons } from "@/components/ui/icons"
 import Link from "next/link"
 import { signIn } from "next-auth/react"
 import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card"
+import { passwordSchema, PasswordRules } from "./password-rules"
 
 const registerSchema = z.object({
   name: z
@@ -31,12 +32,7 @@ const registerSchema = z.object({
   email: z
     .string()
     .email("Email inválido"),
-  password: z
-    .string()
-    .min(6, "A senha deve ter no mínimo 6 caracteres")
-    .regex(/[A-Z]/, "A senha deve conter pelo menos uma letra maiúscula")
-    .regex(/[0-9]/, "A senha deve conter pelo menos um número")
-    .regex(/[^A-Za-z0-9]/, "A senha deve conter pelo menos um caractere especial"),
+  password: passwordSchema,
 })
 
 type RegisterValues = z.infer<typeof registerSchema>
@@ -45,6 +41,7 @@ export function RegisterForm() {
   const router = useRouter()
   const [isPending, startTransition] = React.useTransition()
   const [isLoadingGoogle, setIsLoadingGoogle] = React.useState(false)
+  const [showRules, setShowRules] = React.useState(false)
 
   const form = useForm<RegisterValues>({
     resolver: zodResolver(registerSchema),
@@ -55,67 +52,66 @@ export function RegisterForm() {
     },
   })
 
+  const password = form.watch("password")
+
   async function onSubmit(data: RegisterValues) {
-    startTransition(() => {
-      fetch("/api/auth/register", {
-        method: "POST",
-        headers: {
-          "Content-Type": "application/json",
-        },
-        body: JSON.stringify(data),
-      })
-        .then(async (response) => {
-          const result = await response.json()
-
-          if (!response.ok) {
-            throw new Error(result.error || "Erro ao registrar")
-          }
-
-          // Redireciona para a página de verificação com o email
-          router.push(`/resend-verification?email=${encodeURIComponent(data.email)}`)
-          
-          toast({
-            title: "Registro realizado!",
-            description: "Verifique seu email para ativar sua conta.",
-          })
+    startTransition(async () => {
+      try {
+        const response = await fetch("/api/auth/register", {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+          },
+          body: JSON.stringify(data),
         })
-        .catch((error) => {
-          console.error("[REGISTER_FORM]", error)
-          toast({
-            variant: "destructive",
-            title: "Erro",
-            description: error instanceof Error ? error.message : "Erro ao registrar",
-          })
+
+        if (!response.ok) {
+          const error = await response.json()
+          throw new Error(error.error)
+        }
+
+        toast({
+          title: "Conta criada com sucesso!",
+          description: "Verifique seu email para ativar sua conta.",
         })
+
+        router.push("/login?success=register")
+      } catch (error) {
+        toast({
+          title: "Erro ao criar conta",
+          description: error instanceof Error ? error.message : "Erro desconhecido",
+          variant: "destructive",
+        })
+      }
     })
   }
 
   const loginWithGoogle = async () => {
     try {
       setIsLoadingGoogle(true)
-      await signIn("google", { callbackUrl: "/dashboard" })
+      await signIn("google", { callbackUrl: "/" })
     } catch (error) {
-      console.error("[REGISTER_FORM]", error)
       toast({
+        title: "Erro ao entrar com Google",
+        description: "Ocorreu um erro ao tentar entrar com o Google",
         variant: "destructive",
-        title: "Erro",
-        description: error instanceof Error ? error.message : "Erro ao registrar",
       })
+    } finally {
       setIsLoadingGoogle(false)
     }
   }
 
   return (
-    <Card>
+    <Card className="w-full max-w-md">
       <CardHeader className="space-y-1">
-        <CardTitle className="text-2xl">Criar conta</CardTitle>
+        <CardTitle className="text-2xl">Criar uma conta</CardTitle>
         <CardDescription>
           Preencha os campos abaixo para criar sua conta
         </CardDescription>
       </CardHeader>
-      <CardContent className="grid gap-4">
+      <CardContent className="space-y-4">
         <Form {...form}>
-          <form onSubmit={form.handleSubmit(onSubmit)} className="grid gap-4">
+          <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-4">
             <FormField
               control={form.control}
               name="name"
@@ -136,7 +132,7 @@ export function RegisterForm() {
                 <FormItem>
                   <FormLabel>Email</FormLabel>
                   <FormControl>
-                    <Input placeholder="nome@exemplo.com" {...field} />
+                    <Input placeholder="exemplo@email.com" {...field} />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
@@ -149,61 +145,62 @@ export function RegisterForm() {
                 <FormItem>
                   <FormLabel>Senha</FormLabel>
                   <FormControl>
-                    <Input
-                      placeholder="********"
-                      type="password"
-                      {...field}
+                    <Input 
+                      type="password" 
+                      placeholder="••••••••" 
+                      {...field} 
+                      onFocus={() => setShowRules(true)}
+                      onBlur={() => setShowRules(false)}
                     />
                   </FormControl>
                   <FormMessage />
                 </FormItem>
               )}
             />
-            <Button type="submit" disabled={isPending}>
+            <PasswordRules password={password} showRules={showRules} />
+            <Button
+              type="submit"
+              className="w-full"
+              disabled={isPending}
+            >
               {isPending && (
                 <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
               )}
               Criar conta
             </Button>
           </form>
-
-          <div className="relative">
-            <div className="absolute inset-0 flex items-center">
-              <span className="w-full border-t" />
-            </div>
-            <div className="relative flex justify-center text-xs uppercase">
-              <span className="bg-background px-2 text-muted-foreground">
-                Ou
-              </span>
-            </div>
-          </div>
-
-          <Button
-            variant="outline"
-            type="button"
-            disabled={isLoadingGoogle}
-            onClick={loginWithGoogle}
-          >
-            {isLoadingGoogle ? (
-              <>
-                <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
-                Conectando...
-              </>
-            ) : (
-              <>
-                <Icons.google className="mr-2 h-4 w-4" /> Entrar com Google
-              </>
-            )}
-          </Button>
         </Form>
+        <div className="relative">
+          <div className="absolute inset-0 flex items-center">
+            <span className="w-full border-t" />
+          </div>
+          <div className="relative flex justify-center text-xs uppercase">
+            <span className="bg-background px-2 text-muted-foreground">
+              Ou continue com
+            </span>
+          </div>
+        </div>
+        <Button
+          variant="outline"
+          type="button"
+          className="w-full"
+          onClick={loginWithGoogle}
+          disabled={isLoadingGoogle}
+        >
+          {isLoadingGoogle ? (
+            <Icons.spinner className="mr-2 h-4 w-4 animate-spin" />
+          ) : (
+            <Icons.google className="mr-2 h-4 w-4" />
+          )}
+          Google
+        </Button>
       </CardContent>
-      <CardFooter className="flex flex-col items-center justify-center space-y-2">
+      <CardFooter>
         <div className="text-sm text-muted-foreground">
           Já tem uma conta?{" "}
           <Link
-            aria-label="Sign in"
             href="/login"
-            className="text-primary underline-offset-4 transition-colors hover:underline"
+            className="text-primary underline-offset-4 hover:underline"
           >
             Entrar
           </Link>
