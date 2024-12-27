@@ -56,7 +56,10 @@ export async function GET(request: NextRequest) {
     // Busca o usuário pelo token
     const user = await db.user.findFirst({
       where: { 
-        verifyToken: token,
+        verifyToken: {
+          not: null,
+          equals: token
+        },
         emailVerified: null // Garante que só verifica usuários não verificados
       },
       select: {
