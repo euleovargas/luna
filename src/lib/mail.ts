@@ -12,7 +12,7 @@ const resend = new Resend(RESEND_API_KEY);
 // Configurações de email
 const EMAIL_FROM = 'Luna <noreply@lpclass.com.br>';
 const isDev = process.env.NODE_ENV === 'development';
-const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://luna-lemon.vercel.app';
+const APP_URL = isDev ? 'http://localhost:3000' : process.env.NEXT_PUBLIC_APP_URL || 'https://luna-lemon.vercel.app';
 
 // Email verificado no Resend para testes
 const TEST_EMAIL = 'contato@leovargas.com.br';
@@ -84,6 +84,14 @@ export const sendTestEmail = async (to: string) => {
 export const sendVerificationEmail = async ({ email, token }: SendVerificationEmailParams) => {
   // Em desenvolvimento, sempre envia para o email de teste
   const recipient = isDev ? TEST_EMAIL : email;
+  
+  console.log('[VERIFICATION_EMAIL] Construindo link:', {
+    isDev,
+    APP_URL,
+    token,
+    baseUrl: `${APP_URL}/api/auth/verify`
+  })
+
   const verificationLink = `${APP_URL}/api/auth/verify?token=${token}`;
 
   try {

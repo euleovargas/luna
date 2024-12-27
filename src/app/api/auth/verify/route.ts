@@ -20,7 +20,8 @@ export async function GET(request: NextRequest) {
       tokenLength: token?.length,
       url: request.url,
       fullUrl: request.nextUrl.toString(),
-      searchParams: Object.fromEntries(request.nextUrl.searchParams.entries())
+      searchParams: Object.fromEntries(request.nextUrl.searchParams.entries()),
+      headers: Object.fromEntries(request.headers.entries())
     })
 
     if (!token) {
