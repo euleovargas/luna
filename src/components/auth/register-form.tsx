@@ -71,8 +71,8 @@ export function RegisterForm() {
             throw new Error(result.error || "Erro ao registrar")
           }
 
-          // Redireciona para a página de verificação
-          router.push("/resend-verification")
+          // Redireciona para a página de verificação com o email
+          router.push(`/resend-verification?email=${encodeURIComponent(data.email)}`)
           
           toast({
             title: "Registro realizado!",

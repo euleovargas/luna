@@ -39,11 +39,12 @@ export async function POST(req: Request) {
 
     const verificationToken = generateVerificationToken()
 
-    await db.verificationToken.create({
+    // Atualiza o usuário com o token de verificação
+    await db.user.update({
+      where: { id: user.id },
       data: {
-        identifier: email,
-        token: verificationToken,
-        expires: new Date(Date.now() + 24 * 60 * 60 * 1000) // 24 hours
+        verifyToken: verificationToken,
+        lastEmailSent: new Date()
       }
     })
 

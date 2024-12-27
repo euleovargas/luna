@@ -1,26 +1,33 @@
 import { redirect } from "next/navigation"
 import { db } from "@/lib/db"
-import { getCurrentUser } from "@/lib/session"
 import { ResendVerificationButton } from "@/components/auth/resend-verification-button"
 
-export default async function ResendVerificationPage() {
-  const user = await getCurrentUser()
+interface PageProps {
+  searchParams: { email?: string }
+}
 
-  if (!user?.email) {
-    redirect("/login")
+export default async function ResendVerificationPage({ searchParams }: PageProps) {
+  const { email } = searchParams
+
+  if (!email) {
+    redirect("/register")
   }
 
-  // Se o usuário já está verificado, redireciona
-  const dbUser = await db.user.findUnique({
-    where: { email: user.email },
+  // Verifica se o usuário existe e não está verificado
+  const user = await db.user.findUnique({
+    where: { email },
     select: { 
       emailVerified: true,
       lastEmailSent: true
     }
   })
 
-  if (dbUser?.emailVerified) {
-    redirect("/")
+  if (!user) {
+    redirect("/register")
+  }
+
+  if (user.emailVerified) {
+    redirect("/login?success=email_verified")
   }
 
   return (
@@ -31,15 +38,15 @@ export default async function ResendVerificationPage() {
             Verificação de Email
           </h1>
           <p className="text-sm text-muted-foreground">
-            Enviamos um link de verificação para seu email.
+            Enviamos um link de verificação para {email}.
             <br />
             Verifique sua caixa de entrada e spam.
           </p>
         </div>
 
         <ResendVerificationButton 
-          email={user.email} 
-          lastEmailSent={dbUser?.lastEmailSent}
+          email={email} 
+          lastEmailSent={user.lastEmailSent}
         />
       </div>
     </div>
