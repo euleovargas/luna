@@ -34,21 +34,7 @@ export async function POST(req: Request) {
       data: {
         email,
         name,
-      }
-    })
-
-    const verificationToken = generateVerificationToken()
-    console.log("[REGISTER] Token gerado:", { 
-      token: verificationToken, // Temporário para debug
-      tokenLength: verificationToken.length,
-      emailToVerify: email 
-    })
-
-    // Atualiza o usuário com o token de verificação
-    const updatedUser = await db.user.update({
-      where: { id: user.id },
-      data: {
-        verifyToken: verificationToken,
+        verifyToken: generateVerificationToken(),
         lastEmailSent: new Date()
       },
       select: {
@@ -59,20 +45,21 @@ export async function POST(req: Request) {
       }
     })
 
-    console.log("[REGISTER] Usuário atualizado com token:", { 
-      userId: updatedUser.id,
-      email: updatedUser.email,
-      token: updatedUser.verifyToken, // Temporário para debug
-      tokenLength: updatedUser.verifyToken?.length,
-      lastEmailSent: updatedUser.lastEmailSent
+    console.log("[REGISTER] Usuário criado com token:", { 
+      userId: user.id,
+      email: user.email,
+      token: user.verifyToken, // Temporário para debug
+      tokenLength: user.verifyToken?.length,
+      lastEmailSent: user.lastEmailSent
     })
 
     // Enviando email de forma síncrona
     await sendVerificationEmail({
       email,
-      token: verificationToken
+      token: user.verifyToken!
     })
 
+    console.log("[REGISTER] Email enviado com sucesso:", { email })
     console.log("[REGISTER] Registro concluído com sucesso:", { email })
     return NextResponse.json({ success: true })
   } catch (error) {
