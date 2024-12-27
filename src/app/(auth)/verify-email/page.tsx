@@ -11,7 +11,7 @@ import { useSearchParams as useNextSearchParams } from "next/navigation"
 
 export default function VerifyEmailPage() {
   const router = useRouter()
-  const searchParams = useNextSearchParams()
+  const searchParams = useNextSearchParams()!
   const email = searchParams?.get("email")
   const token = searchParams?.get("token")
   const { toast } = useToast()
@@ -24,25 +24,25 @@ export default function VerifyEmailPage() {
       setIsVerifying(true)
       fetch(`/api/auth/verify?token=${token}`)
         .then(async (response) => {
-          // Se for redirecionamento, pegamos a URL
-          if (response.redirected) {
-            router.push(response.url)
-            return
-          }
+          const data = await response.json()
 
-          // Se não for redirecionamento mas também não for ok, é erro
           if (!response.ok) {
-            throw new Error("Falha ao verificar email")
+            throw new Error(data.error || "Falha ao verificar email")
           }
 
-          // Se chegou aqui deu tudo certo, redireciona para login
+          toast({
+            title: "Email verificado",
+            description: "Seu email foi verificado com sucesso!",
+          })
+
+          // Redireciona para o login
           router.push('/login?success=email_verified')
         })
         .catch((error) => {
           console.error("[VERIFY_EMAIL] Erro ao verificar:", error)
           toast({
             title: "Erro ao verificar email",
-            description: "O link pode ter expirado ou ser inválido. Tente solicitar um novo link.",
+            description: error instanceof Error ? error.message : "O link pode ter expirado ou ser inválido. Tente solicitar um novo link.",
             variant: "destructive",
           })
           setIsVerifying(false)
@@ -73,7 +73,7 @@ export default function VerifyEmailPage() {
       const data = await response.json()
 
       if (!response.ok) {
-        throw new Error(data.message || "Erro ao reenviar email")
+        throw new Error(data.error || "Erro ao reenviar email")
       }
 
       toast({
@@ -85,7 +85,7 @@ export default function VerifyEmailPage() {
       toast({
         title: "Erro ao reenviar email",
         description: error instanceof Error 
-          ? `${error.message} (${error.name})`
+          ? error.message
           : "Erro desconhecido ao reenviar email de verificação",
         variant: "destructive",
       })
@@ -96,7 +96,7 @@ export default function VerifyEmailPage() {
 
   if (isVerifying) {
     return (
-      <div className="flex flex-col items-center justify-center">
+      <div className="flex flex-col items-center justify-center min-h-screen">
         <Card className="w-full max-w-md">
           <CardHeader className="space-y-2 text-center">
             <div className="flex justify-center">
@@ -116,19 +116,20 @@ export default function VerifyEmailPage() {
 
   return (
     <div className="flex min-h-screen flex-col items-center justify-center bg-background">
-      <div className="bg-white rounded-lg p-8 shadow-lg">
-        <div className="flex flex-col items-center space-y-6 text-center">
-          <div className="rounded-full bg-blue-50 p-3">
-            <Icons.mail className="h-10 w-10 text-blue-500" />
+      <Card className="w-full max-w-md">
+        <CardHeader className="space-y-2 text-center">
+          <div className="flex justify-center">
+            <div className="rounded-full bg-blue-50 p-3">
+              <Icons.mail className="h-10 w-10 text-blue-500" />
+            </div>
           </div>
-          <div className="space-y-2">
-            <h1 className="text-2xl font-semibold tracking-tight text-gray-900">Verifique seu e-mail</h1>
-            <p className="text-sm text-gray-500">
-              Enviamos um link de verificação para o seu e-mail.
-              <br />
-              Por favor, verifique sua caixa de entrada e spam.
-            </p>
-          </div>
+          <CardTitle className="text-2xl">Verifique seu email</CardTitle>
+          <CardDescription>
+            Enviamos um link de verificação para o seu email.
+            Por favor, verifique sua caixa de entrada e spam.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className="space-y-4">
           <Button
             variant="outline"
             onClick={handleResendVerification}
@@ -154,8 +155,8 @@ export default function VerifyEmailPage() {
           >
             <Link href="/login">Voltar para o login</Link>
           </Button>
-        </div>
-      </div>
+        </CardContent>
+      </Card>
     </div>
   )
 }
