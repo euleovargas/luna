@@ -287,7 +287,7 @@ export const columns: ColumnDef<UserType>[] = [
               </AlertDialogTrigger>
               <AlertDialogContent>
                 <AlertDialogHeader>
-                  <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+                  <AlertDialogTitle>Deseja excluir este usuário?</AlertDialogTitle>
                   <AlertDialogDescription>
                     Esta ação não pode ser desfeita.
                   </AlertDialogDescription>
@@ -295,18 +295,28 @@ export const columns: ColumnDef<UserType>[] = [
                 <AlertDialogFooter>
                   <AlertDialogCancel>Cancelar</AlertDialogCancel>
                   <AlertDialogAction
+                    className="bg-red-600 hover:bg-red-700"
                     onClick={async () => {
                       const result = await deleteUser(user.id)
                       if (!result.success) {
                         toast({
-                          title: "Erro",
-                          description: "Erro ao deletar usuário",
+                          title: "Erro ao excluir usuário",
+                          description: result.error,
                           variant: "destructive",
                         })
+                        return
                       }
+
+                      toast({
+                        title: "Usuário excluído",
+                        description: "O usuário foi excluído com sucesso.",
+                      })
+
+                      // Atualiza a tabela
+                      window.location.reload()
                     }}
                   >
-                    Continuar
+                    Excluir usuário
                   </AlertDialogAction>
                 </AlertDialogFooter>
               </AlertDialogContent>
