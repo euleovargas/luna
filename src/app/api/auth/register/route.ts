@@ -31,19 +31,33 @@ export async function POST(req: Request) {
     const token = generateVerificationToken();
     console.log('[REGISTER] Token gerado:', { token });
 
+    // Busca usuário com o mesmo token (não deveria existir)
+    const existingToken = await db.user.findFirst({
+      where: { verifyToken: token }
+    });
+    console.log('[REGISTER] Verificando token:', { 
+      token,
+      existe: !!existingToken 
+    });
+
     const user = await db.user.create({
       data: {
         email,
         name,
         verifyToken: token,
         lastEmailSent: new Date()
+      },
+      select: {
+        id: true,
+        email: true,
+        verifyToken: true
       }
     })
 
     console.log('[REGISTER] Usuário criado:', { 
       userId: user.id, 
-      email,
-      token 
+      email: user.email,
+      token: user.verifyToken 
     });
 
     await sendVerificationEmail({ email, token });

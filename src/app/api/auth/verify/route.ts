@@ -19,13 +19,21 @@ export async function GET(request: NextRequest) {
       where: { 
         verifyToken: token,
         emailVerified: null
+      },
+      select: {
+        id: true,
+        email: true,
+        verifyToken: true,
+        emailVerified: true
       }
     });
 
     console.log('[VERIFY] Busca:', { 
       token,
       encontrado: !!user,
-      email: user?.email 
+      email: user?.email,
+      tokenSalvo: user?.verifyToken,
+      jaVerificado: !!user?.emailVerified
     });
 
     if (!user) {
@@ -37,15 +45,24 @@ export async function GET(request: NextRequest) {
     }
 
     // Verifica o email
-    await db.user.update({
+    const updated = await db.user.update({
       where: { id: user.id },
       data: {
         emailVerified: new Date(),
         verifyToken: null
+      },
+      select: {
+        id: true,
+        email: true,
+        emailVerified: true
       }
     });
 
-    console.log('[VERIFY] Email verificado:', { email: user.email });
+    console.log('[VERIFY] Email verificado:', { 
+      email: updated.email,
+      verificadoEm: updated.emailVerified
+    });
+    
     return NextResponse.json({ success: true });
   } catch (error) {
     console.error("[VERIFY] Erro:", error);
