@@ -2,11 +2,11 @@ import { randomBytes } from "crypto"
 
 /**
  * Gera um token aleatório para verificação de email
- * @returns string Token hexadecimal de 32 bytes
+ * @returns string Token simples de 6 caracteres
  */
 export function generateVerificationToken() {
-  // Gerando um token mais curto para debug
-  return randomBytes(8).toString('hex');
+  // Token simples de 6 caracteres
+  return randomBytes(3).toString('hex').toUpperCase();
 }
 
 /**

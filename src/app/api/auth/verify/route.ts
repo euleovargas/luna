@@ -1,15 +1,7 @@
 import { NextRequest, NextResponse } from "next/server";
 import { db } from "@/lib/db";
-import { verifyJwt } from "@/lib/jwt";
-import { z } from "zod";
-
-const verifyEmailSchema = z.object({
-  token: z.string(),
-});
 
 const APP_URL = process.env.NEXT_PUBLIC_APP_URL || 'https://luna-lemon.vercel.app';
-
-export const dynamic = 'force-dynamic';
 
 export async function GET(request: NextRequest) {
   try {
@@ -17,21 +9,23 @@ export async function GET(request: NextRequest) {
     console.log('[VERIFY] Iniciando:', { token });
 
     if (!token) {
-      console.log('[VERIFY] Sem token');
+      console.log('[VERIFY] Token não fornecido');
       return NextResponse.redirect(`${APP_URL}/login?error=missing_token`);
     }
 
-    // Busca todos os usuários não verificados
-    const users = await db.user.findMany({
-      where: { emailVerified: null },
-      select: { id: true, email: true, verifyToken: true }
+    // Busca o usuário pelo token
+    const user = await db.user.findFirst({
+      where: { 
+        verifyToken: token,
+        emailVerified: null
+      }
     });
 
-    console.log('[VERIFY] Usuários não verificados:', users);
-
-    // Encontra o usuário com o token
-    const user = users.find(u => u.verifyToken === token);
-    console.log('[VERIFY] Usuário encontrado:', user);
+    console.log('[VERIFY] Busca:', { 
+      token,
+      encontrado: !!user,
+      email: user?.email 
+    });
 
     if (!user) {
       console.log('[VERIFY] Token inválido');
@@ -47,7 +41,7 @@ export async function GET(request: NextRequest) {
       }
     });
 
-    console.log('[VERIFY] Email verificado com sucesso');
+    console.log('[VERIFY] Email verificado:', { email: user.email });
     return NextResponse.redirect(`${APP_URL}/login?success=email_verified`);
   } catch (error) {
     console.error("[VERIFY] Erro:", error);
