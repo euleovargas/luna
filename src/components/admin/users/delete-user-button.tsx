@@ -22,14 +22,15 @@ export function DeleteUserButton({ userId }: DeleteUserButtonProps) {
       </AlertDialogTrigger>
       <AlertDialogContent>
         <AlertDialogHeader>
-          <AlertDialogTitle>Você tem certeza?</AlertDialogTitle>
+          <AlertDialogTitle>Deseja excluir este usuário?</AlertDialogTitle>
           <AlertDialogDescription>
-            Esta ação não pode ser desfeita. O usuário será permanentemente excluído.
+            Esta ação não pode ser desfeita.
           </AlertDialogDescription>
         </AlertDialogHeader>
         <AlertDialogFooter>
           <AlertDialogCancel>Cancelar</AlertDialogCancel>
           <AlertDialogAction
+            className="bg-red-600 hover:bg-red-700"
             onClick={async () => {
               const result = await deleteUser(userId)
               if (result.success) {
@@ -40,14 +41,14 @@ export function DeleteUserButton({ userId }: DeleteUserButtonProps) {
                 })
               } else {
                 toast({
-                  title: "Erro",
-                  description: "Erro ao excluir usuário.",
+                  title: "Erro ao excluir usuário",
+                  description: result.error,
                   variant: "destructive",
                 })
               }
             }}
           >
-            Continuar
+            Excluir usuário
           </AlertDialogAction>
         </AlertDialogFooter>
       </AlertDialogContent>
