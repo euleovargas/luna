@@ -15,10 +15,12 @@ export default function Navbar({ menuItems: propMenuItems }: NavbarProps) {
     ? [
         { href: "/dashboard", title: "Dashboard" },
         { href: "/admin/users", title: "Usuários" },
+        { href: "/admin/forms", title: "Formulários" },
         { href: "/profile", title: "Perfil" }
       ]
     : [
         { href: "/dashboard", title: "Dashboard" },
+        { href: "/forms/my-responses", title: "Meus Formulários" },
         { href: "/profile", title: "Perfil" }
       ];
   
