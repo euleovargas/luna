@@ -35,6 +35,8 @@ model User {
   role          UserRole  @default(USER)
   createdAt      DateTime  @default(now())
   updatedAt      DateTime  @updatedAt
+  dynamicForms   DynamicForm[]
+  formResponses  FormResponse[]
 
   @@map("users")
 }
@@ -105,4 +107,81 @@ model RateLimit {
 
   @@index([key, timestamp])
   @@map("rate_limits")
+}
+
+// Enum para tipos de campos do formulário
+enum FieldType {
+  TEXT
+  TEXTAREA
+  NUMBER
+  DATE
+  SELECT
+  CHECKBOX
+  RADIO
+}
+
+// Modelo para templates de formulários dinâmicos
+model DynamicForm {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  title       String
+  description String?
+  createdBy   String    @db.ObjectId
+  isActive    Boolean   @default(true)
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  fields      FormField[]
+  responses   FormResponse[]
+  user        User      @relation(fields: [createdBy], references: [id])
+
+  @@map("dynamic_forms")
+}
+
+// Modelo para campos do formulário
+model FormField {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  formId      String    @db.ObjectId
+  type        FieldType
+  label       String
+  description String?
+  required    Boolean   @default(false)
+  order       Int
+  options     String?   // JSON string para campos SELECT, RADIO, CHECKBOX
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  form        DynamicForm    @relation(fields: [formId], references: [id], onDelete: Cascade)
+  responses   FieldResponse[]
+
+  @@map("form_fields")
+}
+
+// Modelo para respostas do formulário
+model FormResponse {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  formId      String    @db.ObjectId
+  userId      String    @db.ObjectId
+  status      String    @default("draft") // draft, submitted
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  
+  form        DynamicForm      @relation(fields: [formId], references: [id], onDelete: Cascade)
+  user        User            @relation(fields: [userId], references: [id], onDelete: Cascade)
+  fields      FieldResponse[]
+
+  @@map("form_responses")
+}
+
+// Modelo para respostas dos campos
+model FieldResponse {
+  id              String    @id @default(auto()) @map("_id") @db.ObjectId
+  responseId      String    @db.ObjectId
+  fieldId         String    @db.ObjectId
+  value           String    // Valor da resposta
+  createdAt       DateTime  @default(now())
+  updatedAt       DateTime  @updatedAt
+  
+  response        FormResponse  @relation(fields: [responseId], references: [id], onDelete: Cascade)
+  field           FormField    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
+
+  @@map("field_responses")
 }
