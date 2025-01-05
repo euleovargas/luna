@@ -73,91 +73,44 @@ export async function PUT(
 ) {
   try {
     const session = await getServerSession(authOptions);
+
     if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { responseId } = params;
     const body = await req.json();
-    const { fields, status = "draft" } = body;
 
-    // Verificar se a resposta existe e pertence ao usuário
-    const existingResponse = await prisma.formResponse.findUnique({
+    const response = await prisma.formResponse.findUnique({
       where: {
-        id: responseId,
-        ...(session.user.role !== UserRole.ADMIN && {
-          userId: session.user.id,
-        }),
-      },
-      include: {
-        form: {
-          include: {
-            fields: true,
-          },
-        },
+        id: params.responseId,
+        userId: session.user.id,
       },
     });
 
-    if (!existingResponse) {
-      return NextResponse.json({ error: "Response not found" }, { status: 404 });
+    if (!response) {
+      return new NextResponse("Not found", { status: 404 });
     }
 
-    // Se o formulário não estiver mais ativo, apenas ADMIN pode atualizar
-    if (!existingResponse.form.isActive && session.user.role !== UserRole.ADMIN) {
-      return NextResponse.json(
-        { error: "Form is no longer active" },
-        { status: 403 }
-      );
-    }
-
-    // Verificar campos obrigatórios se estiver enviando
-    if (status === "submitted") {
-      const requiredFields = existingResponse.form.fields.filter((f) => f.required);
-      const missingFields = requiredFields.filter(
-        (rf) => !fields.some((f: any) => f.fieldId === rf.id && f.value)
-      );
-
-      if (missingFields.length > 0) {
-        return NextResponse.json(
-          {
-            error: "Missing required fields",
-            fields: missingFields.map((f) => f.label),
-          },
-          { status: 400 }
-        );
-      }
-    }
-
-    // Atualizar a resposta
     const updatedResponse = await prisma.formResponse.update({
-      where: { id: responseId },
+      where: {
+        id: params.responseId,
+      },
       data: {
-        status,
+        status: body.status,
         fields: {
-          deleteMany: {}, // Remove campos existentes
-          create: fields.map((field: any) => ({
+          deleteMany: {},
+          create: body.fields.map((field: any) => ({
             fieldId: field.fieldId,
             value: field.value,
           })),
         },
       },
-      include: {
-        fields: {
-          include: {
-            field: true,
-          },
-        },
-        form: true,
-      },
     });
 
     return NextResponse.json(updatedResponse);
   } catch (error) {
-    console.error("Error updating response:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    console.error("[RESPONSE_PUT]", error);
+    return new NextResponse("Internal error", { status: 500 });
   }
 }
 
@@ -168,36 +121,35 @@ export async function DELETE(
 ) {
   try {
     const session = await getServerSession(authOptions);
+
     if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { responseId } = params;
-
-    // Verificar se a resposta existe e pertence ao usuário
     const response = await prisma.formResponse.findUnique({
       where: {
-        id: responseId,
-        ...(session.user.role !== UserRole.ADMIN && {
-          userId: session.user.id,
-        }),
+        id: params.responseId,
+        userId: session.user.id,
       },
     });
 
     if (!response) {
-      return NextResponse.json({ error: "Response not found" }, { status: 404 });
+      return new NextResponse("Not found", { status: 404 });
+    }
+
+    if (response.status === "SUBMITTED") {
+      return new NextResponse("Cannot delete submitted response", { status: 400 });
     }
 
     await prisma.formResponse.delete({
-      where: { id: responseId },
+      where: {
+        id: params.responseId,
+      },
     });
 
-    return NextResponse.json({ success: true });
+    return new NextResponse(null, { status: 204 });
   } catch (error) {
-    console.error("Error deleting response:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    console.error("[RESPONSE_DELETE]", error);
+    return new NextResponse("Internal error", { status: 500 });
   }
 }

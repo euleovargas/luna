@@ -28,6 +28,17 @@ import { toast } from "sonner";
 import { useState } from "react";
 import { FieldType } from "@prisma/client";
 import { useRouter } from "next/navigation";
+import {
+  AlertDialog,
+  AlertDialogAction,
+  AlertDialogCancel,
+  AlertDialogContent,
+  AlertDialogDescription,
+  AlertDialogFooter,
+  AlertDialogHeader,
+  AlertDialogTitle,
+  AlertDialogTrigger,
+} from "@/components/ui/alert-dialog";
 
 interface ResponseFormProps {
   response: any; // Tipo completo seria muito extenso aqui
@@ -85,6 +96,27 @@ export function ResponseForm({ response, isActive }: ResponseFormProps) {
         isDraft ? "Rascunho salvo com sucesso" : "Formulário enviado com sucesso"
       );
       
+      router.push("/forms/my-responses");
+    } catch (error: any) {
+      toast.error(error.message);
+    } finally {
+      setIsSubmitting(false);
+    }
+  }
+
+  async function onDiscard() {
+    try {
+      setIsSubmitting(true);
+      const res = await fetch(`/api/forms/responses/${response.id}`, {
+        method: "DELETE",
+      });
+
+      if (!res.ok) {
+        const error = await res.json();
+        throw new Error(error.error || "Algo deu errado");
+      }
+
+      toast.success("Rascunho descartado com sucesso");
       router.push("/forms/my-responses");
     } catch (error: any) {
       toast.error(error.message);
@@ -196,6 +228,31 @@ export function ResponseForm({ response, isActive }: ResponseFormProps) {
         <div className="flex justify-end space-x-4">
           {isActive && response.status !== "SUBMITTED" && (
             <>
+              <AlertDialog>
+                <AlertDialogTrigger asChild>
+                  <Button type="button" variant="destructive">
+                    Descartar
+                  </Button>
+                </AlertDialogTrigger>
+                <AlertDialogContent>
+                  <AlertDialogHeader>
+                    <AlertDialogTitle>Descartar rascunho?</AlertDialogTitle>
+                    <AlertDialogDescription>
+                      Tem certeza que deseja descartar este rascunho? Esta ação não pode ser desfeita.
+                    </AlertDialogDescription>
+                  </AlertDialogHeader>
+                  <AlertDialogFooter>
+                    <AlertDialogCancel>Cancelar</AlertDialogCancel>
+                    <AlertDialogAction
+                      onClick={onDiscard}
+                      disabled={isSubmitting}
+                    >
+                      Descartar
+                    </AlertDialogAction>
+                  </AlertDialogFooter>
+                </AlertDialogContent>
+              </AlertDialog>
+
               <Button
                 type="button"
                 variant="outline"
