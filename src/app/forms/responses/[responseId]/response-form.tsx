@@ -96,6 +96,7 @@ export function ResponseForm({ response, isActive }: ResponseFormProps) {
         isDraft ? "Rascunho salvo com sucesso" : "Formulário enviado com sucesso"
       );
       
+      router.refresh();
       router.push("/forms/my-responses");
     } catch (error: any) {
       toast.error(error.message);
@@ -117,6 +118,7 @@ export function ResponseForm({ response, isActive }: ResponseFormProps) {
       }
 
       toast.success("Rascunho descartado com sucesso");
+      router.refresh();
       router.push("/forms/my-responses");
     } catch (error: any) {
       toast.error(error.message);

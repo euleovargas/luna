@@ -4,6 +4,7 @@ import { Badge } from "@/components/ui/badge";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import Link from "next/link";
+import { useRouter } from "next/navigation";
 
 interface FormResponseCardProps {
   response: {
@@ -19,6 +20,8 @@ interface FormResponseCardProps {
 }
 
 export function FormResponseCard({ response }: FormResponseCardProps) {
+  const router = useRouter();
+
   const statusColor = {
     draft: "bg-yellow-500",
     submitted: "bg-green-500",
@@ -57,7 +60,7 @@ export function FormResponseCard({ response }: FormResponseCardProps) {
           </div>
           <div className="flex space-x-2 mt-4">
             <Button asChild>
-              <Link href={`/forms/responses/${response.id}`}>
+              <Link href={`/forms/responses/${response.id}`} onClick={() => router.refresh()}>
                 {response.status === "draft" ? "Continuar preenchendo" : "Visualizar"}
               </Link>
             </Button>

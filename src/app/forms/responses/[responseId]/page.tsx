@@ -5,6 +5,7 @@ import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
 import { notFound } from "next/navigation";
 import { ResponseForm } from "./response-form";
+import { UserRole } from "@prisma/client";
 
 export const metadata: Metadata = {
   title: "Formulário",
@@ -28,7 +29,9 @@ export default async function ResponsePage({ params }: ResponsePageProps) {
   const response = await prisma.formResponse.findUnique({
     where: {
       id: params.responseId,
-      userId: session.user.id,
+      ...(session.user.role !== UserRole.ADMIN && {
+        userId: session.user.id,
+      }),
     },
     include: {
       form: {
@@ -43,6 +46,12 @@ export default async function ResponsePage({ params }: ResponsePageProps) {
       fields: {
         include: {
           field: true,
+        },
+      },
+      user: {
+        select: {
+          name: true,
+          email: true,
         },
       },
     },
@@ -60,11 +69,16 @@ export default async function ResponsePage({ params }: ResponsePageProps) {
           {response.form.description && (
             <p className="text-gray-500 mt-2">{response.form.description}</p>
           )}
+          {session.user.role === UserRole.ADMIN && (
+            <p className="text-sm text-gray-500 mt-4">
+              Respondido por: {response.user.name || response.user.email}
+            </p>
+          )}
         </div>
 
         <ResponseForm 
           response={response} 
-          isActive={response.form.isActive} 
+          isActive={response.form.isActive && response.userId === session.user.id} 
         />
       </div>
     </div>
