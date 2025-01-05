@@ -8,6 +8,25 @@ import Link from "next/link";
 import { Button } from "@/components/ui/button";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
+import {
+  Table,
+  TableBody,
+  TableCell,
+  TableHead,
+  TableHeader,
+  TableRow,
+} from "@/components/ui/table";
+import { Avatar, AvatarFallback, AvatarImage } from "@/components/ui/avatar";
+import { 
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from "@/components/ui/dropdown-menu";
+import { MoreHorizontal } from "lucide-react";
+import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
   title: "Respostas do Formulário",
@@ -34,14 +53,13 @@ export default async function FormResponsesPage({ params }: Props) {
     },
     include: {
       responses: {
-        where: {
-          status: "SUBMITTED",
-        },
         include: {
           user: {
             select: {
+              id: true,
               name: true,
               email: true,
+              image: true,
             },
           },
           fields: {
@@ -81,39 +99,83 @@ export default async function FormResponsesPage({ params }: Props) {
             </p>
           </div>
         ) : (
-          <div className="grid gap-6">
-            {form.responses.map((response) => (
-              <Card key={response.id} className="p-6">
-                <div className="flex flex-col space-y-4">
-                  <div className="flex justify-between items-start">
-                    <div>
-                      <h3 className="text-lg font-semibold">
-                        {response.user.name || response.user.email}
-                      </h3>
-                      <p className="text-sm text-gray-500">
-                        Enviado{" "}
-                        {formatDistanceToNow(response.updatedAt, {
-                          addSuffix: true,
-                          locale: ptBR,
-                        })}
-                      </p>
-                    </div>
-                    <Link href={`/forms/responses/${response.id}`}>
-                      <Button variant="outline">Visualizar</Button>
-                    </Link>
-                  </div>
-
-                  <div className="grid gap-4">
-                    {response.fields.map((fieldResponse) => (
-                      <div key={fieldResponse.id}>
-                        <p className="font-medium">{fieldResponse.field.label}</p>
-                        <p className="text-gray-600">{fieldResponse.value}</p>
+          <div className="rounded-md border">
+            <Table>
+              <TableHeader>
+                <TableRow>
+                  <TableHead>Usuário</TableHead>
+                  <TableHead>Status</TableHead>
+                  <TableHead>Última atualização</TableHead>
+                  <TableHead>Campos preenchidos</TableHead>
+                  <TableHead className="w-[70px]"></TableHead>
+                </TableRow>
+              </TableHeader>
+              <TableBody>
+                {form.responses.map((response) => (
+                  <TableRow key={response.id}>
+                    <TableCell>
+                      <div className="flex items-center gap-3">
+                        <Avatar>
+                          <AvatarImage src={response.user.image || undefined} />
+                          <AvatarFallback>
+                            {response.user.name?.[0]?.toUpperCase() || 
+                             response.user.email?.[0]?.toUpperCase()}
+                          </AvatarFallback>
+                        </Avatar>
+                        <div className="flex flex-col">
+                          <span className="font-medium">
+                            {response.user.name || response.user.email}
+                          </span>
+                          {response.user.name && (
+                            <span className="text-sm text-gray-500">
+                              {response.user.email}
+                            </span>
+                          )}
+                        </div>
                       </div>
-                    ))}
-                  </div>
-                </div>
-              </Card>
-            ))}
+                    </TableCell>
+                    <TableCell>
+                      <Badge
+                        variant={response.status === "DRAFT" ? "secondary" : "default"}
+                      >
+                        {response.status === "DRAFT" ? "Rascunho" : "Enviado"}
+                      </Badge>
+                    </TableCell>
+                    <TableCell>
+                      {formatDistanceToNow(response.updatedAt, {
+                        addSuffix: true,
+                        locale: ptBR,
+                      })}
+                    </TableCell>
+                    <TableCell>
+                      {response.fields.length} / {form.fields.length}
+                    </TableCell>
+                    <TableCell>
+                      <DropdownMenu>
+                        <DropdownMenuTrigger asChild>
+                          <Button
+                            variant="ghost"
+                            className="h-8 w-8 p-0"
+                          >
+                            <span className="sr-only">Abrir menu</span>
+                            <MoreHorizontal className="h-4 w-4" />
+                          </Button>
+                        </DropdownMenuTrigger>
+                        <DropdownMenuContent align="end">
+                          <DropdownMenuLabel>Ações</DropdownMenuLabel>
+                          <DropdownMenuSeparator />
+                          <DropdownMenuItem asChild>
+                            <Link href={`/forms/responses/${response.id}`}>
+                              Visualizar respostas
+                            </Link>
+                          </DropdownMenuItem>
+                        </DropdownMenuContent>
+                      </DropdownMenu>
+                    </TableCell>
+                  </TableRow>
+                ))}
+              </TableBody>
+            </Table>
           </div>
         )}
       </div>
