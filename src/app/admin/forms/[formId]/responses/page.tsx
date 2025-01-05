@@ -52,6 +52,11 @@ export default async function FormResponsesPage({ params }: Props) {
       id: params.formId,
     },
     include: {
+      fields: {
+        orderBy: {
+          order: "asc",
+        },
+      },
       responses: {
         include: {
           user: {
