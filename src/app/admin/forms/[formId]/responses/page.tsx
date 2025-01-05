@@ -119,3 +119,4 @@ export default async function FormResponsesPage({ params }: Props) {
       </div>
     </div>
   );
+}
