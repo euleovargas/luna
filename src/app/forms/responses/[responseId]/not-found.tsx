@@ -15,3 +15,4 @@ export default function ResponseNotFound() {
       </div>
     </div>
   );
+}
