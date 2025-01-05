@@ -33,7 +33,7 @@ export default async function MyResponsesPage() {
   });
 
   // Buscar formulários disponíveis
-  const availableForms = await prisma.form.findMany({
+  const availableForms = await prisma.dynamicForm.findMany({
     where: {
       isActive: true,
       NOT: {

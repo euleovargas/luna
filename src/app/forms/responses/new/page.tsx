@@ -28,7 +28,7 @@ export default async function NewResponsePage({ searchParams }: Props) {
   }
 
   // Buscar o formulário
-  const form = await prisma.form.findUnique({
+  const form = await prisma.dynamicForm.findUnique({
     where: {
       id: searchParams.formId,
       isActive: true,
