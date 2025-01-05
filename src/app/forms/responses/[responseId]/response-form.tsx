@@ -72,7 +72,7 @@ export function ResponseForm({ response, isActive }: ResponseFormProps) {
         },
         body: JSON.stringify({
           ...data,
-          status: isDraft ? "draft" : "submitted",
+          status: isDraft ? "DRAFT" : "SUBMITTED",
         }),
       });
 
@@ -85,11 +85,7 @@ export function ResponseForm({ response, isActive }: ResponseFormProps) {
         isDraft ? "Rascunho salvo com sucesso" : "Formulário enviado com sucesso"
       );
       
-      if (!isDraft) {
-        router.push("/forms/my-responses");
-      } else {
-        router.refresh();
-      }
+      router.push("/forms/my-responses");
     } catch (error: any) {
       toast.error(error.message);
     } finally {
@@ -112,7 +108,7 @@ export function ResponseForm({ response, isActive }: ResponseFormProps) {
                 <FormControl>
                   <Input
                     {...formField}
-                    disabled={!isActive || response.status === "submitted"}
+                    disabled={!isActive || response.status === "SUBMITTED"}
                   />
                 </FormControl>
                 {field.description && (
@@ -136,7 +132,7 @@ export function ResponseForm({ response, isActive }: ResponseFormProps) {
                 <FormControl>
                   <Textarea
                     {...formField}
-                    disabled={!isActive || response.status === "submitted"}
+                    disabled={!isActive || response.status === "SUBMITTED"}
                   />
                 </FormControl>
                 {field.description && (
@@ -161,7 +157,7 @@ export function ResponseForm({ response, isActive }: ResponseFormProps) {
                 <Select
                   onValueChange={formField.onChange}
                   defaultValue={formField.value}
-                  disabled={!isActive || response.status === "submitted"}
+                  disabled={!isActive || response.status === "SUBMITTED"}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -198,7 +194,7 @@ export function ResponseForm({ response, isActive }: ResponseFormProps) {
         {response.form.fields.map((field: any) => renderField(field))}
 
         <div className="flex justify-end space-x-4">
-          {isActive && response.status !== "submitted" && (
+          {isActive && response.status !== "SUBMITTED" && (
             <>
               <Button
                 type="button"
