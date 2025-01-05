@@ -9,8 +9,8 @@ interface FormResponseCardProps {
   response: {
     id: string;
     status: string;
-    createdAt: string;
-    updatedAt: string;
+    createdAt: Date;
+    updatedAt: Date;
     form: {
       title: string;
       description?: string | null;
@@ -43,14 +43,14 @@ export function FormResponseCard({ response }: FormResponseCardProps) {
         <div className="flex flex-col space-y-2">
           <div className="text-sm text-gray-500">
             Criado{" "}
-            {formatDistanceToNow(new Date(response.createdAt), {
+            {formatDistanceToNow(response.createdAt, {
               addSuffix: true,
               locale: ptBR,
             })}
           </div>
           <div className="text-sm text-gray-500">
             Última atualização{" "}
-            {formatDistanceToNow(new Date(response.updatedAt), {
+            {formatDistanceToNow(response.updatedAt, {
               addSuffix: true,
               locale: ptBR,
             })}
