@@ -65,7 +65,7 @@ export default async function NewResponsePage({ searchParams }: Props) {
       formId: form.id,
       userId: session.user.id,
       status: "DRAFT",
-      fieldResponses: {
+      fields: {
         createMany: {
           data: form.fields.map((field) => ({
             fieldId: field.id,
@@ -84,7 +84,7 @@ export default async function NewResponsePage({ searchParams }: Props) {
           },
         },
       },
-      fieldResponses: {
+      fields: {
         include: {
           field: true,
         },
