@@ -3,7 +3,7 @@ import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import { redirect } from "next/navigation";
 import prisma from "@/lib/prisma";
-import { ResponseForm } from "@/app/forms/responses/[responseId]/response-form";
+import { ResponseForm } from "@/app/(root)/forms/responses/[responseId]/response-form";
 
 export const metadata: Metadata = {
   title: "Preencher Formulário",
