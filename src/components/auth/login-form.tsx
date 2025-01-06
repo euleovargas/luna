@@ -80,7 +80,7 @@ export function LoginForm() {
     const signInResult = await signIn("credentials", {
       email: data.email,
       password: data.password,
-      redirect: false,
+      callbackUrl: "/dashboard",
     })
 
     setIsLoading(false)
@@ -92,8 +92,6 @@ export function LoginForm() {
         variant: "destructive",
       })
     }
-
-    router.push("/dashboard")
   }
 
   const loginWithGoogle = async () => {
