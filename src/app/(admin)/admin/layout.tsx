@@ -17,6 +17,7 @@ export default function AdminLayout({
   const menuItems = [
     { href: "/dashboard", title: "Dashboard" },
     { href: "/admin/users", title: "Usuários" },
+    { href: "/admin/forms", title: "Formulários" },
     { href: "/profile", title: "Perfil" }
   ]
 
