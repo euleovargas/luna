@@ -77,20 +77,20 @@ export function LoginForm() {
   async function onSubmit(data: LoginValues) {
     setIsLoading(true)
 
-    const signInResult = await signIn("credentials", {
-      email: data.email,
-      password: data.password,
-      callbackUrl: "/dashboard",
-    })
-
-    setIsLoading(false)
-
-    if (!signInResult?.ok) {
-      return toast({
+    try {
+      await signIn("credentials", {
+        email: data.email,
+        password: data.password,
+        callbackUrl: "/dashboard",
+      })
+    } catch (error) {
+      toast({
         title: "Erro ao fazer login",
         description: "Credenciais inválidas",
         variant: "destructive",
       })
+    } finally {
+      setIsLoading(false)
     }
   }
 
