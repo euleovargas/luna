@@ -1,4 +1,4 @@
-import { Header } from "@/components/header";
+import { MainHeader } from "@/components/layout/MainHeader";
 
 export default function FormLayout({
   children,
@@ -7,7 +7,7 @@ export default function FormLayout({
 }) {
   return (
     <>
-      <Header />
+      <MainHeader menuItems={[]} />
       {children}
     </>
   );

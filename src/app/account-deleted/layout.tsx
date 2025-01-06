@@ -1,4 +1,4 @@
-import { Header } from "@/components/header";
+import { MainHeader } from "@/components/layout/MainHeader";
 
 export default function AccountDeletedLayout({
   children,
@@ -7,7 +7,7 @@ export default function AccountDeletedLayout({
 }) {
   return (
     <>
-      <Header />
+      <MainHeader menuItems={[]} />
       {children}
     </>
   );
