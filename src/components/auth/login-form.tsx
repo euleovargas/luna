@@ -78,15 +78,27 @@ export function LoginForm() {
     setIsLoading(true)
 
     try {
-      await signIn("credentials", {
+      const result = await signIn("credentials", {
         email: data.email,
         password: data.password,
-        callbackUrl: "/dashboard",
+        redirect: false,
       })
+
+      if (result?.error) {
+        toast({
+          title: "Erro ao fazer login",
+          description: "Credenciais inválidas",
+          variant: "destructive",
+        })
+        return
+      }
+
+      // Se não houver erro, redireciona para a dashboard
+      router.push("/dashboard")
     } catch (error) {
       toast({
         title: "Erro ao fazer login",
-        description: "Credenciais inválidas",
+        description: "Ocorreu um erro inesperado",
         variant: "destructive",
       })
     } finally {
