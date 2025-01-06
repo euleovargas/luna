@@ -1,4 +1,4 @@
-import { Header } from "@/components/header";
+import { MainHeader } from "@/components/layout/MainHeader";
 
 export default function MyResponsesLayout({
   children,
@@ -7,7 +7,7 @@ export default function MyResponsesLayout({
 }) {
   return (
     <>
-      <Header />
+      <MainHeader menuItems={[]} />
       {children}
     </>
   );

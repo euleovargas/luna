@@ -1,14 +1,14 @@
-import Navbar from "@/components/layout/Navbar";
+import { MainHeader } from "@/components/layout/MainHeader";
 
-export default function FormsLayout({
+export default function ResponsesLayout({
   children,
 }: {
   children: React.ReactNode;
 }) {
   return (
     <>
-      <Navbar />
-      <main>{children}</main>
+      <MainHeader menuItems={[]} />
+      {children}
     </>
   );
 }

@@ -1,4 +1,4 @@
-import Navbar from "@/components/layout/Navbar";
+import { MainHeader } from "@/components/layout/MainHeader";
 
 export default function AdminFormsLayout({
   children,
@@ -7,7 +7,7 @@ export default function AdminFormsLayout({
 }) {
   return (
     <>
-      <Navbar />
+      <MainHeader menuItems={[]} />
       <main>{children}</main>
     </>
   );
