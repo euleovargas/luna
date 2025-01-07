@@ -26,7 +26,6 @@ import {
   DropdownMenuTrigger,
 } from "@/components/ui/dropdown-menu";
 import { MoreHorizontal } from "lucide-react";
-import { Badge } from "@/components/ui/badge";
 
 export const metadata: Metadata = {
   title: "Respostas do Formulário",
@@ -109,7 +108,6 @@ export default async function FormResponsesPage({ params }: Props) {
               <TableHeader>
                 <TableRow>
                   <TableHead>Usuário</TableHead>
-                  <TableHead>Status</TableHead>
                   <TableHead>Última atualização</TableHead>
                   <TableHead>Campos preenchidos</TableHead>
                   <TableHead className="w-[70px]"></TableHead>
@@ -138,13 +136,6 @@ export default async function FormResponsesPage({ params }: Props) {
                           )}
                         </div>
                       </div>
-                    </TableCell>
-                    <TableCell>
-                      <Badge
-                        variant={response.status === "DRAFT" ? "secondary" : "default"}
-                      >
-                        {response.status === "DRAFT" ? "Rascunho" : "Enviado"}
-                      </Badge>
                     </TableCell>
                     <TableCell>
                       {formatDistanceToNow(response.updatedAt, {
