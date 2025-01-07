@@ -1,8 +1,18 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
+import { z } from "zod";
 import { UserRole } from "@prisma/client";
+
+const responseSchema = z.object({
+  fields: z.array(
+    z.object({
+      fieldId: z.string(),
+      value: z.string(),
+    })
+  ),
+});
 
 // GET /api/forms/[formId]/responses - Lista respostas de um formulário
 export async function GET(
@@ -56,25 +66,17 @@ export async function GET(
 
 // POST /api/forms/[formId]/responses - Cria uma nova resposta
 export async function POST(
-  req: Request,
+  request: NextRequest,
   { params }: { params: { formId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
+
     if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 });
     }
 
-    const { formId } = params;
-    const body = await req.json();
-    const { fields, status = "draft" } = body;
-
-    if (!fields || !Array.isArray(fields)) {
-      return NextResponse.json(
-        { error: "Invalid response data" },
-        { status: 400 }
-      );
-    }
+    const formId = params.formId;
 
     // Verificar se o formulário existe e está ativo
     const form = await prisma.dynamicForm.findUnique({
@@ -88,36 +90,32 @@ export async function POST(
     });
 
     if (!form) {
+      return new NextResponse("Form not found", { status: 404 });
+    }
+
+    // Verificar se o usuário já respondeu este formulário
+    const existingResponse = await prisma.formResponse.findFirst({
+      where: {
+        formId,
+        userId: session.user.id,
+      },
+    });
+
+    if (existingResponse) {
       return NextResponse.json(
-        { error: "Form not found or inactive" },
-        { status: 404 }
+        { error: "Você já respondeu este formulário" },
+        { status: 400 }
       );
     }
 
-    // Verificar campos obrigatórios
-    if (status === "submitted") {
-      const requiredFields = form.fields.filter((f) => f.required);
-      const missingFields = requiredFields.filter(
-        (rf) => !fields.some((f: any) => f.fieldId === rf.id && f.value)
-      );
+    const body = await request.json();
+    const { fields } = responseSchema.parse(body);
 
-      if (missingFields.length > 0) {
-        return NextResponse.json(
-          {
-            error: "Missing required fields",
-            fields: missingFields.map((f) => f.label),
-          },
-          { status: 400 }
-        );
-      }
-    }
-
-    // Criar a resposta com seus campos
+    // Criar a resposta
     const response = await prisma.formResponse.create({
       data: {
         formId,
         userId: session.user.id,
-        status,
         fields: {
           create: fields.map((field: any) => ({
             fieldId: field.fieldId,
@@ -126,6 +124,7 @@ export async function POST(
         },
       },
       include: {
+        form: true,
         fields: {
           include: {
             field: true,
@@ -136,10 +135,7 @@ export async function POST(
 
     return NextResponse.json(response);
   } catch (error) {
-    console.error("Error creating response:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    console.error("[FORMS_RESPONSE_POST]", error);
+    return new NextResponse("Internal error", { status: 500 });
   }
 }
