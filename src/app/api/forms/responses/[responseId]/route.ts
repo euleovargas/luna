@@ -85,6 +85,9 @@ export async function PUT(
         id: params.responseId,
         userId: session.user.id,
       },
+      include: {
+        form: true,
+      },
     });
 
     if (!response) {
