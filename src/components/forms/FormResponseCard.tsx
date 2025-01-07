@@ -1,42 +1,62 @@
 "use client";
 
 import { Button } from "@/components/ui/button";
-import { Card } from "@/components/ui/card";
+import { Card, CardContent, CardDescription, CardFooter, CardHeader, CardTitle } from "@/components/ui/card";
 import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
+import { Form, FormResponse } from "@prisma/client";
+import { Badge } from "@/components/ui/badge";
 
 interface FormResponseCardProps {
-  response: any;
+  response?: FormResponse & { form: Form };
+  form?: Form;
+  isCreated?: boolean;
 }
 
-export function FormResponseCard({ response }: FormResponseCardProps) {
+export function FormResponseCard({ response, form, isCreated }: FormResponseCardProps) {
   const router = useRouter();
 
+  const title = isCreated ? form?.title : response?.form.title;
+  const updatedAt = isCreated ? form?.updatedAt : response?.updatedAt;
+  const status = response?.status;
+  const id = isCreated ? form?.id : response?.id;
+
   return (
-    <Card className="p-6 space-y-4">
-      <div>
-        <h3 className="text-xl font-semibold">{response.form.title}</h3>
-        <p className="text-sm text-gray-500">
+    <Card className="flex flex-col">
+      <CardHeader>
+        <CardTitle className="line-clamp-1">{title}</CardTitle>
+        <CardDescription>
           Atualizado{" "}
-          {formatDistanceToNow(response.updatedAt, {
+          {formatDistanceToNow(updatedAt!, {
             addSuffix: true,
             locale: ptBR,
           })}
-        </p>
-      </div>
-
-      <div className="flex justify-end space-x-2">
+        </CardDescription>
+      </CardHeader>
+      <CardContent className="flex-1">
+        {status && (
+          <Badge variant={status === "DRAFT" ? "outline" : "default"}>
+            {status === "DRAFT" ? "Rascunho" : "Enviado"}
+          </Badge>
+        )}
+      </CardContent>
+      <CardFooter className="flex justify-end">
         <Link 
-          href={`/forms/responses/${response.id}`}
+          href={isCreated ? `/admin/forms/${id}` : `/forms/responses/${id}`}
           onClick={() => router.refresh()}
         >
           <Button variant="outline">
-            {response.status === "DRAFT" ? "Continuar preenchendo" : "Visualizar"}
+            {isCreated 
+              ? "Gerenciar" 
+              : status === "DRAFT" 
+                ? "Continuar preenchendo" 
+                : "Visualizar"
+            }
           </Button>
         </Link>
-      </div>
+      </CardFooter>
     </Card>
   );
 }
