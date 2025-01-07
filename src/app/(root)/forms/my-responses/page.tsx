@@ -10,7 +10,7 @@ import { UserRole } from "@prisma/client";
 
 export const metadata: Metadata = {
   title: "Minhas Respostas",
-  description: "Veja todas as suas respostas aos formulários",
+  description: "Veja e edite suas respostas aos formulários",
 };
 
 export default async function MyResponsesPage() {
@@ -50,7 +50,7 @@ export default async function MyResponsesPage() {
         <div className="flex items-center justify-between">
           <div>
             <h1 className="text-3xl font-bold">Minhas Respostas</h1>
-            <p className="text-gray-500">Veja todas as suas respostas aos formulários</p>
+            <p className="text-gray-500">Veja e edite suas respostas aos formulários</p>
           </div>
           <div className="flex gap-2">
             {isAdmin && (
@@ -69,6 +69,9 @@ export default async function MyResponsesPage() {
             <p className="text-gray-500">
               Você ainda não respondeu nenhum formulário
             </p>
+            <Link href="/forms" className="mt-4 inline-block">
+              <Button>Ver Formulários Disponíveis</Button>
+            </Link>
           </div>
         ) : (
           <div className="flex flex-col space-y-10">
