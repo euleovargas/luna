@@ -95,6 +95,8 @@ export function LoginForm() {
 
       // Se não houver erro, redireciona para a dashboard
       router.push("/dashboard")
+      // Aguardar a navegação terminar
+      await new Promise((resolve) => setTimeout(resolve, 500))
     } catch (error) {
       toast({
         title: "Erro ao fazer login",
