@@ -51,7 +51,6 @@ export default async function NewResponsePage({ searchParams }: Props) {
     where: {
       formId: form.id,
       userId: session.user.id,
-      status: "SUBMITTED",
     },
   });
 
@@ -59,12 +58,11 @@ export default async function NewResponsePage({ searchParams }: Props) {
     redirect("/forms/my-responses");
   }
 
-  // Criar uma nova resposta em rascunho
+  // Criar uma nova resposta
   const response = await prisma.formResponse.create({
     data: {
       formId: form.id,
       userId: session.user.id,
-      status: "DRAFT",
       fields: {
         createMany: {
           data: form.fields.map((field) => ({

@@ -91,17 +91,28 @@ export async function PUT(
       return new NextResponse("Not found", { status: 404 });
     }
 
+    // Não permitir edição se o formulário estiver inativo
+    if (!response.form.isActive) {
+      return NextResponse.json(
+        { error: "Este formulário não está mais ativo" },
+        { status: 400 }
+      );
+    }
+
+    // Atualizar os campos
     const updatedResponse = await prisma.formResponse.update({
       where: {
         id: params.responseId,
       },
       data: {
-        status: body.status,
         fields: {
-          deleteMany: {},
-          create: body.fields.map((field: any) => ({
-            fieldId: field.fieldId,
-            value: field.value,
+          updateMany: body.fields.map((field) => ({
+            where: {
+              fieldId: field.fieldId,
+            },
+            data: {
+              value: field.value,
+            },
           })),
         },
       },

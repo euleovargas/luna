@@ -25,9 +25,9 @@ import {
 import { Checkbox } from "@/components/ui/checkbox";
 import { RadioGroup, RadioGroupItem } from "@/components/ui/radio-group";
 import { toast } from "sonner";
+import { useRouter } from "next/navigation";
 import { useState } from "react";
 import { FieldType } from "@prisma/client";
-import { useRouter } from "next/navigation";
 import {
   AlertDialog,
   AlertDialogAction,
@@ -140,10 +140,7 @@ export function ResponseForm({ response, isActive }: ResponseFormProps) {
               <FormItem>
                 <FormLabel>{field.label}</FormLabel>
                 <FormControl>
-                  <Input
-                    {...formField}
-                    disabled={!isActive || response.status === "SUBMITTED"}
-                  />
+                  <Input {...formField} disabled={!isActive} />
                 </FormControl>
                 {field.description && (
                   <FormDescription>{field.description}</FormDescription>
@@ -164,10 +161,7 @@ export function ResponseForm({ response, isActive }: ResponseFormProps) {
               <FormItem>
                 <FormLabel>{field.label}</FormLabel>
                 <FormControl>
-                  <Textarea
-                    {...formField}
-                    disabled={!isActive || response.status === "SUBMITTED"}
-                  />
+                  <Textarea {...formField} disabled={!isActive} />
                 </FormControl>
                 {field.description && (
                   <FormDescription>{field.description}</FormDescription>
@@ -191,7 +185,7 @@ export function ResponseForm({ response, isActive }: ResponseFormProps) {
                 <Select
                   onValueChange={formField.onChange}
                   defaultValue={formField.value}
-                  disabled={!isActive || response.status === "SUBMITTED"}
+                  disabled={!isActive}
                 >
                   <FormControl>
                     <SelectTrigger>
@@ -228,7 +222,7 @@ export function ResponseForm({ response, isActive }: ResponseFormProps) {
         {response.form.fields.map((field: any) => renderField(field))}
 
         <div className="flex justify-end space-x-4">
-          {isActive && response.status !== "SUBMITTED" && (
+          {isActive && (
             <>
               <AlertDialog>
                 <AlertDialogTrigger asChild>
