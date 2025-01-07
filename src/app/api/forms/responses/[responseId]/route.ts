@@ -18,13 +18,14 @@ type ResponseInput = z.infer<typeof responseSchema>;
 
 // GET /api/forms/responses/[responseId] - Obtém detalhes de uma resposta específica
 export async function GET(
-  req: Request,
+  request: NextRequest,
   { params }: { params: { responseId: string } }
 ) {
   try {
     const session = await getServerSession(authOptions);
+
     if (!session?.user) {
-      return NextResponse.json({ error: "Unauthorized" }, { status: 401 });
+      return new NextResponse("Unauthorized", { status: 401 });
     }
 
     const { responseId } = params;
@@ -65,16 +66,13 @@ export async function GET(
     });
 
     if (!response) {
-      return NextResponse.json({ error: "Response not found" }, { status: 404 });
+      return new NextResponse("Not found", { status: 404 });
     }
 
     return NextResponse.json(response);
   } catch (error) {
     console.error("Error fetching response:", error);
-    return NextResponse.json(
-      { error: "Internal Server Error" },
-      { status: 500 }
-    );
+    return new NextResponse("Internal error", { status: 500 });
   }
 }
 
@@ -149,9 +147,9 @@ export async function PUT(
   }
 }
 
-// DELETE /api/forms/responses/[responseId] - Remove uma resposta (apenas o próprio usuário ou ADMIN)
+// DELETE /api/forms/responses/[responseId] - Exclui uma resposta específica
 export async function DELETE(
-  req: Request,
+  request: NextRequest,
   { params }: { params: { responseId: string } }
 ) {
   try {
@@ -166,14 +164,21 @@ export async function DELETE(
         id: params.responseId,
         userId: session.user.id,
       },
+      include: {
+        form: true,
+      },
     });
 
     if (!response) {
       return new NextResponse("Not found", { status: 404 });
     }
 
-    if (response.status === "SUBMITTED") {
-      return new NextResponse("Cannot delete submitted response", { status: 400 });
+    // Não permitir exclusão se o formulário estiver inativo
+    if (!response.form.isActive) {
+      return NextResponse.json(
+        { error: "Este formulário não está mais ativo" },
+        { status: 400 }
+      );
     }
 
     await prisma.formResponse.delete({
@@ -184,7 +189,7 @@ export async function DELETE(
 
     return new NextResponse(null, { status: 204 });
   } catch (error) {
-    console.error("[RESPONSE_DELETE]", error);
+    console.error("[FORMS_RESPONSE_DELETE]", error);
     return new NextResponse("Internal error", { status: 500 });
   }
 }
