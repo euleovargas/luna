@@ -35,9 +35,9 @@ export default async function MyResponsesPage() {
 
   // Se for admin, buscar também os formulários criados
   const isAdmin = session.user.role === UserRole.ADMIN;
-  const createdForms = isAdmin ? await prisma.form.findMany({
+  const createdForms = isAdmin ? await prisma.dynamicForm.findMany({
     where: {
-      createdById: session.user.id,
+      createdBy: session.user.id,
     },
     orderBy: {
       updatedAt: "desc",

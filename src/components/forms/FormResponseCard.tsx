@@ -6,12 +6,16 @@ import { formatDistanceToNow } from "date-fns";
 import { ptBR } from "date-fns/locale";
 import Link from "next/link";
 import { useRouter } from "next/navigation";
-import { Form, FormResponse } from "@prisma/client";
+import { DynamicForm, FormResponse } from "@prisma/client";
 import { Badge } from "@/components/ui/badge";
 
+type ResponseWithForm = FormResponse & {
+  form: DynamicForm;
+};
+
 interface FormResponseCardProps {
-  response?: FormResponse & { form: Form };
-  form?: Form;
+  response?: ResponseWithForm;
+  form?: DynamicForm;
   isCreated?: boolean;
 }
 
@@ -37,8 +41,8 @@ export function FormResponseCard({ response, form, isCreated }: FormResponseCard
       </CardHeader>
       <CardContent className="flex-1">
         {status && (
-          <Badge variant={status === "DRAFT" ? "outline" : "default"}>
-            {status === "DRAFT" ? "Rascunho" : "Enviado"}
+          <Badge variant={status === "draft" ? "outline" : "default"}>
+            {status === "draft" ? "Rascunho" : "Enviado"}
           </Badge>
         )}
       </CardContent>
@@ -50,7 +54,7 @@ export function FormResponseCard({ response, form, isCreated }: FormResponseCard
           <Button variant="outline">
             {isCreated 
               ? "Gerenciar" 
-              : status === "DRAFT" 
+              : status === "draft" 
                 ? "Continuar preenchendo" 
                 : "Visualizar"
             }
