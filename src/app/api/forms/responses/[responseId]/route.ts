@@ -1,8 +1,20 @@
-import { NextResponse } from "next/server";
+import { NextRequest, NextResponse } from "next/server";
 import { getServerSession } from "next-auth";
 import { authOptions } from "@/lib/auth";
 import prisma from "@/lib/prisma";
 import { UserRole } from "@prisma/client";
+import { z } from "zod";
+
+const responseSchema = z.object({
+  fields: z.array(
+    z.object({
+      fieldId: z.string(),
+      value: z.string(),
+    })
+  ),
+});
+
+type ResponseInput = z.infer<typeof responseSchema>;
 
 // GET /api/forms/responses/[responseId] - Obtém detalhes de uma resposta específica
 export async function GET(
@@ -68,7 +80,7 @@ export async function GET(
 
 // PUT /api/forms/responses/[responseId] - Atualiza uma resposta específica
 export async function PUT(
-  req: Request,
+  request: NextRequest,
   { params }: { params: { responseId: string } }
 ) {
   try {
@@ -77,8 +89,6 @@ export async function PUT(
     if (!session?.user) {
       return new NextResponse("Unauthorized", { status: 401 });
     }
-
-    const body = await req.json();
 
     const response = await prisma.formResponse.findUnique({
       where: {
@@ -102,6 +112,9 @@ export async function PUT(
       );
     }
 
+    const body = await request.json();
+    const { fields } = responseSchema.parse(body);
+
     // Atualizar os campos
     const updatedResponse = await prisma.formResponse.update({
       where: {
@@ -109,7 +122,7 @@ export async function PUT(
       },
       data: {
         fields: {
-          updateMany: body.fields.map((field) => ({
+          updateMany: fields.map((field: ResponseInput["fields"][number]) => ({
             where: {
               fieldId: field.fieldId,
             },
@@ -119,11 +132,19 @@ export async function PUT(
           })),
         },
       },
+      include: {
+        form: true,
+        fields: {
+          include: {
+            field: true,
+          },
+        },
+      },
     });
 
     return NextResponse.json(updatedResponse);
   } catch (error) {
-    console.error("[RESPONSE_PUT]", error);
+    console.error("[FORMS_RESPONSE_UPDATE]", error);
     return new NextResponse("Internal error", { status: 500 });
   }
 }
