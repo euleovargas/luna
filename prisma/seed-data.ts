@@ -1,10 +1,10 @@
-const { PrismaClient, UserRole } = require('@prisma/client');
+const client = require('@prisma/client');
 
-const prisma = new PrismaClient();
+const seedClient = new client.PrismaClient();
 
-async function main() {
+async function seed() {
   // Criar um curso
-  const course = await prisma.course.create({
+  const course = await seedClient.course.create({
     data: {
       name: 'Curso de Desenvolvimento Web',
       description: 'Aprenda a desenvolver aplicações web modernas',
@@ -12,7 +12,7 @@ async function main() {
   });
 
   // Criar um módulo
-  const module = await prisma.module.create({
+  const module = await seedClient.module.create({
     data: {
       courseId: course.id,
       name: 'Introdução ao Next.js',
@@ -22,7 +22,7 @@ async function main() {
   });
 
   // Criar uma aula com vídeo do Vimeo
-  const lesson = await prisma.lesson.create({
+  const lesson = await seedClient.lesson.create({
     data: {
       moduleId: module.id,
       name: 'Configurando o Ambiente',
@@ -34,7 +34,7 @@ async function main() {
   });
 
   // Criar uma turma
-  const classItem = await prisma.class.create({
+  const classItem = await seedClient.class.create({
     data: {
       courseId: course.id,
       name: 'Turma 1',
@@ -44,18 +44,18 @@ async function main() {
   });
 
   // Criar um usuário de teste (se não existir)
-  const user = await prisma.user.upsert({
+  const user = await seedClient.user.upsert({
     where: { email: 'aluno@example.com' },
     update: {},
     create: {
       email: 'aluno@example.com',
       name: 'Aluno Teste',
-      role: UserRole.STUDENT,
+      role: client.UserRole.STUDENT,
     },
   });
 
   // Matricular o usuário na turma
-  await prisma.classEnrollment.create({
+  await seedClient.classEnrollment.create({
     data: {
       classId: classItem.id,
       userId: user.id,
@@ -65,11 +65,11 @@ async function main() {
   console.log('Dados de teste criados com sucesso!');
 }
 
-main()
+seed()
   .catch((e) => {
     console.error(e);
     process.exit(1);
   })
   .finally(async () => {
-    await prisma.$disconnect();
+    await seedClient.$disconnect();
   });
