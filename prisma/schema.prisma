@@ -15,6 +15,9 @@ generator client {
 enum UserRole {
   ADMIN
   MANAGER
+  SUPPORT
+  INSTRUCTOR
+  STUDENT
   USER
 }
 
@@ -37,6 +40,8 @@ model User {
   updatedAt      DateTime  @updatedAt
   dynamicForms   DynamicForm[]
   formResponses  FormResponse[]
+  progress       Progress[]
+  enrollments    ClassEnrollment[]
 
   @@map("users")
 }
@@ -183,4 +188,83 @@ model FieldResponse {
   field           FormField    @relation(fields: [fieldId], references: [id], onDelete: Cascade)
 
   @@map("field_responses")
+}
+
+// Modelos para o sistema de cursos
+model Course {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  name        String
+  description String?
+  modules     Module[]
+  classes     Class[]
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+
+  @@map("courses")
+}
+
+model Module {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  courseId    String    @db.ObjectId
+  name        String
+  description String?
+  order       Int
+  lessons     Lesson[]
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+
+  @@map("modules")
+}
+
+model Lesson {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  moduleId    String    @db.ObjectId
+  name        String
+  description String?
+  videoUrl    String?
+  videoId     String?
+  order       Int
+  module      Module    @relation(fields: [moduleId], references: [id], onDelete: Cascade)
+  progress    Progress[]
+
+  @@map("lessons")
+}
+
+model Progress {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  userId      String    @db.ObjectId
+  lessonId    String    @db.ObjectId
+  percentage  Float     @default(0)
+  completed   Boolean   @default(false)
+  lastPosition Float?
+  createdAt   DateTime  @default(now())
+  updatedAt   DateTime  @updatedAt
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+  lesson      Lesson    @relation(fields: [lessonId], references: [id], onDelete: Cascade)
+
+  @@unique([userId, lessonId])
+  @@map("progress")
+}
+
+model Class {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  courseId    String    @db.ObjectId
+  name        String
+  startDate   DateTime
+  endDate     DateTime?
+  course      Course    @relation(fields: [courseId], references: [id], onDelete: Cascade)
+  students    ClassEnrollment[]
+
+  @@map("classes")
+}
+
+model ClassEnrollment {
+  id          String    @id @default(auto()) @map("_id") @db.ObjectId
+  classId     String    @db.ObjectId
+  userId      String    @db.ObjectId
+  enrolledAt  DateTime  @default(now())
+  class       Class     @relation(fields: [classId], references: [id], onDelete: Cascade)
+  user        User      @relation(fields: [userId], references: [id], onDelete: Cascade)
+
+  @@unique([classId, userId])
+  @@map("class_enrollments")
 }
