@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import Player from '@vimeo/player';
+import VimeoPlayer from '@vimeo/player';
 import { Card } from '@/components/ui/card';
 
 interface VimeoPlayerProps {
@@ -12,12 +12,12 @@ interface VimeoPlayerProps {
 
 export function VimeoPlayer({ videoId, onProgress, onComplete }: VimeoPlayerProps) {
   const playerRef = useRef<HTMLDivElement>(null);
-  const [player, setPlayer] = useState<Player | null>(null);
+  const [player, setPlayer] = useState<VimeoPlayer | null>(null);
 
   useEffect(() => {
     if (!playerRef.current) return;
 
-    const vimeoPlayer = new Player(playerRef.current, {
+    const vimeoPlayer = new VimeoPlayer(playerRef.current, {
       id: videoId,
       width: 640,
       height: 360,
@@ -26,7 +26,7 @@ export function VimeoPlayer({ videoId, onProgress, onComplete }: VimeoPlayerProp
     setPlayer(vimeoPlayer);
 
     // Eventos do player
-    vimeoPlayer.on('timeupdate', ({ percent }) => {
+    vimeoPlayer.on('timeupdate', ({ seconds, percent }) => {
       onProgress?.(percent * 100);
     });
 
@@ -37,7 +37,7 @@ export function VimeoPlayer({ videoId, onProgress, onComplete }: VimeoPlayerProp
     return () => {
       vimeoPlayer.destroy();
     };
-  }, [videoId]);
+  }, [videoId, onProgress, onComplete]);
 
   return (
     <Card className="w-full aspect-video">
