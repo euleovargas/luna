@@ -1,4 +1,5 @@
 const client = require('@prisma/client');
+const bcrypt = require('bcryptjs');
 
 const seedClient = new client.PrismaClient();
 
@@ -44,6 +45,7 @@ async function seed() {
   });
 
   // Criar um usuário de teste (se não existir)
+  const hashedPassword = await bcrypt.hash('senha123', 10);
   const user = await seedClient.user.upsert({
     where: { email: 'aluno@example.com' },
     update: {},
@@ -51,6 +53,8 @@ async function seed() {
       email: 'aluno@example.com',
       name: 'Aluno Teste',
       role: client.UserRole.STUDENT,
+      password: hashedPassword,
+      emailVerified: new Date(), // Marcar email como verificado
     },
   });
 
