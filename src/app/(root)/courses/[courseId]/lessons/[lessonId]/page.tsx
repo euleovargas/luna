@@ -18,8 +18,13 @@ interface LessonData {
   order: number;
 }
 
+interface RouteParams {
+  lessonId: string;
+  courseId: string;
+}
+
 export default function LessonPage() {
-  const params = useParams();
+  const params = useParams() as RouteParams;
   const { toast } = useToast();
   const [lesson, setLesson] = useState<LessonData | null>(null);
   const [progress, setProgress] = useState(0);
