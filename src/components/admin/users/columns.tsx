@@ -229,10 +229,13 @@ export const columns: ColumnDef<UserType>[] = [
     header: "Função",
     cell: ({ row }) => {
       const role = row.getValue("role") as UserRole
-      const roleLabels = {
-        [UserRole.ADMIN]: "Administrador",
-        [UserRole.MANAGER]: "Gerente",
-        [UserRole.USER]: "Usuário",
+      const roleLabels: Record<UserRole, string> = {
+        ADMIN: "Admin",
+        MANAGER: "Gerente",
+        SUPPORT: "Suporte",
+        INSTRUCTOR: "Instrutor",
+        STUDENT: "Aluno",
+        USER: "Usuário",
       }
       return <Badge variant="outline">{roleLabels[role]}</Badge>
     },
