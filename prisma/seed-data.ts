@@ -45,10 +45,15 @@ async function seed() {
   });
 
   // Criar um usuário de teste (se não existir)
-  const hashedPassword = await bcrypt.hash('senha123', 10);
+  const salt = await bcrypt.genSalt(10);
+  const hashedPassword = await bcrypt.hash('senha123', salt);
+  
   const user = await seedClient.user.upsert({
     where: { email: 'aluno@example.com' },
-    update: {},
+    update: {
+      password: hashedPassword,
+      emailVerified: new Date(),
+    },
     create: {
       email: 'aluno@example.com',
       name: 'Aluno Teste',
