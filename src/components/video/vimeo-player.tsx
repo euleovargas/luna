@@ -1,7 +1,7 @@
 'use client';
 
 import { useEffect, useRef, useState } from 'react';
-import VimeoPlayer from '@vimeo/player';
+import Vimeo from '@vimeo/player';
 import { Card } from '@/components/ui/card';
 
 interface VimeoPlayerProps {
@@ -12,12 +12,12 @@ interface VimeoPlayerProps {
 
 export function VimeoPlayer({ videoId, onProgress, onComplete }: VimeoPlayerProps) {
   const playerRef = useRef<HTMLDivElement>(null);
-  const [player, setPlayer] = useState<VimeoPlayer | null>(null);
+  const [player, setPlayer] = useState<Vimeo | null>(null);
 
   useEffect(() => {
     if (!playerRef.current) return;
 
-    const vimeoPlayer = new VimeoPlayer(playerRef.current, {
+    const vimeoPlayer = new Vimeo(playerRef.current, {
       id: videoId,
       width: 640,
       height: 360,
