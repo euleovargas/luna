@@ -8,7 +8,7 @@
     "start": "next start -p 3000",
     "lint": "next lint",
     "postinstall": "prisma generate",
-    "seed": "ts-node prisma/seed.ts"
+    "seed": "ts-node --project tsconfig.seed.json prisma/seed-data.ts"
   },
   "dependencies": {
     "@auth/prisma-adapter": "^2.7.4",

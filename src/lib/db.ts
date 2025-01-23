@@ -1,34 +1,16 @@
-import { PrismaClient } from '@prisma/client'
+const { PrismaClient } = require('@prisma/client')
 
-declare global {
-  var prisma: PrismaClient | undefined
-}
+// eslint-disable-next-line no-var
+global.prisma = global.prisma || undefined
 
 const prismaClientSingleton = () => {
-  return new PrismaClient({
-    log: ['error', 'warn'],
-    datasources: {
-      db: {
-        url: process.env.DATABASE_URL
-      },
-    },
-  })
+  return new PrismaClient()
 }
 
-export const prisma = globalThis.prisma ?? prismaClientSingleton()
+const db = global.prisma ?? prismaClientSingleton()
 
 if (process.env.NODE_ENV !== 'production') {
-  globalThis.prisma = prisma
+  global.prisma = db
 }
 
-export const db = prisma.$extends({
-  query: {
-    $allOperations({ operation, model, args, query }) {
-      const start = performance.now()
-      return query(args).finally(() => {
-        const end = performance.now()
-        console.log(`${model}.${operation} took ${end - start}ms`)
-      })
-    },
-  },
-})
+module.exports = { db }

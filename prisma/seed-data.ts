@@ -1,9 +1,10 @@
-const { UserRole } = require('@prisma/client');
-const { db } = require('../src/lib/db');
+const { PrismaClient, UserRole } = require('@prisma/client');
+
+const prisma = new PrismaClient();
 
 async function main() {
   // Criar um curso
-  const course = await db.course.create({
+  const course = await prisma.course.create({
     data: {
       name: 'Curso de Desenvolvimento Web',
       description: 'Aprenda a desenvolver aplicações web modernas',
@@ -11,7 +12,7 @@ async function main() {
   });
 
   // Criar um módulo
-  const module = await db.module.create({
+  const module = await prisma.module.create({
     data: {
       courseId: course.id,
       name: 'Introdução ao Next.js',
@@ -21,7 +22,7 @@ async function main() {
   });
 
   // Criar uma aula com vídeo do Vimeo
-  const lesson = await db.lesson.create({
+  const lesson = await prisma.lesson.create({
     data: {
       moduleId: module.id,
       name: 'Configurando o Ambiente',
@@ -33,7 +34,7 @@ async function main() {
   });
 
   // Criar uma turma
-  const classItem = await db.class.create({
+  const classItem = await prisma.class.create({
     data: {
       courseId: course.id,
       name: 'Turma 1',
@@ -43,7 +44,7 @@ async function main() {
   });
 
   // Criar um usuário de teste (se não existir)
-  const user = await db.user.upsert({
+  const user = await prisma.user.upsert({
     where: { email: 'aluno@example.com' },
     update: {},
     create: {
@@ -54,7 +55,7 @@ async function main() {
   });
 
   // Matricular o usuário na turma
-  await db.classEnrollment.create({
+  await prisma.classEnrollment.create({
     data: {
       classId: classItem.id,
       userId: user.id,
@@ -70,5 +71,5 @@ main()
     process.exit(1);
   })
   .finally(async () => {
-    await db.$disconnect();
+    await prisma.$disconnect();
   });
