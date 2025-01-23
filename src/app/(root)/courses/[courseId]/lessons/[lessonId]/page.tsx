@@ -18,13 +18,10 @@ interface LessonData {
   order: number;
 }
 
-interface RouteParams {
-  lessonId: string;
-  courseId: string;
-}
-
 export default function LessonPage() {
-  const params = useParams() as RouteParams;
+  const params = useParams();
+  const lessonId = params?.lessonId as string;
+  const courseId = params?.courseId as string;
   const { toast } = useToast();
   const [lesson, setLesson] = useState<LessonData | null>(null);
   const [progress, setProgress] = useState(0);
@@ -33,13 +30,15 @@ export default function LessonPage() {
   // Buscar dados da aula
   useEffect(() => {
     const fetchLesson = async () => {
+      if (!lessonId) return;
+      
       try {
-        const response = await fetch(`/api/lessons/${params.lessonId}`);
+        const response = await fetch(`/api/lessons/${lessonId}`);
         const data = await response.json();
         setLesson(data);
         
         // Buscar progresso existente
-        const progressResponse = await fetch(`/api/lessons/${params.lessonId}/progress`);
+        const progressResponse = await fetch(`/api/lessons/${lessonId}/progress`);
         const progressData = await progressResponse.json();
         setProgress(progressData.percentage || 0);
         setCompleted(progressData.completed || false);
@@ -53,14 +52,16 @@ export default function LessonPage() {
     };
 
     fetchLesson();
-  }, [params.lessonId]);
+  }, [lessonId]);
 
   // Atualizar progresso
   const handleProgress = async (newProgress: number) => {
+    if (!lessonId) return;
+    
     setProgress(newProgress);
     
     try {
-      await fetch(`/api/lessons/${params.lessonId}/progress`, {
+      await fetch(`/api/lessons/${lessonId}/progress`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ progress: newProgress })
@@ -72,8 +73,10 @@ export default function LessonPage() {
 
   // Marcar como concluído
   const handleComplete = async () => {
+    if (!lessonId) return;
+    
     try {
-      await fetch(`/api/lessons/${params.lessonId}/complete`, {
+      await fetch(`/api/lessons/${lessonId}/complete`, {
         method: 'POST'
       });
       setCompleted(true);
