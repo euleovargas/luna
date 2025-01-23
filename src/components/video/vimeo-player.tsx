@@ -18,7 +18,7 @@ export function VimeoPlayer({ videoId, onProgress, onComplete }: VimeoPlayerProp
     if (!playerRef.current) return;
 
     const vimeoPlayer = new Vimeo(playerRef.current, {
-      id: videoId,
+      id: parseInt(videoId),
       width: 640,
       height: 360,
     });
