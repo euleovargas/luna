@@ -32,7 +32,7 @@ export default async function CoursesPage() {
       },
       classes: {
         include: {
-          classEnrollments: {
+          students: {
             where: {
               userId: user.id,
             },
@@ -62,7 +62,7 @@ export default async function CoursesPage() {
     const progress = totalLessons === 0 ? 0 : (completedLessons / totalLessons) * 100
 
     const isEnrolled = course.classes.some((classItem) =>
-      classItem.classEnrollments.length > 0
+      classItem.students.length > 0
     )
 
     return {
